@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+(function() {
+  const memStore = {};
+  try {
+    const test = window.localStorage;
+    test.setItem('__test', '1');
+    test.removeItem('__test');
+  } catch (e) {
+    console.warn('Storage sandbox active; engaging memory storage fallback.');
+    try {
+      Object.defineProperty(window, 'localStorage', {
+        value: {
+          getItem: (k) => memStore[k] || null,
+          setItem: (k, v) => { memStore[k] = String(v); },
+          removeItem: (k) => { delete memStore[k]; },
+          clear: () => { for (const k in memStore) delete memStore[k]; }
+        },
+        writable: true,
+        configurable: true
+      });
+    } catch(err) {}
+  }
+})();
+</script>
+  <meta charset="UTF-8">
+  <title>Awana Galaxy Architect — Cosmic Creation Sandbox (Week 3)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #030712;
+      --card: rgba(15, 23, 42, 0.88);
+      --cyan: #38BDF8;
+      --purple: #C084FC;
+      --gold: #FBBF24;
+      --pink: #F472B6;
+      --green: #34D399;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background: var(--bg);
+      color: #F8FAFC;
+      font-family: 'Inter', sans-serif;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    canvas {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 1;
+      cursor: crosshair;
+    }
+    .ui-layer {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      pointer-events: none;
+    }
+    .interactive { pointer-events: auto; }
+
+    /* Top HUD Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 36px;
+      background: rgba(15, 23, 42, 0.75);
+      border-bottom: 2px solid rgba(56, 189, 248, 0.25);
+      backdrop-filter: blur(12px);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .brand-title {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 15px;
+      color: var(--cyan);
+      letter-spacing: 1px;
+      text-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+    }
+    .brand-sub {
+      font-size: 11px;
+      color: #94A3B8;
+      margin-top: 3px;
+    }
+
+    /* Bible Banner Hook */
+    .verse-badge {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--gold);
+      background: rgba(251, 191, 36, 0.12);
+      border: 1px solid rgba(251, 191, 36, 0.3);
+      padding: 6px 16px;
+      border-radius: 20px;
+    }
+
+    /* Bottom Architect Toolbar */
+    .toolbar-container {
+      position: absolute;
+      bottom: 24px;
+      left: 0; right: 0;
+      display: flex;
+      justify-content: center;
+      pointer-events: none;
+    }
+    .toolbar {
+      background: var(--card);
+      border: 2px solid rgba(56, 189, 248, 0.35);
+      border-radius: 20px;
+      padding: 12px 24px;
+      display: flex;
+      gap: 12px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 15px 50px rgba(0, 0, 0, 0.8), 0 0 20px rgba(56, 189, 248, 0.2);
+      pointer-events: auto;
+    }
+    .tool-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1.5px solid rgba(255, 255, 255, 0.15);
+      color: #FFF;
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .tool-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: translateY(-2px);
+    }
+    .tool-btn.active {
+      background: var(--cyan);
+      color: #030712;
+      border-color: var(--cyan);
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.6);
+      transform: scale(1.04);
+    }
+    .hotkey {
+      font-size: 10px;
+      background: rgba(0,0,0,0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      opacity: 0.8;
+    }
+
+    /* Counter Badge */
+    .counter-tag {
+      position: absolute;
+      top: 80px;
+      right: 36px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-family: monospace;
+      color: var(--cyan);
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="spaceCanvas"></canvas>
+
+<div class="ui-layer">
+  <!-- Header -->
+  <header class="interactive">
+    <div class="brand">
+      <div style="font-size: 30px;">🌌</div>
+      <div>
+        <div class="brand-title">GALAXY ARCHITECT</div>
+        <div class="brand-sub">Awana Week 3 &bull; Cosmic Creation Sandbox</div>
+      </div>
+    </div>
+    <div class="verse-badge">
+      ✨ "He determines the number of the stars and calls them each by name." — Psalm 147:4
+    </div>
+  </header>
+
+  <div class="counter-tag" id="counterTag">
+    CELESTIAL OBJECTS: 0
+  </div>
+
+  <!-- Bottom Toolbar -->
+  <div class="toolbar-container">
+    <div class="toolbar interactive">
+      <button class="tool-btn active" id="btnPlanet" onclick="setTool('planet')">
+        <span>🪐 Planet</span>
+        <span class="hotkey">1</span>
+      </button>
+      <button class="tool-btn" id="btnGalaxy" onclick="setTool('galaxy')">
+        <span>🌀 Spiral Galaxy</span>
+        <span class="hotkey">2</span>
+      </button>
+      <button class="tool-btn" id="btnSupernova" onclick="setTool('supernova')">
+        <span>💥 Supernova</span>
+        <span class="hotkey">3</span>
+      </button>
+      <button class="tool-btn" id="btnComet" onclick="setTool('comet')">
+        <span>☄️ Comet</span>
+        <span class="hotkey">4</span>
+      </button>
+      <button class="tool-btn" id="btnStar" onclick="setTool('star')">
+        <span>☀️ Giant Star</span>
+        <span class="hotkey">5</span>
+      </button>
+      <button class="tool-btn" style="background: rgba(239, 68, 68, 0.15); border-color: #EF4444; color: #F87171;" onclick="clearUniverse()">
+        <span>🧹 Clear</span>
+        <span class="hotkey">C</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 100% OFFLINE WEB AUDIO SYNTHESIZER
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  function playTone(freq, type, duration, delay=0) {
+    setTimeout(() => {
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }, delay * 1000);
+  }
+
+  function playSound(type) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (type === 'planet') {
+      playTone(330, 'sine', 0.25);
+      playTone(440, 'triangle', 0.35, 0.08);
+    } else if (type === 'galaxy') {
+      playTone(523, 'sine', 0.2, 0);
+      playTone(659, 'triangle', 0.25, 0.1);
+      playTone(784, 'sine', 0.3, 0.2);
+      playTone(1046, 'triangle', 0.5, 0.3);
+    } else if (type === 'supernova') {
+      playTone(120, 'sawtooth', 0.4);
+      playTone(80, 'square', 0.6, 0.05);
+    } else if (type === 'comet') {
+      for (let i = 0; i < 6; i++) {
+        playTone(900 - i * 100, 'sine', 0.08, i * 0.03);
+      }
+    } else if (type === 'star') {
+      playTone(220, 'triangle', 0.5);
+      playTone(440, 'sine', 0.4, 0.1);
+    } else if (type === 'clear') {
+      playTone(150, 'sawtooth', 0.3);
+    }
+  }
+
+  // CANVAS & RESIZE
+  const canvas = document.getElementById('spaceCanvas');
+  const ctx = canvas.getContext('2d');
+  let width, height;
+
+  function resize() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // Background Starfield
+  const bgStars = [];
+  for (let i = 0; i < 240; i++) {
+    bgStars.push({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      r: Math.random() * 2 + 0.5,
+      alpha: Math.random(),
+      speed: Math.random() * 0.015 + 0.005
+    });
+  }
+
+  // Celestial Objects Array
+  let activeTool = 'planet';
+  const celestialObjects = [];
+
+  class Celestial {
+    constructor(x, y, type) {
+      this.x = x;
+      this.y = y;
+      this.type = type;
+      this.age = 0;
+      this.particles = [];
+
+      if (type === 'planet') {
+        this.color = ['#38BDF8', '#FBBF24', '#34D399', '#C084FC', '#F472B6', '#60A5FA'][Math.floor(Math.random() * 6)];
+        this.radius = Math.random() * 32 + 20;
+        this.ring = Math.random() > 0.3;
+        this.ringAngle = Math.random() * Math.PI;
+      } else if (type === 'galaxy') {
+        const arms = 3;
+        const ptsPerArm = 70;
+        this.color = '#C084FC';
+        for (let a = 0; a < arms; a++) {
+          const armOffset = (a * 2 * Math.PI) / arms;
+          for (let p = 0; p < ptsPerArm; p++) {
+            const dist = p * 2.4;
+            const angle = armOffset + dist * 0.05;
+            this.particles.push({
+              dist,
+              angle,
+              speed: 0.018 - dist * 0.00009,
+              color: dist < 45 ? '#FBBF24' : (dist < 100 ? '#38BDF8' : '#C084FC'),
+              r: Math.random() * 2 + 1
+            });
+          }
+        }
+      } else if (type === 'supernova') {
+        for (let i = 0; i < 140; i++) {
+          const angle = Math.random() * 2 * Math.PI;
+          const spd = Math.random() * 9 + 2;
+          this.particles.push({
+            x: 0, y: 0,
+            vx: Math.cos(angle) * spd,
+            vy: Math.sin(angle) * spd,
+            life: 1,
+            color: ['#FBBF24', '#F472B6', '#FFF', '#38BDF8', '#FB7185'][Math.floor(Math.random() * 5)]
+          });
+        }
+      } else if (type === 'comet') {
+        this.vx = (Math.random() - 0.5) * 6 + (Math.random() > 0.5 ? 4 : -4);
+        this.vy = Math.random() * 4 + 2;
+        this.trail = [];
+      } else if (type === 'star') {
+        // Giant Star (UY Scuti style)
+        this.radius = Math.random() * 45 + 35;
+        this.color = ['#F59E0B', '#EF4444', '#FBBF24', '#38BDF8'][Math.floor(Math.random() * 4)];
+        this.pulse = 0;
+      }
+    }
+
+    update() {
+      this.age++;
+      if (this.type === 'galaxy') {
+        this.particles.forEach(p => { p.angle += p.speed; });
+      } else if (this.type === 'supernova') {
+        this.particles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vx *= 0.96;
+          p.vy *= 0.96;
+          p.life -= 0.012;
+        });
+      } else if (this.type === 'comet') {
+        this.trail.push({ x: this.x, y: this.y, life: 1 });
+        this.x += this.vx;
+        this.y += this.vy;
+        if (this.x < -50 || this.x > width + 50 || this.y > height + 50) {
+          this.dead = true;
+        }
+        this.trail.forEach(t => { t.life -= 0.03; });
+        this.trail = this.trail.filter(t => t.life > 0);
+      } else if (this.type === 'star') {
+        this.pulse += 0.05;
+      }
+    }
+
+    draw() {
+      if (this.type === 'planet') {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // Atmosphere Halo
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius * 1.35, 0, Math.PI * 2);
+        ctx.fillStyle = this.color + '25';
+        ctx.fill();
+
+        // Planet Body
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.shadowColor = this.color;
+        ctx.shadowBlur = 24;
+        ctx.fill();
+
+        // Ring
+        if (this.ring) {
+          ctx.rotate(this.ringAngle);
+          ctx.beginPath();
+          ctx.ellipse(0, 0, this.radius * 2.3, this.radius * 0.45, 0, 0, Math.PI * 2);
+          ctx.strokeStyle = '#FFFFFF90';
+          ctx.lineWidth = 3.5;
+          ctx.stroke();
+        }
+        ctx.restore();
+      } else if (this.type === 'galaxy') {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        this.particles.forEach(p => {
+          const px = Math.cos(p.angle) * p.dist;
+          const py = Math.sin(p.angle) * p.dist * 0.55; // inclined view
+          ctx.beginPath();
+          ctx.arc(px, py, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          ctx.shadowColor = p.color;
+          ctx.shadowBlur = 10;
+          ctx.fill();
+        });
+        ctx.restore();
+      } else if (this.type === 'supernova') {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        this.particles.forEach(p => {
+          if (p.life > 0) {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.life * 4, 0, Math.PI * 2);
+            ctx.fillStyle = p.color;
+            ctx.shadowColor = p.color;
+            ctx.shadowBlur = 14;
+            ctx.fill();
+          }
+        });
+        ctx.restore();
+      } else if (this.type === 'comet') {
+        // Trail
+        this.trail.forEach(t => {
+          ctx.beginPath();
+          ctx.arc(t.x, t.y, t.life * 4, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(56, 189, 248, ${t.life * 0.6})`;
+          ctx.fill();
+        });
+        // Head
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 6, 0, Math.PI * 2);
+        ctx.fillStyle = '#FFF';
+        ctx.shadowColor = '#38BDF8';
+        ctx.shadowBlur = 20;
+        ctx.fill();
+      } else if (this.type === 'star') {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        const r = this.radius + Math.sin(this.pulse) * 3;
+
+        // Giant Corona
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 1.5, 0, Math.PI * 2);
+        ctx.fillStyle = this.color + '20';
+        ctx.fill();
+
+        // Star Body
+        ctx.beginPath();
+        ctx.arc(0, 0, r, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.shadowColor = this.color;
+        ctx.shadowBlur = 35;
+        ctx.fill();
+
+        // White-hot core
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.45, 0, Math.PI * 2);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+  }
+
+  // Click / Tap to Spawn
+  function handleSpawn(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    celestialObjects.push(new Celestial(x, y, activeTool));
+    playSound(activeTool);
+    updateCount();
+  }
+
+  canvas.addEventListener('pointerdown', (e) => {
+    handleSpawn(e.clientX, e.clientY);
+  });
+  // Fallback click
+  canvas.addEventListener('click', (e) => {
+    celestialObjects.push(new Celestial(e.clientX, e.clientY, activeTool));
+    playSound(activeTool);
+    updateCount();
+  });
+
+  function setTool(tool) {
+    activeTool = tool;
+    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById('btn' + tool.charAt(0).toUpperCase() + tool.slice(1));
+    if (btn) btn.classList.add('active');
+  }
+
+  function clearUniverse() {
+    celestialObjects.length = 0;
+    playSound('clear');
+    updateCount();
+  }
+
+  function updateCount() {
+    document.getElementById('counterTag').textContent = `CELESTIAL OBJECTS: ${celestialObjects.length}`;
+  }
+
+  // Keyboard Shortcuts
+  window.addEventListener('keydown', (e) => {
+    if (e.key === '1') setTool('planet');
+    if (e.key === '2') setTool('galaxy');
+    if (e.key === '3') setTool('supernova');
+    if (e.key === '4') setTool('comet');
+    if (e.key === '5') setTool('star');
+    if (e.key === 'c' || e.key === 'C') clearUniverse();
+  });
+
+  // Animation Loop
+  function loop() {
+    ctx.clearRect(0, 0, width, height);
+
+    // Stars
+    bgStars.forEach(s => {
+      s.alpha += s.speed;
+      const a = (Math.sin(s.alpha) + 1) / 2;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 255, 255, ${a * 0.8 + 0.2})`;
+      ctx.fill();
+    });
+
+    // Celestial Objects
+    for (let i = celestialObjects.length - 1; i >= 0; i--) {
+      const obj = celestialObjects[i];
+      obj.update();
+      obj.draw();
+      if (obj.dead) celestialObjects.splice(i, 1);
+    }
+
+    requestAnimationFrame(loop);
+  }
+  loop();
+</script>
+
+<a href="../index.html" id="arcadeBackBtn" style="position:fixed; top:12px; left:12px; z-index:999999; background:rgba(15,23,42,0.85); color:#38BDF8; border:2px solid #38BDF8; border-radius:8px; padding:6px 14px; font-family:'Courier New', monospace; font-size:13px; font-weight:800; text-decoration:none; box-shadow:0 4px 15px rgba(0,0,0,0.5); backdrop-filter:blur(4px); display:flex; align-items:center; gap:6px; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='#38BDF8'; this.style.color='#0F172A';" onmouseout="this.style.background='rgba(15,23,42,0.85)'; this.style.color='#38BDF8';">
+  ⬅ ARCADE MENU
+</a>
+</body>
+</html>

@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+(function() {
+  const memStore = {};
+  try {
+    const test = window.localStorage;
+    test.setItem('__test', '1');
+    test.removeItem('__test');
+  } catch (e) {
+    console.warn('Storage sandbox active; engaging memory storage fallback.');
+    try {
+      Object.defineProperty(window, 'localStorage', {
+        value: {
+          getItem: (k) => memStore[k] || null,
+          setItem: (k, v) => { memStore[k] = String(v); },
+          removeItem: (k) => { delete memStore[k]; },
+          clear: () => { for (const k in memStore) delete memStore[k]; }
+        },
+        writable: true,
+        configurable: true
+      });
+    } catch(err) {}
+  }
+})();
+</script>
+  <meta charset="UTF-8">
+  <title>Cosmic Defender: 2D Retro Arcade Space Shooter — Awana Edition</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #030712;
+      --cyan: #38BDF8;
+      --gold: #FBBF24;
+      --pink: #F472B6;
+      --green: #34D399;
+      --red: #EF4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background: var(--bg);
+      color: #FFF;
+      font-family: 'Press Start 2P', monospace;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    #gameContainer {
+      position: relative;
+      width: 800px;
+      height: 600px;
+      background: #050811;
+      border: 3px solid rgba(56, 189, 248, 0.4);
+      border-radius: 12px;
+      box-shadow: 0 0 50px rgba(0, 0, 0, 0.9), 0 0 25px rgba(56, 189, 248, 0.25);
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+    }
+    /* HUD Overlays */
+    .hud-layer {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      text-shadow: 0 2px 4px #000;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .hud-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .val-score { color: var(--gold); }
+    .val-wave { color: var(--cyan); }
+    .val-lives { color: var(--red); font-size: 14px; }
+    
+    /* Start / Game Over Screen Overlay */
+    .screen-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(3, 7, 18, 0.88);
+      backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 30px;
+      z-index: 20;
+    }
+    .screen-title {
+      font-size: 20px;
+      color: var(--cyan);
+      margin-bottom: 12px;
+      text-shadow: 0 0 12px rgba(56, 189, 248, 0.8);
+      line-height: 1.4;
+    }
+    .screen-sub {
+      font-size: 10px;
+      color: #94A3B8;
+      margin-bottom: 24px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      line-height: 1.5;
+      max-width: 480px;
+    }
+    .btn-arcade {
+      background: linear-gradient(135deg, #0284C7, #0369A1);
+      border: 2px solid var(--cyan);
+      color: #FFF;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 11px;
+      padding: 14px 28px;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
+      transition: all 0.2s;
+    }
+    .btn-arcade:hover {
+      background: linear-gradient(135deg, #0369A1, #075985);
+      transform: scale(1.05);
+      box-shadow: 0 0 30px rgba(56, 189, 248, 0.8);
+    }
+    .controls-hint {
+      margin-top: 20px;
+      font-size: 9px;
+      color: #64748B;
+      line-height: 1.6;
+    }
+
+    /* Wave Clear Banner */
+    #waveBanner {
+      display: none;
+      position: absolute;
+      top: 40%;
+      left: 0; right: 0;
+      background: rgba(15, 23, 42, 0.95);
+      border-top: 2px solid var(--gold);
+      border-bottom: 2px solid var(--gold);
+      padding: 16px 20px;
+      text-align: center;
+      z-index: 15;
+      box-shadow: 0 0 40px rgba(251, 191, 36, 0.4);
+      animation: bannerSlide 0.4s ease-out;
+    }
+    @keyframes bannerSlide {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .banner-title {
+      font-size: 14px;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+    .banner-verse {
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: #FFF;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+
+<div id="gameContainer">
+  <!-- HUD -->
+  <div class="hud-layer">
+    <div class="hud-item">
+      <span>SCORE:</span>
+      <span class="val-score" id="hudScore">0</span>
+    </div>
+    <div class="hud-item">
+      <span>WAVE:</span>
+      <span class="val-wave" id="hudWave">1</span>
+    </div>
+    <div class="hud-item">
+      <span>HIGH:</span>
+      <span class="val-score" id="hudHigh">0</span>
+    </div>
+    <div class="hud-item">
+      <span id="hudLives" class="val-lives">❤️❤️❤️</span>
+    </div>
+  </div>
+
+  <!-- Wave Clear Scripture Banner -->
+  <div id="waveBanner">
+    <div class="banner-title" id="bannerWave">WAVE 1 CLEARED!</div>
+    <div class="banner-verse" id="bannerVerse">"The heavens declare the glory of God!" — Psalm 19:1</div>
+  </div>
+
+  <!-- Start Screen -->
+  <div class="screen-overlay" id="startScreen">
+    <div style="font-size: 42px; margin-bottom: 14px;">🛸✨</div>
+    <div class="screen-title">COSMIC DEFENDER</div>
+    <div class="screen-sub">
+      Defend planet Earth from rogue asteroid swarms! Shoot asteroids, collect Truth Crystals, and unlock the wonders of God's universe!
+    </div>
+    <button class="btn-arcade" onclick="startGame()">START MISSION [SPACE]</button>
+    <div class="controls-hint">
+      CONTROLS: [LEFT / RIGHT] or [A / D] to Move<br>
+      [SPACEBAR] to Fire Lasers<br>
+      Power-ups: ⚡ Triple Shot &bull; 🛡️ Shield &bull; 💎 Truth Bomb
+    </div>
+  </div>
+
+  <!-- Game Over Screen -->
+  <div class="screen-overlay" id="gameOverScreen" style="display: none;">
+    <div style="font-size: 42px; margin-bottom: 14px;">💥</div>
+    <div class="screen-title" style="color: var(--red);">MISSION COMPROMISED</div>
+    <div class="screen-sub" id="finalScoreText">Final Score: 0 &bull; Wave: 1</div>
+    <button class="btn-arcade" onclick="startGame()">TRY AGAIN [SPACE]</button>
+  </div>
+
+  <!-- Canvas -->
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+</div>
+
+<script>
+  // 100% OFFLINE WEB AUDIO SYNTHESIZER (8-BIT SOUND EFFECTS)
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  function playTone(freq, type, duration, delay=0) {
+    setTimeout(() => {
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }, delay * 1000);
+  }
+
+  function playSound(type) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (type === 'laser') {
+      playTone(850, 'sawtooth', 0.08);
+      playTone(400, 'sine', 0.08, 0.02);
+    } else if (type === 'explosion') {
+      playTone(120, 'sawtooth', 0.25);
+      playTone(70, 'square', 0.35, 0.05);
+    } else if (type === 'powerup') {
+      playTone(523, 'triangle', 0.1, 0);
+      playTone(659, 'triangle', 0.1, 0.08);
+      playTone(784, 'triangle', 0.15, 0.16);
+      playTone(1046, 'sine', 0.3, 0.24);
+    } else if (type === 'waveClear') {
+      playTone(440, 'triangle', 0.15, 0);
+      playTone(554, 'triangle', 0.15, 0.1);
+      playTone(659, 'triangle', 0.2, 0.2);
+      playTone(880, 'sine', 0.5, 0.32);
+    } else if (type === 'hit') {
+      playTone(200, 'sawtooth', 0.2);
+    }
+  }
+
+  // SCRIPTURE WAVE TRUTHS
+  const WAVE_TRUTHS = [
+    { title: "WAVE 1 DEFENDED!", verse: '"The heavens declare the glory of God; the skies proclaim His work!" — Psalm 19:1' },
+    { title: "WAVE 2 DEFENDED!", verse: '"He counts the stars and calls each one by name!" — Psalm 147:4' },
+    { title: "WAVE 3 DEFENDED!", verse: '"Jesus said: I am the way, the truth, and the life!" — John 14:6' },
+    { title: "WAVE 4 DEFENDED!", verse: '"A worker approved by God, rightly handling the Word of Truth!" — 2 Timothy 2:15' },
+    { title: "CREATION PROTECTED!", verse: '"The God who made 200 sextillion stars knows YOUR name!" — Psalm 139:14' }
+  ];
+
+  // GAME ENGINE STATE
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+
+  let gameState = 'start'; // 'start', 'playing', 'wavePause', 'gameOver'
+  let score = 0;
+  let highScore = 0;
+  try {
+    highScore = parseInt(localStorage.getItem('awana_space_high') || '0');
+  } catch (e) {
+    console.warn('Chromebook file:// localStorage restricted, using memory store:', e);
+  }
+  let lives = 3;
+  let wave = 1;
+  let waveKills = 0;
+  let killsRequired = 15;
+
+  document.getElementById('hudHigh').textContent = highScore;
+
+  // Starfield
+  const stars = [];
+  for (let i = 0; i < 90; i++) {
+    stars.push({
+      x: Math.random() * 800,
+      y: Math.random() * 600,
+      speed: Math.random() * 1.5 + 0.5,
+      r: Math.random() * 1.8 + 0.6
+    });
+  }
+
+  // Player Ship
+  const player = {
+    x: 400,
+    y: 530,
+    w: 36,
+    h: 36,
+    speed: 7,
+    tripleShotTimer: 0,
+    shield: false,
+    invincibleTimer: 0
+  };
+
+  const keys = {};
+  // Chromebook Touchscreen & Pointer Controls
+  canvas.addEventListener('pointerdown', (e) => {
+    if (gameState === 'start' || gameState === 'gameOver') {
+      startGame();
+    } else if (gameState === 'playing') {
+      player.x = (e.clientX - canvas.getBoundingClientRect().left) * (800 / canvas.clientWidth);
+      fireLaser();
+    }
+  });
+
+  window.addEventListener('keydown', (e) => {
+    keys[e.key] = true;
+    if (e.key === ' ' && gameState === 'start') startGame();
+    if (e.key === ' ' && gameState === 'gameOver') startGame();
+    if (e.key === ' ' && gameState === 'playing') fireLaser();
+  });
+  window.addEventListener('keyup', (e) => { keys[e.key] = false; });
+
+  // Arrays
+  const lasers = [];
+  const asteroids = [];
+  const powerups = [];
+  const particles = [];
+
+  function startGame() {
+    gameState = 'playing';
+    score = 0;
+    lives = 3;
+    wave = 1;
+    waveKills = 0;
+    killsRequired = 15;
+    player.x = 400;
+    player.tripleShotTimer = 0;
+    player.shield = false;
+
+    lasers.length = 0;
+    asteroids.length = 0;
+    powerups.length = 0;
+    particles.length = 0;
+
+    document.getElementById('startScreen').style.display = 'none';
+    document.getElementById('gameOverScreen').style.display = 'none';
+    document.getElementById('waveBanner').style.display = 'none';
+
+    updateHUD();
+    spawnAsteroidWave();
+  }
+
+  function updateHUD() {
+    document.getElementById('hudScore').textContent = score;
+    document.getElementById('hudWave').textContent = wave;
+    document.getElementById('hudHigh').textContent = highScore;
+    let heartStr = '';
+    for (let i = 0; i < lives; i++) heartStr += '❤️';
+    document.getElementById('hudLives').textContent = heartStr;
+  }
+
+  function fireLaser() {
+    playSound('laser');
+    if (player.tripleShotTimer > 0) {
+      lasers.push({ x: player.x, y: player.y - 10, vx: 0, vy: -11 });
+      lasers.push({ x: player.x - 12, y: player.y - 6, vx: -2.5, vy: -10 });
+      lasers.push({ x: player.x + 12, y: player.y - 6, vx: 2.5, vy: -10 });
+    } else {
+      lasers.push({ x: player.x - 8, y: player.y - 10, vx: 0, vy: -11 });
+      lasers.push({ x: player.x + 8, y: player.y - 10, vx: 0, vy: -11 });
+    }
+  }
+
+  function spawnAsteroidWave() {
+    const count = 3 + wave;
+    for (let i = 0; i < count; i++) {
+      spawnAsteroid();
+    }
+  }
+
+  function spawnAsteroid() {
+    const sizeRoll = Math.random();
+    let r = 16, hp = 1, pts = 10, spd = Math.random() * 1.5 + 1.2 + wave * 0.3;
+    if (sizeRoll > 0.75) {
+      r = 28; hp = 3; pts = 30; spd = Math.random() * 1.0 + 0.8;
+    } else if (sizeRoll > 0.45) {
+      r = 22; hp = 2; pts = 20; spd = Math.random() * 1.2 + 1.0;
+    }
+    asteroids.push({
+      x: Math.random() * 740 + 30,
+      y: -Math.random() * 200 - 30,
+      r: r,
+      hp: hp,
+      maxHp: hp,
+      pts: pts,
+      vy: spd,
+      vx: (Math.random() - 0.5) * 1.2,
+      rot: 0,
+      vRot: (Math.random() - 0.5) * 0.05
+    });
+  }
+
+  function spawnExplosion(x, y, color='#FBBF24', count=16) {
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = Math.random() * 5 + 1;
+      particles.push({
+        x: x, y: y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        color: color,
+        life: 1,
+        r: Math.random() * 3 + 2
+      });
+    }
+  }
+
+  // GAME LOOP
+  let lastTime = 0;
+  function update(dt) {
+    // Stars
+    stars.forEach(s => {
+      s.y += s.speed;
+      if (s.y > 600) s.y = 0;
+    });
+
+    if (gameState !== 'playing') return;
+
+    // Player Movement
+    if ((keys['ArrowLeft'] || keys['a'] || keys['A']) && player.x > 30) player.x -= player.speed;
+    if ((keys['ArrowRight'] || keys['d'] || keys['D']) && player.x < 770) player.x += player.speed;
+
+    if (player.tripleShotTimer > 0) player.tripleShotTimer -= dt;
+    if (player.invincibleTimer > 0) player.invincibleTimer -= dt;
+
+    // Lasers
+    for (let i = lasers.length - 1; i >= 0; i--) {
+      const l = lasers[i];
+      l.x += l.vx;
+      l.y += l.vy;
+      if (l.y < -20 || l.x < 0 || l.x > 800) lasers.splice(i, 1);
+    }
+
+    // Spawn more asteroids continuously
+    if (asteroids.length < 4 + wave * 2) {
+      if (Math.random() < 0.035) spawnAsteroid();
+    }
+
+    // Asteroids
+    for (let i = asteroids.length - 1; i >= 0; i--) {
+      const a = asteroids[i];
+      a.x += a.vx;
+      a.y += a.vy;
+      a.rot += a.vRot;
+
+      if (a.x < a.r || a.x > 800 - a.r) a.vx *= -1;
+
+      // Offscreen bottom
+      if (a.y > 640) {
+        asteroids.splice(i, 1);
+        continue;
+      }
+
+      // Check collision with Lasers
+      for (let j = lasers.length - 1; j >= 0; j--) {
+        const l = lasers[j];
+        const dist = Math.hypot(a.x - l.x, a.y - l.y);
+        if (dist < a.r + 6) {
+          lasers.splice(j, 1);
+          a.hp--;
+          spawnExplosion(l.x, l.y, '#38BDF8', 6);
+          if (a.hp <= 0) {
+            playSound('explosion');
+            score += a.pts;
+            waveKills++;
+            spawnExplosion(a.x, a.y, a.r > 24 ? '#EF4444' : '#FBBF24', 20);
+
+            // Chance to drop powerup
+            if (Math.random() < 0.22) {
+              const types = ['triple', 'shield', 'crystal'];
+              const t = types[Math.floor(Math.random() * types.length)];
+              powerups.push({ x: a.x, y: a.y, type: t, vy: 2 });
+            }
+
+            asteroids.splice(i, 1);
+            checkWaveProgress();
+            break;
+          }
+        }
+      }
+
+      // Check collision with Player
+      if (player.invincibleTimer <= 0) {
+        const pDist = Math.hypot(a.x - player.x, a.y - player.y);
+        if (pDist < a.r + 18) {
+          if (player.shield) {
+            player.shield = false;
+            playSound('hit');
+            spawnExplosion(player.x, player.y, '#38BDF8', 25);
+            player.invincibleTimer = 1.0;
+            asteroids.splice(i, 1);
+          } else {
+            lives--;
+            playSound('explosion');
+            spawnExplosion(player.x, player.y, '#EF4444', 35);
+            player.invincibleTimer = 2.0;
+            asteroids.splice(i, 1);
+            updateHUD();
+            if (lives <= 0) {
+              triggerGameOver();
+              return;
+            }
+          }
+        }
+      }
+    }
+
+    // Powerups
+    for (let i = powerups.length - 1; i >= 0; i--) {
+      const p = powerups[i];
+      p.y += p.vy;
+      const pDist = Math.hypot(p.x - player.x, p.y - player.y);
+      if (pDist < 28) {
+        playSound('powerup');
+        if (p.type === 'triple') {
+          player.tripleShotTimer = 10.0;
+        } else if (p.type === 'shield') {
+          player.shield = true;
+        } else if (p.type === 'crystal') {
+          // Truth Crystal Bomb: clears all asteroids on screen!
+          score += 200;
+          asteroids.forEach(a => {
+            spawnExplosion(a.x, a.y, '#C084FC', 15);
+            score += a.pts;
+            waveKills++;
+          });
+          asteroids.length = 0;
+          checkWaveProgress();
+        }
+        powerups.splice(i, 1);
+        continue;
+      }
+      if (p.y > 640) powerups.splice(i, 1);
+    }
+
+    // Particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const pt = particles[i];
+      pt.x += pt.vx;
+      pt.y += pt.vy;
+      pt.life -= 0.025;
+      if (pt.life <= 0) particles.splice(i, 1);
+    }
+
+    if (score > highScore) {
+      highScore = score;
+      try {
+        localStorage.setItem('awana_space_high', highScore);
+      } catch (e) {}
+    }
+    updateHUD();
+  }
+
+  function checkWaveProgress() {
+    if (waveKills >= killsRequired) {
+      gameState = 'wavePause';
+      playSound('waveClear');
+      const banner = document.getElementById('waveBanner');
+      const truth = WAVE_TRUTHS[(wave - 1) % WAVE_TRUTHS.length];
+      document.getElementById('bannerWave').textContent = truth.title;
+      document.getElementById('bannerVerse').textContent = truth.verse;
+      banner.style.display = 'block';
+
+      setTimeout(() => {
+        banner.style.display = 'none';
+        wave++;
+        waveKills = 0;
+        killsRequired += 5;
+        gameState = 'playing';
+        spawnAsteroidWave();
+      }, 4000);
+    }
+  }
+
+  function triggerGameOver() {
+    gameState = 'gameOver';
+    document.getElementById('finalScoreText').textContent = `Final Score: ${score} • Wave: ${wave}`;
+    document.getElementById('gameOverScreen').style.display = 'flex';
+  }
+
+  // RENDER FUNCTION
+  function draw() {
+    ctx.clearRect(0, 0, 800, 600);
+
+    // Stars
+    stars.forEach(s => {
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = '#FFF';
+      ctx.fill();
+    });
+
+    // Lasers
+    lasers.forEach(l => {
+      ctx.save();
+      ctx.shadowColor = '#38BDF8';
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = '#38BDF8';
+      ctx.fillRect(l.x - 2, l.y - 10, 4, 16);
+      ctx.restore();
+    });
+
+    // Powerups
+    powerups.forEach(p => {
+      ctx.save();
+      ctx.font = '20px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      if (p.type === 'triple') ctx.fillText('⚡', p.x, p.y);
+      else if (p.type === 'shield') ctx.fillText('🛡️', p.x, p.y);
+      else if (p.type === 'crystal') ctx.fillText('💎', p.x, p.y);
+      ctx.restore();
+    });
+
+    // Asteroids
+    asteroids.forEach(a => {
+      ctx.save();
+      ctx.translate(a.x, a.y);
+      ctx.rotate(a.rot);
+      ctx.beginPath();
+      ctx.arc(0, 0, a.r, 0, Math.PI * 2);
+      ctx.fillStyle = a.r > 24 ? '#78350F' : '#475569';
+      ctx.strokeStyle = a.r > 24 ? '#F59E0B' : '#94A3B8';
+      ctx.lineWidth = 2;
+      ctx.fill();
+      ctx.stroke();
+
+      // Inner crater
+      ctx.beginPath();
+      ctx.arc(a.r * 0.3, -a.r * 0.2, a.r * 0.3, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.fill();
+      ctx.restore();
+    });
+
+    // Particles
+    particles.forEach(pt => {
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, pt.r * pt.life, 0, Math.PI * 2);
+      ctx.fillStyle = pt.color;
+      ctx.globalAlpha = pt.life;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    });
+
+    // Player Ship (Draw only if alive or flashing invincible)
+    if (lives > 0) {
+      if (player.invincibleTimer <= 0 || Math.floor(Date.now() / 100) % 2 === 0) {
+        ctx.save();
+        ctx.translate(player.x, player.y);
+
+        // Shield Bubble
+        if (player.shield) {
+          ctx.beginPath();
+          ctx.arc(0, 0, 32, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(56, 189, 248, 0.2)';
+          ctx.strokeStyle = '#38BDF8';
+          ctx.lineWidth = 2;
+          ctx.shadowColor = '#38BDF8';
+          ctx.shadowBlur = 15;
+          ctx.stroke();
+          ctx.fill();
+        }
+
+        // Ship Body (Pixel Art Retro Wedge)
+        ctx.beginPath();
+        ctx.moveTo(0, -18);
+        ctx.lineTo(16, 16);
+        ctx.lineTo(6, 10);
+        ctx.lineTo(-6, 10);
+        ctx.lineTo(-16, 16);
+        ctx.closePath();
+        ctx.fillStyle = '#E2E8F0';
+        ctx.strokeStyle = '#38BDF8';
+        ctx.lineWidth = 2;
+        ctx.fill();
+        ctx.stroke();
+
+        // Cockpit Window
+        ctx.beginPath();
+        ctx.arc(0, -2, 4, 0, Math.PI * 2);
+        ctx.fillStyle = '#38BDF8';
+        ctx.fill();
+
+        // Engine Thruster Flame
+        ctx.beginPath();
+        ctx.moveTo(-5, 12);
+        ctx.lineTo(0, 20 + Math.random() * 6);
+        ctx.lineTo(5, 12);
+        ctx.fillStyle = '#F59E0B';
+        ctx.fill();
+
+        ctx.restore();
+      }
+    }
+  }
+
+  // MAIN RUN LOOP
+  function gameLoop(time) {
+    const dt = (time - lastTime) / 1000 || 0.016;
+    lastTime = time;
+    update(dt);
+    draw();
+    requestAnimationFrame(gameLoop);
+  }
+  requestAnimationFrame(gameLoop);
+</script>
+
+<a href="../index.html" id="arcadeBackBtn" style="position:fixed; top:12px; left:12px; z-index:999999; background:rgba(15,23,42,0.85); color:#38BDF8; border:2px solid #38BDF8; border-radius:8px; padding:6px 14px; font-family:'Courier New', monospace; font-size:13px; font-weight:800; text-decoration:none; box-shadow:0 4px 15px rgba(0,0,0,0.5); backdrop-filter:blur(4px); display:flex; align-items:center; gap:6px; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='#38BDF8'; this.style.color='#0F172A';" onmouseout="this.style.background='rgba(15,23,42,0.85)'; this.style.color='#38BDF8';">
+  ⬅ ARCADE MENU
+</a>
+</body>
+</html>

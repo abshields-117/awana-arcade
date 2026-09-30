@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+(function() {
+  const memStore = {};
+  try {
+    const test = window.localStorage;
+    test.setItem('__test', '1');
+    test.removeItem('__test');
+  } catch (e) {
+    console.warn('Storage sandbox active; engaging memory storage fallback.');
+    try {
+      Object.defineProperty(window, 'localStorage', {
+        value: {
+          getItem: (k) => memStore[k] || null,
+          setItem: (k, v) => { memStore[k] = String(v); },
+          removeItem: (k) => { delete memStore[k]; },
+          clear: () => { for (const k in memStore) delete memStore[k]; }
+        },
+        writable: true,
+        configurable: true
+      });
+    } catch(err) {}
+  }
+})();
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Awana Retro & Hacker Screensaver</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: 'Courier New', monospace;
+  }
+  canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+  }
+  .crt-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+                linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+    background-size: 100% 4px, 6px 100%;
+    pointer-events: none;
+    z-index: 10;
+  }
+  .theme-badge {
+    position: fixed;
+    bottom: 20px;
+    right: 25px;
+    font-size: 14px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    opacity: 0.6;
+    z-index: 20;
+    transition: all 0.5s ease;
+  }
+</style>
+</head>
+<body>
+<div class="crt-overlay"></div>
+<div id="themeBadge" class="theme-badge">THEME: MATRIX CRT</div>
+<canvas id="screenCanvas"></canvas>
+
+<script>
+const canvas = document.getElementById('screenCanvas');
+const ctx = canvas.getContext('2d');
+let width = canvas.width = window.innerWidth;
+let height = canvas.height = window.innerHeight;
+
+function resize() {
+  width = canvas.width = window.innerWidth;
+  height = canvas.height = window.innerHeight;
+}
+window.onresize = resize;
+
+// 6 EPIC RETRO & HACKER THEMES
+// 0: Matrix Green Phosphor
+// 1: Linux Omarchy Sudo Creation (Days 1-7)
+// 2: Cyber Hollywood Hacker
+// 3: Commodore 64 BASIC
+// 4: Amber MS-DOS 6.22
+// 5: 80s Synthwave Outrun Cyber Grid
+
+const THEME_DURATION = 18000; // 18 seconds each
+let currentTheme = 0;
+let themeStartTime = Date.now();
+
+// -------------------------------------------------------------
+// 1. MATRIX EMERALD PARTICLES
+// -------------------------------------------------------------
+const matrixChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ+*#<>=~+*#".split("");
+const matrixParticles = [];
+for (let i = 0; i < 320; i++) {
+  matrixParticles.push({
+    x: Math.random() * width,
+    y: Math.random() * height,
+    dy: Math.random() * 1.4 + 1.1,
+    char: matrixChars[Math.floor(Math.random() * matrixChars.length)],
+    tx: 0, ty: 0, isTarget: false,
+    alpha: Math.random() * 0.4 + 0.3
+  });
+}
+let matrixPhase = 0;
+let matrixPhaseTime = Date.now();
+
+function sampleShapeTargets(type) {
+  const off = document.createElement('canvas');
+  off.width = width; off.height = height;
+  const octx = off.getContext('2d');
+  octx.fillStyle = '#000';
+  octx.fillRect(0, 0, width, height);
+  const cx = width / 2, cy = height / 2;
+
+  if (type === 'WELCOME') {
+    octx.font = 'bold ' + Math.min(width * 0.1, 90) + 'px monospace';
+    octx.fillStyle = '#fff';
+    octx.textAlign = 'center'; octx.textBaseline = 'middle';
+    octx.fillText('WELCOME', cx, cy);
+  } else if (type === 'AWANA') {
+    octx.font = 'bold ' + Math.min(width * 0.12, 105) + 'px monospace';
+    octx.fillStyle = '#fff';
+    octx.textAlign = 'center'; octx.textBaseline = 'middle';
+    octx.fillText('AWANA', cx, cy);
+  } else if (type === 'CROSS') {
+    const barW = Math.min(width * 0.04, 28);
+    const vH = Math.min(height * 0.5, 320);
+    const hW = Math.min(width * 0.32, 210);
+    octx.fillStyle = '#fff';
+    octx.fillRect(cx - barW / 2, cy - vH * 0.45, barW, vH);
+    octx.fillRect(cx - hW / 2, cy - vH * 0.15, hW, barW);
+  }
+
+  const imgData = octx.getImageData(0, 0, width, height).data;
+  const targets = [];
+  const step = Math.max(5, Math.floor(Math.sqrt((width * height) / 1400)));
+  for (let y = 0; y < height; y += step) {
+    for (let x = 0; x < width; x += step) {
+      if (imgData[(y * width + x) * 4 + 3] > 128) targets.push({x, y});
+    }
+  }
+  return targets;
+}
+
+function drawMatrixTheme(t) {
+  ctx.fillStyle = 'rgba(3, 7, 18, 0.14)';
+  ctx.fillRect(0, 0, width, height);
+
+  const now = Date.now();
+  if (now - matrixPhaseTime > 6000) {
+    matrixPhase = (matrixPhase + 1) % 3;
+    matrixPhaseTime = now;
+    const shapeName = matrixPhase === 0 ? 'WELCOME' : matrixPhase === 1 ? 'AWANA' : 'CROSS';
+    const targets = sampleShapeTargets(shapeName);
+    for (let i = 0; i < matrixParticles.length; i++) {
+      const p = matrixParticles[i];
+      if (i < targets.length) {
+        p.tx = targets[i].x; p.ty = targets[i].y; p.isTarget = true;
+      } else {
+        p.isTarget = false;
+      }
+    }
+  }
+
+  for (let i = 0; i < matrixParticles.length; i++) {
+    const p = matrixParticles[i];
+    if (p.isTarget) {
+      p.x += (p.tx - p.x) * 0.06;
+      p.y += (p.ty - p.y) * 0.06;
+      const d = Math.abs(p.x - p.tx) + Math.abs(p.y - p.ty);
+      if (d < 3) {
+        ctx.shadowBlur = 18; ctx.shadowColor = '#ffffff';
+        ctx.fillStyle = '#ffffff';
+      } else {
+        ctx.shadowBlur = 12; ctx.shadowColor = '#22c55e';
+        ctx.fillStyle = '#4ade80';
+      }
+    } else {
+      p.y += p.dy;
+      if (p.y > height) { p.y = -15; p.x = Math.random() * width; }
+      ctx.shadowBlur = 6; ctx.shadowColor = '#15803d';
+      ctx.fillStyle = 'rgba(34, 197, 94, ' + p.alpha + ')';
+    }
+    ctx.font = "18px monospace";
+    ctx.fillText(p.char, p.x, p.y);
+  }
+  ctx.shadowBlur = 0;
+}
+
+// -------------------------------------------------------------
+// 2. LINUX OMARCHY: SUDO CREATION DAYS 1-7
+// -------------------------------------------------------------
+const linuxLines = [
+  { text: "hermes@omarchy-laptop:~$ sudo systemctl start universe.service", color: "#38bdf8" },
+  { text: "[  OK  ] Created slice system-universe.slice.", color: "#4ade80" },
+  { text: "hermes@omarchy-laptop:~$ sudo ./create_universe.sh --genesis-1", color: "#38bdf8" },
+  { text: "[DAY 1] sudo modprobe light && separate --from darkness   [ OK ]", color: "#fef08a" },
+  { text: "[DAY 2] sudo mkfs.vault sky --split waters_above_below    [ OK ]", color: "#67e8f9" },
+  { text: "[DAY 3] sudo mount /dev/dry_land /earth && seed plants    [ OK ]", color: "#86efac" },
+  { text: "[DAY 4] sudo cronjob sync --sun --moon --stars            [ OK ]", color: "#fde047" },
+  { text: "[DAY 5] sudo spawn --sea 'great_whales' --air 'eagles'    [ OK ]", color: "#93c5fd" },
+  { text: "[DAY 6] sudo install mankind.pkg --likeness 'image_of_god'[ OK ]", color: "#f472b6" },
+  { text: "[DAY 7] sudo systemctl pause --holy-rest                  [ OK ]", color: "#c084fc" },
+  { text: "", color: "#fff" },
+  { text: ">>> GENESIS 1:31: 'God saw all that He had made: VERY GOOD.'", color: "#38bdf8" },
+  { text: "hermes@omarchy-laptop:~$ _", color: "#ffffff" }
+];
+
+function drawLinuxTheme(t) {
+  ctx.fillStyle = "#0a0e17";
+  ctx.fillRect(0, 0, width, height);
+
+  // Linux terminal header bar
+  ctx.fillStyle = "#1e293b";
+  ctx.fillRect(0, 0, width, 45);
+  ctx.fillStyle = "#ef4444"; ctx.beginPath(); ctx.arc(25, 22, 7, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#eab308"; ctx.beginPath(); ctx.arc(45, 22, 7, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#22c55e"; ctx.beginPath(); ctx.arc(65, 22, 7, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#94a3b8"; ctx.font = "bold 16px monospace";
+  ctx.fillText("bash - hermes@omarchy-laptop: ~/awana/genesis (Arch Linux 7.0)", 95, 27);
+
+  const elapsed = (Date.now() - themeStartTime) / 1000;
+  const linesToShow = Math.min(linuxLines.length, Math.floor(elapsed * 1.5) + 1);
+
+  const fontSize = Math.min(Math.max(16, width * 0.021), 24);
+  ctx.font = 'bold ' + fontSize + 'px monospace';
+
+  let startY = 85;
+  for (let i = 0; i < linesToShow; i++) {
+    const item = linuxLines[i];
+    ctx.fillStyle = item.color;
+    ctx.shadowColor = item.color;
+    ctx.shadowBlur = 8;
+    ctx.fillText(item.text, 40, startY);
+    startY += fontSize * 1.55;
+  }
+
+  // Tux penguin & Cross ascii on the right
+  const asciiX = width - Math.min(width * 0.35, 340);
+  ctx.font = "bold 18px monospace";
+  ctx.fillStyle = "#38bdf8";
+  ctx.shadowColor = "#38bdf8";
+  ctx.shadowBlur = 12;
+  const ay = height * 0.3;
+  ctx.fillText("       +        ", asciiX, ay);
+  ctx.fillText("     +++++      ", asciiX, ay + 22);
+  ctx.fillText("       +        ", asciiX, ay + 44);
+  ctx.fillText("       +   .--. ", asciiX, ay + 66);
+  ctx.fillText("       +  |o_o |", asciiX, ay + 88);
+  ctx.fillText("       +  |:_/ |", asciiX, ay + 110);
+  ctx.fillText("     ++++//   \\\\", asciiX, ay + 132);
+  ctx.fillText("        (|     |)", asciiX, ay + 154);
+  ctx.fillText("       /'-_   _-`\\", asciiX, ay + 176);
+  ctx.fillText("       (____)=(____)", asciiX, ay + 198);
+  ctx.shadowBlur = 0;
+}
+
+// -------------------------------------------------------------
+// 3. CYBER HOLLYWOOD HACKER THEME
+// -------------------------------------------------------------
+const hackerHex = [];
+for (let i = 0; i < 20; i++) {
+  hackerHex.push("0x" + Math.floor(Math.random() * 0xFFFFFF).toString(16).toUpperCase().padStart(6, '0'));
+}
+const hackerLines = [
+  "[!] INITIATING SYSTEM BREACH...",
+  "[+] TARGET: PLANET EARTH (VOID & DARKNESS)",
+  "[>] INJECTING FAITH ROOTKIT v7.77...",
+  "[+] FIREWALL OVERRIDDEN BY THE WORD OF GOD",
+  "[+] SINS FORGIVEN: 100% COMPLETE",
+  "[!] ACCESS LEVEL GRANTED: CHILD OF GOD (JOHN 1:12)",
+  "",
+  "       =======================================",
+  "       ||  SYSTEM COMPROMISED BY GOD'S LOVE ||",
+  "       ======================================="
+];
+
+function drawHackerTheme(t) {
+  ctx.fillStyle = "rgba(5, 5, 8, 0.25)";
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.fillStyle = "rgba(6, 182, 212, 0.4)";
+  ctx.font = "15px monospace";
+  for (let i = 0; i < 20; i++) {
+    const hex = hackerHex[(i + Math.floor(t * 8)) % hackerHex.length];
+    ctx.fillText(hex + " " + hex + " 00 FF 77 AA", 30, 70 + i * 26);
+  }
+
+  const boxX = Math.max(width * 0.32, 280);
+  ctx.strokeStyle = "#ef4444";
+  ctx.lineWidth = 2;
+  ctx.shadowColor = "#ef4444";
+  ctx.shadowBlur = 15;
+  ctx.strokeRect(boxX, 50, width - boxX - 40, height - 100);
+
+  ctx.fillStyle = "rgba(239, 68, 68, 0.08)";
+  ctx.fillRect(boxX, 50, width - boxX - 40, height - 100);
+
+  const elapsed = (Date.now() - themeStartTime) / 1000;
+  const linesToShow = Math.min(hackerLines.length, Math.floor(elapsed * 1.4) + 1);
+
+  const fontSize = Math.min(Math.max(16, width * 0.02), 22);
+  ctx.font = 'bold ' + fontSize + 'px monospace';
+  ctx.fillStyle = "#f87171";
+
+  let startY = 100;
+  for (let i = 0; i < linesToShow; i++) {
+    const line = hackerLines[i];
+    if (line.includes("SYSTEM COMPROMISED")) {
+      ctx.fillStyle = "#22c55e";
+      ctx.shadowColor = "#22c55e";
+    }
+    ctx.fillText(line, boxX + 25, startY);
+    startY += fontSize * 1.8;
+  }
+  ctx.shadowBlur = 0;
+}
+
+// -------------------------------------------------------------
+// 4. COMMODORE 64 THEME
+// -------------------------------------------------------------
+const c64Lines = [
+  "    **** COMMODORE 64 BASIC V2 ****",
+  " 64K RAM SYSTEM  38911 BASIC BYTES FREE",
+  "",
+  "READY.",
+  "10 REM *** AWANA 2026 ***",
+  "20 PRINT \"IN THE BEGINNING GOD CREATED...\"",
+  "30 PRINT \"GENESIS 1:1\"",
+  "40 FOR I=1 TO 5: GOSUB 100: NEXT I",
+  "RUN",
+  "",
+  "+ JESUS LOVES YOU! +",
+  "READY.",
+  "_"
+];
+
+function drawC64Theme(t) {
+  const borderWidth = Math.max(40, width * 0.08);
+  const borderHeight = Math.max(35, height * 0.08);
+
+  ctx.fillStyle = "#40318d";
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.fillStyle = "#3e31a2";
+  ctx.fillRect(borderWidth, borderHeight, width - borderWidth * 2, height - borderHeight * 2);
+
+  ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+  for (let y = borderHeight; y < height - borderHeight; y += 4) {
+    ctx.fillRect(borderWidth, y, width - borderWidth * 2, 2);
+  }
+
+  const elapsed = (Date.now() - themeStartTime) / 1000;
+  const linesToShow = Math.min(c64Lines.length, Math.floor(elapsed * 1.6) + 1);
+
+  const fontSize = Math.min(Math.max(16, width * 0.024), 28);
+  ctx.font = 'bold ' + fontSize + 'px "Courier New", monospace';
+  ctx.fillStyle = "#a5a5ff";
+  ctx.shadowBlur = 8;
+  ctx.shadowColor = "#a5a5ff";
+
+  const startX = borderWidth + 30;
+  let startY = borderHeight + fontSize * 1.8;
+
+  for (let i = 0; i < linesToShow; i++) {
+    let line = c64Lines[i];
+    if (i === linesToShow - 1 && Math.floor(t * 3) % 2 === 0 && line.endsWith("_")) {
+      line = line.slice(0, -1) + " ";
+    }
+    ctx.fillText(line, startX, startY);
+    startY += fontSize * 1.5;
+  }
+
+  const cx = width - borderWidth - 130;
+  const cy = height - borderHeight - 160;
+  ctx.fillStyle = "#ffffff";
+  ctx.shadowColor = "#ffffff";
+  ctx.shadowBlur = 15;
+  ctx.fillRect(cx - 15, cy - 80, 30, 160);
+  ctx.fillRect(cx - 55, cy - 35, 110, 30);
+  ctx.shadowBlur = 0;
+}
+
+// -------------------------------------------------------------
+// 5. AMBER PHOSPHOR MS-DOS 6.22
+// -------------------------------------------------------------
+const dosCommands = [
+  "C:\\> DATE",
+  "Current date is Wednesday 09-09-2026",
+  "C:\\> DIR /W AWANA",
+  "[.]  [..]  GENESIS.TXT  SALVATION.EXE  CROSS.ASC",
+  "C:\\> TYPE GENESIS.TXT",
+  "\"In the beginning, God created the heavens and the earth.\"",
+  "C:\\> RUN SALVATION.EXE",
+  "LOADING FAITH MODULE [||||||||||||||||||||] 100%",
+  "",
+  "       +-------------------------+",
+  "       |   JESUS CHRIST IS LORD  |",
+  "       +-------------------------+",
+  ""
+];
+
+function drawDosTheme(t) {
+  ctx.fillStyle = "rgba(5, 3, 0, 0.25)";
+  ctx.fillRect(0, 0, width, height);
+
+  const fontSize = Math.min(Math.max(16, width * 0.022), 24);
+  ctx.font = fontSize + 'px "Courier New", monospace';
+  ctx.fillStyle = "#ffb000";
+  ctx.shadowColor = "#ffb000";
+  ctx.shadowBlur = 10;
+
+  const elapsed = (Date.now() - themeStartTime) / 1000;
+  const linesToShow = Math.min(dosCommands.length, Math.floor(elapsed * 1.5) + 1);
+
+  let startY = 60;
+  for (let i = 0; i < linesToShow; i++) {
+    let line = dosCommands[i];
+    if (i === linesToShow - 1 && Math.floor(t * 3) % 2 === 0) line += "_";
+    ctx.fillText(line, 50, startY);
+    startY += fontSize * 1.6;
+  }
+
+  const crossX = width - Math.min(width * 0.35, 320);
+  const crossY = height * 0.25;
+  ctx.font = 'bold 22px monospace';
+  ctx.fillText("      [+]      ", crossX, crossY);
+  ctx.fillText("      [+]      ", crossX, crossY + 25);
+  ctx.fillText("  [+][+][+][+] ", crossX, crossY + 50);
+  ctx.fillText("      [+]      ", crossX, crossY + 75);
+  ctx.fillText("      [+]      ", crossX, crossY + 100);
+  ctx.fillText("      [+]      ", crossX, crossY + 125);
+  ctx.fillText("      [+]      ", crossX, crossY + 150);
+  ctx.fillText("  AWANA BIBLE  ", crossX, crossY + 195);
+  ctx.shadowBlur = 0;
+}
+
+// -------------------------------------------------------------
+// 6. 80s SYNTHWAVE OUTRUN GRID
+// -------------------------------------------------------------
+let synthwaveTime = 0;
+function drawSynthwaveTheme(t) {
+  synthwaveTime += 0.02;
+
+  const sky = ctx.createLinearGradient(0, 0, 0, height * 0.6);
+  sky.addColorStop(0, "#0f051d");
+  sky.addColorStop(0.7, "#3b0764");
+  sky.addColorStop(1, "#ec4899");
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, width, height * 0.6);
+
+  const sunY = height * 0.58;
+  const sunR = Math.min(width, height) * 0.22;
+  const sunGrad = ctx.createLinearGradient(0, sunY - sunR, 0, sunY + sunR);
+  sunGrad.addColorStop(0, "#fde047");
+  sunGrad.addColorStop(0.5, "#f43f5e");
+  sunGrad.addColorStop(1, "#831843");
+
+  ctx.fillStyle = sunGrad;
+  ctx.shadowColor = "#f43f5e";
+  ctx.shadowBlur = 30;
+  ctx.beginPath();
+  ctx.arc(width / 2, sunY, sunR, Math.PI, 0);
+  ctx.fill();
+
+  ctx.fillStyle = "#3b0764";
+  for (let y = sunY - sunR * 0.6; y < sunY; y += 12) {
+    const stripH = (y - (sunY - sunR * 0.6)) * 0.08 + 2;
+    ctx.fillRect(width / 2 - sunR - 10, y, (sunR + 10) * 2, stripH);
+  }
+  ctx.shadowBlur = 0;
+
+  ctx.fillStyle = "#090117";
+  ctx.fillRect(0, height * 0.6, width, height * 0.4);
+
+  ctx.strokeStyle = "#06b6d4";
+  ctx.shadowColor = "#06b6d4";
+  ctx.shadowBlur = 12;
+  ctx.lineWidth = 2;
+
+  const horizonY = height * 0.6;
+  const cx = width / 2;
+  for (let x = -width; x <= width * 2; x += 90) {
+    ctx.beginPath();
+    ctx.moveTo(cx, horizonY);
+    ctx.lineTo(x, height);
+    ctx.stroke();
+  }
+
+  const gridSpeed = (synthwaveTime * 60) % 40;
+  for (let y = horizonY; y <= height; y += 22) {
+    const p = (y - horizonY) / (height - horizonY);
+    const actualY = horizonY + Math.pow(p, 1.8) * (height - horizonY) + gridSpeed * p;
+    if (actualY <= height) {
+      ctx.beginPath();
+      ctx.moveTo(0, actualY);
+      ctx.lineTo(width, actualY);
+      ctx.stroke();
+    }
+  }
+
+  const crossX = width / 2;
+  const crossY = horizonY - 140 + Math.sin(synthwaveTime * 2) * 15;
+  ctx.strokeStyle = "#ffffff";
+  ctx.shadowColor = "#ec4899";
+  ctx.shadowBlur = 25;
+  ctx.lineWidth = 8;
+  ctx.beginPath(); ctx.moveTo(crossX, crossY - 70); ctx.lineTo(crossX, crossY + 80); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(crossX - 45, crossY - 20); ctx.lineTo(crossX + 45, crossY - 20); ctx.stroke();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 32px 'Segoe UI', sans-serif";
+  ctx.textAlign = "center";
+  ctx.shadowColor = "#06b6d4";
+  ctx.shadowBlur = 20;
+  ctx.fillText("JESUS LOVES YOU", width / 2, height * 0.92);
+  ctx.shadowBlur = 0;
+}
+
+// -------------------------------------------------------------
+// MAIN CONTROLLER LOOP
+// -------------------------------------------------------------
+const themeNames = [
+  "THEME: MATRIX CRT (GREEN PHOSPHOR)",
+  "THEME: LINUX OMARCHY (SUDO CREATION DAYS 1-7)",
+  "THEME: CYBER HACKER (HOLLYWOOD TERMINAL)",
+  "THEME: COMMODORE 64 (BASIC V2)",
+  "THEME: MS-DOS 6.22 (AMBER CRT)",
+  "THEME: 80s SYNTHWAVE / OUTRUN CYBER GRID"
+];
+const themeBadges = document.getElementById('themeBadge');
+let startTime = Date.now();
+
+function loop() {
+  const t = (Date.now() - startTime) / 1000;
+  const themeElapsed = Date.now() - themeStartTime;
+
+  if (themeElapsed > THEME_DURATION) {
+    currentTheme = (currentTheme + 1) % 6;
+    themeStartTime = Date.now();
+    themeBadges.textContent = themeNames[currentTheme];
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, width, height);
+  }
+
+  switch(currentTheme) {
+    case 0: drawMatrixTheme(t); break;
+    case 1: drawLinuxTheme(t); break;
+    case 2: drawHackerTheme(t); break;
+    case 3: drawC64Theme(t); break;
+    case 4: drawDosTheme(t); break;
+    case 5: drawSynthwaveTheme(t); break;
+  }
+
+  requestAnimationFrame(loop);
+}
+
+loop();
+</script>
+<a href="../index.html" id="arcadeBackBtn" style="position:fixed; top:12px; left:12px; z-index:999999; background:rgba(15,23,42,0.85); color:#38BDF8; border:2px solid #38BDF8; border-radius:8px; padding:6px 14px; font-family:'Courier New', monospace; font-size:13px; font-weight:800; text-decoration:none; box-shadow:0 4px 15px rgba(0,0,0,0.5); backdrop-filter:blur(4px); display:flex; align-items:center; gap:6px; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='#38BDF8'; this.style.color='#0F172A';" onmouseout="this.style.background='rgba(15,23,42,0.85)'; this.style.color='#38BDF8';">
+  ⬅ ARCADE MENU
+</a>
+</body>
+</html>

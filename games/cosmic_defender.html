@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+(function() {
+  const memStore = {};
+  try {
+    const test = window.localStorage;
+    test.setItem('__test', '1');
+    test.removeItem('__test');
+  } catch (e) {
+    console.warn('Storage sandbox active; engaging memory storage fallback.');
+    try {
+      Object.defineProperty(window, 'localStorage', {
+        value: {
+          getItem: (k) => memStore[k] || null,
+          setItem: (k, v) => { memStore[k] = String(v); },
+          removeItem: (k) => { delete memStore[k]; },
+          clear: () => { for (const k in memStore) delete memStore[k]; }
+        },
+        writable: true,
+        configurable: true
+      });
+    } catch(err) {}
+  }
+})();
+</script>
+  <meta charset="UTF-8">
+  <title>Awana Cosmic Defender & Galaxy Architect — Week 3</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #030712;
+      --card: #0F172A;
+      --neon-cyan: #38BDF8;
+      --neon-purple: #C084FC;
+      --neon-gold: #FBBF24;
+      --neon-pink: #F472B6;
+      --neon-green: #34D399;
+      --team-a: #38BDF8;
+      --team-b: #F472B6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background: var(--bg);
+      color: #F8FAFC;
+      font-family: 'Inter', sans-serif;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    /* Starfield Canvas Background */
+    #spaceCanvas {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 1;
+      cursor: crosshair;
+    }
+    /* UI Overlay */
+    .ui-layer {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      pointer-events: none;
+    }
+    .interactive { pointer-events: auto; }
+    
+    /* Top Header Bar */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 36px;
+      background: rgba(15, 23, 42, 0.75);
+      border-bottom: 2px solid rgba(56, 189, 248, 0.25);
+      backdrop-filter: blur(12px);
+    }
+    .game-logo {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .retro-title {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 16px;
+      color: var(--neon-cyan);
+      text-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+      letter-spacing: 1px;
+    }
+    .subtitle {
+      font-size: 12px;
+      color: #94A3B8;
+      margin-top: 4px;
+    }
+    .mode-nav {
+      display: flex;
+      gap: 12px;
+    }
+    .btn-mode {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #F8FAFC;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-mode:hover, .btn-mode.active {
+      background: var(--neon-cyan);
+      color: #030712;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
+    }
+    
+    /* Scores & Buzzer Bar */
+    .scoreboard {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 12px 30px;
+      background: rgba(3, 7, 18, 0.85);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .team-box {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 8px 24px;
+      border-radius: 12px;
+      border: 2px solid transparent;
+      transition: all 0.3s;
+    }
+    .team-a { color: var(--team-a); }
+    .team-b { color: var(--team-b); }
+    .team-box.buzzed-a {
+      border-color: var(--team-a);
+      background: rgba(56, 189, 248, 0.2);
+      box-shadow: 0 0 30px rgba(56, 189, 248, 0.6);
+      animation: pulseBuzzer 0.5s infinite alternate;
+    }
+    .team-box.buzzed-b {
+      border-color: var(--team-b);
+      background: rgba(244, 114, 182, 0.2);
+      box-shadow: 0 0 30px rgba(244, 114, 182, 0.6);
+      animation: pulseBuzzer 0.5s infinite alternate;
+    }
+    @keyframes pulseBuzzer {
+      from { transform: scale(1); }
+      to { transform: scale(1.05); }
+    }
+    .team-name {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 13px;
+    }
+    .team-score {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 26px;
+    }
+    .key-badge {
+      font-size: 10px;
+      background: rgba(255, 255, 255, 0.15);
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #FFF;
+      margin-left: 8px;
+    }
+    
+    /* Main Content Stage */
+    #mainStage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+    }
+    
+    /* Trivia Card */
+    .trivia-card {
+      width: 90%;
+      max-width: 1000px;
+      background: rgba(15, 23, 42, 0.92);
+      border: 2px solid rgba(56, 189, 248, 0.4);
+      border-radius: 24px;
+      padding: 36px 44px;
+      box-shadow: 0 0 50px rgba(0, 0, 0, 0.8), 0 0 20px rgba(56, 189, 248, 0.2);
+      backdrop-filter: blur(20px);
+      text-align: center;
+      position: relative;
+    }
+    .question-category {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 11px;
+      color: var(--neon-gold);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .question-text {
+      font-size: 32px;
+      font-weight: 800;
+      line-height: 1.35;
+      color: #FFFFFF;
+      margin-bottom: 28px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    }
+    .answer-box {
+      display: none;
+      background: rgba(52, 211, 153, 0.15);
+      border: 2px dashed var(--neon-green);
+      border-radius: 16px;
+      padding: 20px;
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--neon-green);
+      margin-bottom: 24px;
+      animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes popIn {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    
+    /* Countdown Timer Bar */
+    .timer-bar-container {
+      width: 100%;
+      height: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .timer-bar {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, var(--neon-green), var(--neon-gold), var(--neon-pink));
+      transition: width 1s linear;
+    }
+    
+    /* Controls Button Bar */
+    .control-row {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .btn-action {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #FFF;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .btn-action:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+    .btn-reveal {
+      background: linear-gradient(135deg, #10B981, #059669);
+      border-color: #34D399;
+    }
+    .btn-next {
+      background: linear-gradient(135deg, #2563EB, #1D4ED8);
+      border-color: #60A5FA;
+    }
+    
+    /* Soundboard shortcuts */
+    .sound-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+      justify-content: center;
+    }
+    .btn-sound {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #94A3B8;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-sound:hover { color: #FFF; border-color: #FFF; }
+    
+    /* Architect Palette Bar */
+    .architect-bar {
+      display: none;
+      position: absolute;
+      bottom: 24px;
+      background: rgba(15, 23, 42, 0.88);
+      border: 1.5px solid rgba(56, 189, 248, 0.3);
+      border-radius: 16px;
+      padding: 12px 24px;
+      backdrop-filter: blur(12px);
+      gap: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+    }
+    .tool-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #FFF;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tool-btn.active {
+      background: var(--neon-cyan);
+      color: #030712;
+      border-color: var(--neon-cyan);
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="spaceCanvas"></canvas>
+
+<div class="ui-layer">
+  <!-- Header -->
+  <header class="interactive">
+    <div class="game-logo">
+      <div style="font-size: 28px;">🌌</div>
+      <div>
+        <div class="retro-title">AWANA COSMIC DEFENDER</div>
+        <div class="subtitle">Week 3 &bull; Intro to Bible & The Scale of Creation</div>
+      </div>
+    </div>
+    <div class="mode-nav">
+      <button class="btn-mode active" id="btnModeTrivia" onclick="setMode('trivia')">🎯 Arcade Trivia</button>
+      <button class="btn-mode" id="btnModeArchitect" onclick="setMode('architect')">🪐 Galaxy Architect</button>
+    </div>
+  </header>
+
+  <!-- Scoreboard -->
+  <div class="scoreboard interactive" id="scoreBoard">
+    <div class="team-box team-a" id="teamBoxA">
+      <div>
+        <div class="team-name">TEAM ALPHA (BOYS) <span class="key-badge">KEY: A</span></div>
+      </div>
+      <div class="team-score" id="scoreA">0</div>
+      <button class="btn-action" style="padding: 4px 10px; font-size: 11px;" onclick="addPoint('A')">+100</button>
+    </div>
+
+    <div style="text-align: center;">
+      <button class="btn-action" style="background: rgba(239,68,68,0.2); border-color: #EF4444; color: #F87171;" onclick="resetBuzzers()">
+        🔄 Reset Buzzer [SPACE]
+      </button>
+    </div>
+
+    <div class="team-box team-b" id="teamBoxB">
+      <div>
+        <div class="team-name">TEAM OMEGA (GIRLS) <span class="key-badge">KEY: L</span></div>
+      </div>
+      <div class="team-score" id="scoreB">0</div>
+      <button class="btn-action" style="padding: 4px 10px; font-size: 11px;" onclick="addPoint('B')">+100</button>
+    </div>
+  </div>
+
+  <!-- Main Stage -->
+  <div id="mainStage">
+    <!-- Trivia Card -->
+    <div class="trivia-card interactive" id="triviaCard">
+      <div class="question-category" id="qCategory">SCALE OF SPACE // QUESTION 1 OF 6</div>
+      <div class="timer-bar-container">
+        <div class="timer-bar" id="timerBar"></div>
+      </div>
+      <div class="question-text" id="qText">
+        Loading cosmic trivia mission...
+      </div>
+      <div class="answer-box" id="qAnswer">
+        Answer text
+      </div>
+      
+      <div class="control-row">
+        <button class="btn-action btn-reveal" onclick="revealAnswer()">💡 Reveal Answer [ENTER]</button>
+        <button class="btn-action btn-next" onclick="nextQuestion()">🚀 Next Mission [RIGHT ARROW]</button>
+        <button class="btn-action" onclick="startTimer()">⏱️ 15s Timer [T]</button>
+      </div>
+
+      <div class="sound-row">
+        <button class="btn-sound" onclick="playSound('fanfare')">🎺 Fanfare [1]</button>
+        <button class="btn-sound" onclick="playSound('laser')">🔫 Laser Pew [2]</button>
+        <button class="btn-sound" onclick="playSound('cheer')">🎉 Confetti [3]</button>
+        <button class="btn-sound" onclick="playSound('whistle')">🌬️ Whistle [4]</button>
+      </div>
+    </div>
+
+    <!-- Galaxy Architect Toolbar -->
+    <div class="architect-bar interactive" id="architectBar">
+      <button class="tool-btn active" id="toolPlanet" onclick="setTool('planet')">🪐 Spawn Planet</button>
+      <button class="tool-btn" id="toolGalaxy" onclick="setTool('galaxy')">🌀 Spiral Galaxy</button>
+      <button class="tool-btn" id="toolSupernova" onclick="setTool('supernova')">💥 Supernova Burst</button>
+      <button class="tool-btn" id="toolComet" onclick="setTool('comet')">☄️ Shooting Comet</button>
+      <button class="tool-btn" style="color: #EF4444;" onclick="clearUniverse()">🧹 Reset Universe</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // AUDIO SYNTHESIS ENGINE (Web Audio API - 100% Offline Single File!)
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  function playTone(freq, type, duration, delay=0) {
+    setTimeout(() => {
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }, delay * 1000);
+  }
+
+  function playSound(type) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (type === 'buzzerA') {
+      playTone(440, 'sine', 0.2);
+      playTone(660, 'triangle', 0.3, 0.08);
+      playTone(880, 'sine', 0.4, 0.16);
+    } else if (type === 'buzzerB') {
+      playTone(523, 'sine', 0.2);
+      playTone(659, 'triangle', 0.3, 0.08);
+      playTone(1046, 'sine', 0.4, 0.16);
+    } else if (type === 'laser') {
+      for (let i = 0; i < 5; i++) {
+        playTone(900 - i * 150, 'sawtooth', 0.04, i * 0.03);
+      }
+    } else if (type === 'fanfare') {
+      playTone(523, 'triangle', 0.15, 0);
+      playTone(659, 'triangle', 0.15, 0.12);
+      playTone(784, 'triangle', 0.2, 0.24);
+      playTone(1046, 'triangle', 0.5, 0.36);
+    } else if (type === 'cheer') {
+      playTone(880, 'sine', 0.3, 0);
+      playTone(1100, 'triangle', 0.4, 0.1);
+      spawnConfetti();
+    } else if (type === 'whistle') {
+      for (let i = 0; i < 8; i++) {
+        playTone(600 + Math.sin(i) * 200, 'sine', 0.05, i * 0.04);
+      }
+    }
+  }
+
+  // TRIVIA QUESTION DECK
+  const questions = [
+    {
+      cat: "TRUTH & SCRIPTURE // VERSE MEMORY",
+      q: "In John 14:6, what three things did Jesus declare that He is?",
+      a: "The WAY, the TRUTH, and the LIFE!"
+    },
+    {
+      cat: "THE SCALE OF CREATION // COSMIC SIZE",
+      q: "True or False: The Sun is the biggest star in the entire universe?",
+      a: "FALSE! Stars like UY Scuti are so massive they could fit 5 BILLION Suns inside them!"
+    },
+    {
+      cat: "BIBLE DISCOVERY // OLD & NEW TESTAMENT",
+      q: "How many total books are in the Bible?",
+      a: "66 Books! (39 in the Old Testament + 27 in the New Testament)"
+    },
+    {
+      cat: "GOD OF THE STARS // PSALM 147:4",
+      q: "According to Psalm 147:4, what amazing thing does God do with every star in space?",
+      a: "He numbers them ALL and calls every single star by NAME!"
+    },
+    {
+      cat: "2 TIMOTHY 2:15 // APPROVED WORKER",
+      q: "What is an approved worker of God called to 'rightly handle'?",
+      a: "The WORD OF TRUTH!"
+    },
+    {
+      cat: "CREATION REVELATION // PSALM 19:1",
+      q: "Complete this verse: 'The heavens declare the ________ of God; the skies proclaim the work of His hands.'",
+      a: "GLORY of God!"
+    }
+  ];
+
+  let currentQIdx = 0;
+  let scoreA = 0;
+  let scoreB = 0;
+  let buzzedTeam = null;
+  let timerInterval = null;
+
+  function loadQuestion(idx) {
+    const q = questions[idx];
+    document.getElementById('qCategory').textContent = `${q.cat} (MISSION ${idx + 1} OF ${questions.length})`;
+    document.getElementById('qText').textContent = q.q;
+    document.getElementById('qAnswer').textContent = q.a;
+    document.getElementById('qAnswer').style.display = 'none';
+    resetTimer();
+  }
+
+  function nextQuestion() {
+    currentQIdx = (currentQIdx + 1) % questions.length;
+    loadQuestion(currentQIdx);
+    resetBuzzers();
+  }
+
+  function revealAnswer() {
+    const box = document.getElementById('qAnswer');
+    box.style.display = 'block';
+    playSound('fanfare');
+    spawnConfetti();
+  }
+
+  function addPoint(team) {
+    if (team === 'A') {
+      scoreA += 100;
+      document.getElementById('scoreA').textContent = scoreA;
+      playSound('fanfare');
+    } else {
+      scoreB += 100;
+      document.getElementById('scoreB').textContent = scoreB;
+      playSound('fanfare');
+    }
+    spawnConfetti();
+  }
+
+  function handleBuzzer(team) {
+    if (buzzedTeam !== null) return; // Lockout
+    buzzedTeam = team;
+    if (team === 'A') {
+      document.getElementById('teamBoxA').classList.add('buzzed-a');
+      playSound('buzzerA');
+    } else {
+      document.getElementById('teamBoxB').classList.add('buzzed-b');
+      playSound('buzzerB');
+    }
+  }
+
+  function resetBuzzers() {
+    buzzedTeam = null;
+    document.getElementById('teamBoxA').classList.remove('buzzed-a');
+    document.getElementById('teamBoxB').classList.remove('buzzed-b');
+  }
+
+  function startTimer() {
+    resetTimer();
+    const bar = document.getElementById('timerBar');
+    bar.style.transition = 'width 15s linear';
+    bar.style.width = '0%';
+    playTone(600, 'sine', 0.1);
+  }
+
+  function resetTimer() {
+    const bar = document.getElementById('timerBar');
+    bar.style.transition = 'none';
+    bar.style.width = '100%';
+  }
+
+  // KEYBOARD CONTROLS
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'a' || e.key === 'A') handleBuzzer('A');
+    if (e.key === 'l' || e.key === 'L') handleBuzzer('B');
+    if (e.key === ' ') { resetBuzzers(); e.preventDefault(); }
+    if (e.key === 'Enter') revealAnswer();
+    if (e.key === 'ArrowRight') nextQuestion();
+    if (e.key === 't' || e.key === 'T') startTimer();
+    if (e.key === '1') playSound('fanfare');
+    if (e.key === '2') playSound('laser');
+    if (e.key === '3') playSound('cheer');
+    if (e.key === '4') playSound('whistle');
+  });
+
+  // MODE SWITCHER (Trivia vs Galaxy Architect)
+  let currentMode = 'trivia';
+  let activeTool = 'planet';
+
+  function setMode(mode) {
+    currentMode = mode;
+    document.getElementById('btnModeTrivia').classList.toggle('active', mode === 'trivia');
+    document.getElementById('btnModeArchitect').classList.toggle('active', mode === 'architect');
+    document.getElementById('triviaCard').style.display = (mode === 'trivia') ? 'block' : 'none';
+    document.getElementById('scoreBoard').style.display = (mode === 'trivia') ? 'flex' : 'none';
+    document.getElementById('architectBar').style.display = (mode === 'architect') ? 'flex' : 'none';
+  }
+
+  function setTool(tool) {
+    activeTool = tool;
+    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tool' + tool.charAt(0).toUpperCase() + tool.slice(1)).classList.add('active');
+  }
+
+  function clearUniverse() {
+    celestialBodies.length = 0;
+    playSound('laser');
+  }
+
+  // CANVAS COSMIC PARTICLES & GALAXY PHYSICS
+  const canvas = document.getElementById('spaceCanvas');
+  const ctx = canvas.getContext('2d');
+  let width, height;
+
+  function resize() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // Background Starfield
+  const stars = [];
+  for (let i = 0; i < 200; i++) {
+    stars.push({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      r: Math.random() * 2 + 0.5,
+      alpha: Math.random(),
+      speed: Math.random() * 0.02 + 0.005
+    });
+  }
+
+  // Celestial Bodies (Planets, Galaxies, Supernovas)
+  const celestialBodies = [];
+
+  class Celestial {
+    constructor(x, y, type) {
+      this.x = x;
+      this.y = y;
+      this.type = type;
+      this.particles = [];
+      this.age = 0;
+
+      if (type === 'planet') {
+        this.color = ['#38BDF8', '#FBBF24', '#34D399', '#C084FC', '#F472B6'][Math.floor(Math.random() * 5)];
+        this.radius = Math.random() * 28 + 18;
+        this.ring = Math.random() > 0.4;
+        this.ringAngle = Math.random() * Math.PI;
+      } else if (type === 'galaxy') {
+        const arms = 3;
+        const ptsPerArm = 60;
+        this.color = '#C084FC';
+        for (let a = 0; a < arms; a++) {
+          const armOffset = (a * 2 * Math.PI) / arms;
+          for (let p = 0; p < ptsPerArm; p++) {
+            const dist = p * 2.2;
+            const angle = armOffset + dist * 0.05;
+            this.particles.push({ dist, angle, speed: 0.015 - dist * 0.00008, color: dist < 40 ? '#FBBF24' : '#38BDF8' });
+          }
+        }
+      } else if (type === 'supernova') {
+        for (let i = 0; i < 120; i++) {
+          const angle = Math.random() * 2 * Math.PI;
+          const spd = Math.random() * 8 + 2;
+          this.particles.push({
+            x: 0, y: 0,
+            vx: Math.cos(angle) * spd,
+            vy: Math.sin(angle) * spd,
+            life: 1,
+            color: ['#FBBF24', '#F472B6', '#FFF', '#38BDF8'][Math.floor(Math.random() * 4)]
+          });
+        }
+      }
+    }
+
+    update() {
+      this.age++;
+      if (this.type === 'supernova') {
+        this.particles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vx *= 0.96;
+          p.vy *= 0.96;
+          p.life -= 0.012;
+        });
+      } else if (this.type === 'galaxy') {
+        this.particles.forEach(p => {
+          p.angle += p.speed;
+        });
+      }
+    }
+
+    draw() {
+      if (this.type === 'planet') {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        // Atmosphere Glow
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius * 1.3, 0, Math.PI * 2);
+        ctx.fillStyle = this.color + '20';
+        ctx.fill();
+
+        // Planet Body
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.shadowColor = this.color;
+        ctx.shadowBlur = 20;
+        ctx.fill();
+
+        // Optional Rings
+        if (this.ring) {
+          ctx.rotate(this.ringAngle);
+          ctx.beginPath();
+          ctx.ellipse(0, 0, this.radius * 2.2, this.radius * 0.45, 0, 0, Math.PI * 2);
+          ctx.strokeStyle = '#FFFFFF80';
+          ctx.lineWidth = 3;
+          ctx.stroke();
+        }
+        ctx.restore();
+      } else if (this.type === 'galaxy') {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        this.particles.forEach(p => {
+          const px = Math.cos(p.angle) * p.dist;
+          const py = Math.sin(p.angle) * p.dist * 0.6; // tilted
+          ctx.beginPath();
+          ctx.arc(px, py, 1.8, 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          ctx.shadowColor = p.color;
+          ctx.shadowBlur = 8;
+          ctx.fill();
+        });
+        ctx.restore();
+      } else if (this.type === 'supernova') {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        this.particles.forEach(p => {
+          if (p.life > 0) {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.life * 3.5, 0, Math.PI * 2);
+            ctx.fillStyle = p.color;
+            ctx.shadowColor = p.color;
+            ctx.shadowBlur = 12;
+            ctx.fill();
+          }
+        });
+        ctx.restore();
+      }
+    }
+  }
+
+  // Interactive Click in Space
+  canvas.addEventListener('click', (e) => {
+    if (currentMode === 'architect') {
+      celestialBodies.push(new Celestial(e.clientX, e.clientY, activeTool));
+      playSound('laser');
+    }
+  });
+
+  // Confetti Cannons
+  const confetti = [];
+  function spawnConfetti() {
+    for (let i = 0; i < 80; i++) {
+      confetti.push({
+        x: width / 2,
+        y: height / 2 + 100,
+        vx: (Math.random() - 0.5) * 16,
+        vy: (Math.random() - 0.8) * 18,
+        r: Math.random() * 6 + 4,
+        color: ['#38BDF8', '#FBBF24', '#F472B6', '#34D399', '#C084FC'][Math.floor(Math.random() * 5)],
+        rot: Math.random() * 360,
+        vRot: (Math.random() - 0.5) * 10,
+        life: 1
+      });
+    }
+  }
+
+  // Animation Loop
+  function loop() {
+    ctx.clearRect(0, 0, width, height);
+
+    // Stars
+    stars.forEach(s => {
+      s.alpha += s.speed;
+      const a = (Math.sin(s.alpha) + 1) / 2;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 255, 255, ${a * 0.8 + 0.2})`;
+      ctx.fill();
+    });
+
+    // Celestial Bodies
+    celestialBodies.forEach(b => {
+      b.update();
+      b.draw();
+    });
+
+    // Confetti
+    for (let i = confetti.length - 1; i >= 0; i--) {
+      const c = confetti[i];
+      c.x += c.vx;
+      c.y += c.vy;
+      c.vy += 0.4; // gravity
+      c.rot += c.vRot;
+      c.life -= 0.015;
+
+      ctx.save();
+      ctx.translate(c.x, c.y);
+      ctx.rotate((c.rot * Math.PI) / 180);
+      ctx.fillStyle = c.color;
+      ctx.fillRect(-c.r / 2, -c.r / 2, c.r, c.r);
+      ctx.restore();
+
+      if (c.life <= 0) confetti.splice(i, 1);
+    }
+
+    requestAnimationFrame(loop);
+  }
+  loop();
+
+  // Initialize first question
+  loadQuestion(0);
+</script>
+
+<a href="../index.html" id="arcadeBackBtn" style="position:fixed; top:12px; left:12px; z-index:999999; background:rgba(15,23,42,0.85); color:#38BDF8; border:2px solid #38BDF8; border-radius:8px; padding:6px 14px; font-family:'Courier New', monospace; font-size:13px; font-weight:800; text-decoration:none; box-shadow:0 4px 15px rgba(0,0,0,0.5); backdrop-filter:blur(4px); display:flex; align-items:center; gap:6px; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='#38BDF8'; this.style.color='#0F172A';" onmouseout="this.style.background='rgba(15,23,42,0.85)'; this.style.color='#38BDF8';">
+  ⬅ ARCADE MENU
+</a>
+</body>
+</html>

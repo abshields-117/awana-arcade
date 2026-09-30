@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+(function() {
+  const memStore = {};
+  try {
+    const test = window.localStorage;
+    test.setItem('__test', '1');
+    test.removeItem('__test');
+  } catch (e) {
+    console.warn('Storage sandbox active; engaging memory storage fallback.');
+    try {
+      Object.defineProperty(window, 'localStorage', {
+        value: {
+          getItem: (k) => memStore[k] || null,
+          setItem: (k, v) => { memStore[k] = String(v); },
+          removeItem: (k) => { delete memStore[k]; },
+          clear: () => { for (const k in memStore) delete memStore[k]; }
+        },
+        writable: true,
+        configurable: true
+      });
+    } catch(err) {}
+  }
+})();
+</script>
+  <meta charset="UTF-8">
+  <title>Eden Explorer — Awana Arcade Game Show Edition</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background: radial-gradient(circle at center, #0a2e1d 0%, #030d07 100%);
+      color: #f8fafc;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    #gardenCanvas, #confettiCanvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+    }
+    #gardenCanvas { z-index: 1; opacity: 0.4; }
+    #confettiCanvas { z-index: 50; }
+
+    header {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 36px;
+      background: rgba(4, 18, 11, 0.9);
+      border-bottom: 3px solid #22c55e;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.6);
+    }
+    .brand-title {
+      font-size: 28px;
+      font-weight: 900;
+      color: #4ade80;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .verse-badge {
+      background: rgba(34, 197, 94, 0.2);
+      border: 1.5px solid #4ade80;
+      padding: 6px 18px;
+      border-radius: 20px;
+      font-size: 15px;
+      font-weight: 800;
+      color: #a7f3d0;
+    }
+
+    /* Soundboard & Quick Tools */
+    .soundboard {
+      display: flex;
+      gap: 8px;
+    }
+    .sfx-btn {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1.5px solid #475569;
+      color: #cbd5e1;
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .sfx-btn:hover { background: #334155; transform: scale(1.05); }
+
+    /* Scoreboard */
+    .scoreboard {
+      display: flex;
+      gap: 16px;
+    }
+    .team-card {
+      background: rgba(15, 23, 42, 0.85);
+      border: 2.5px solid #38bdf8;
+      padding: 6px 20px;
+      border-radius: 14px;
+      text-align: center;
+      min-width: 140px;
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.2s ease;
+      position: relative;
+    }
+    .team-card.team-b { border-color: #f43f5e; }
+    .team-card:hover { transform: translateY(-2px); }
+    .team-card:active { transform: scale(0.96); }
+    .team-card.buzzed {
+      box-shadow: 0 0 35px #38bdf8 !important;
+      background: rgba(14, 165, 233, 0.3) !important;
+    }
+    .team-card.team-b.buzzed {
+      box-shadow: 0 0 35px #f43f5e !important;
+      background: rgba(244, 63, 94, 0.3) !important;
+    }
+    .team-label { font-size: 12px; font-weight: 800; color: #94a3b8; text-transform: uppercase; }
+    .team-score { font-size: 28px; font-weight: 900; color: #ffffff; }
+
+    main {
+      position: relative;
+      z-index: 10;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 16px 40px;
+    }
+
+    .game-card {
+      background: rgba(15, 23, 42, 0.92);
+      border: 2.5px solid #22c55e;
+      box-shadow: 0 0 50px rgba(34, 197, 94, 0.25);
+      border-radius: 28px;
+      width: 100%;
+      max-width: 1150px;
+      padding: 32px 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      backdrop-filter: blur(20px);
+      position: relative;
+      transition: transform 0.1s ease;
+    }
+
+    /* Screen-Shake Animation */
+    @keyframes cardShake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-14px) rotate(-1deg); }
+      40%, 80% { transform: translateX(14px) rotate(1deg); }
+    }
+    .shake {
+      animation: cardShake 0.45s ease;
+      border-color: #f43f5e !important;
+      box-shadow: 0 0 60px rgba(244, 63, 94, 0.6) !important;
+    }
+
+    /* Lightning Timer Bar */
+    .timer-container {
+      width: 100%;
+      height: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 5px;
+      overflow: hidden;
+      margin-top: -8px;
+    }
+    .timer-bar {
+      height: 100%;
+      width: 100%;
+      background: #22c55e;
+      transition: width 0.1s linear, background 0.3s ease;
+    }
+
+    .mode-nav {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+    }
+    .mode-btn {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1.5px solid #475569;
+      color: #94a3b8;
+      padding: 10px 24px;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .mode-btn.active {
+      background: #22c55e;
+      border-color: #4ade80;
+      color: #04120b;
+      box-shadow: 0 0 25px rgba(34, 197, 94, 0.45);
+    }
+
+    .question-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .q-badge {
+      background: #1e293b;
+      color: #38bdf8;
+      padding: 6px 16px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 800;
+    }
+    .q-text {
+      font-size: 32px;
+      font-weight: 900;
+      line-height: 1.3;
+      color: #ffffff;
+      text-align: center;
+      min-height: 85px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .opt-btn {
+      background: #1e293b;
+      border: 2px solid #334155;
+      padding: 20px 24px;
+      border-radius: 18px;
+      font-size: 22px;
+      font-weight: 700;
+      color: #e2e8f0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      transition: all 0.2s ease;
+      text-align: left;
+    }
+    .opt-btn:hover {
+      background: #334155;
+      border-color: #64748b;
+      transform: translateY(-2px);
+    }
+    .opt-letter {
+      background: rgba(255, 255, 255, 0.1);
+      width: 42px; height: 42px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      color: #38bdf8;
+      font-size: 20px;
+    }
+    .opt-btn.correct {
+      background: #15803d !important;
+      border-color: #4ade80 !important;
+      color: #ffffff !important;
+      box-shadow: 0 0 35px rgba(74, 222, 128, 0.6) !important;
+      transform: scale(1.02);
+    }
+    .opt-btn.wrong {
+      background: #881337 !important;
+      border-color: #f43f5e !important;
+      color: #fda4af !important;
+      opacity: 0.6;
+    }
+
+    .fact-box {
+      background: rgba(6, 78, 59, 0.6);
+      border: 2px solid #10b981;
+      padding: 18px 26px;
+      border-radius: 16px;
+      font-size: 20px;
+      line-height: 1.5;
+      color: #a7f3d0;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .controls-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .action-btn {
+      background: #22c55e;
+      border: none;
+      color: #04120b;
+      padding: 12px 28px;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .action-btn:hover { background: #4ade80; box-shadow: 0 0 25px rgba(74, 222, 128, 0.45); transform: translateY(-1px); }
+
+    /* Creature Naming Mode */
+    .creature-card {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      padding: 16px 0;
+    }
+    .creature-avatar {
+      font-size: 110px;
+      background: rgba(30, 41, 59, 0.7);
+      border: 3.5px solid #38bdf8;
+      width: 190px; height: 190px;
+      border-radius: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 35px rgba(56, 189, 248, 0.35);
+      animation: floatAvatar 3s ease-in-out infinite;
+    }
+    @keyframes floatAvatar {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    .creature-details {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .creature-title {
+      font-size: 38px;
+      font-weight: 900;
+      color: #fde047;
+    }
+    .creature-clues {
+      font-size: 21px;
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
+    .creature-god-fact {
+      font-size: 18px;
+      color: #a7f3d0;
+      background: rgba(6, 78, 59, 0.5);
+      padding: 14px 20px;
+      border-radius: 12px;
+      border-left: 5px solid #10b981;
+    }
+
+    /* BUZZER LOCKOUT BANNER */
+    #buzzerBanner {
+      position: absolute;
+      top: -24px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 32px;
+      border-radius: 20px;
+      font-size: 20px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      display: none;
+      animation: popIn 0.25s ease;
+      z-index: 100;
+    }
+    @keyframes popIn {
+      0% { transform: translateX(-50%) scale(0.6); opacity: 0; }
+      100% { transform: translateX(-50%) scale(1); opacity: 1; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="gardenCanvas"></canvas>
+  <canvas id="confettiCanvas"></canvas>
+
+  <header>
+    <div class="brand-title">
+      🌿 <span>EDEN EXPLORER</span>
+      <span class="verse-badge">Genesis 2:7 • The Breath of Life</span>
+    </div>
+
+    <!-- Live Soundboard FX for Brett -->
+    <div class="soundboard">
+      <button class="sfx-btn" onclick="playTrumpetFanfare()">🎺 Fanfare</button>
+      <button class="sfx-btn" onclick="playRoarSound()">🦁 Roar</button>
+      <button class="sfx-btn" onclick="playSirenSound()">🚨 Alert</button>
+      <button class="sfx-btn" onclick="launchConfetti(80)">🎉 Confetti</button>
+      <button class="sfx-btn" id="btnTimerToggle" onclick="toggleTimer()" style="background:#0284c7; color:#fff; border-color:#38bdf8;">⚡ Timer: OFF</button>
+    </div>
+
+    <!-- Buzzer Scoreboard: Click or Press A / L -->
+    <div class="scoreboard">
+      <div class="team-card" id="cardTeamA" onclick="addScore('teamA')">
+        <div class="team-label">Team Alpha (Press 'A' / +1)</div>
+        <div class="team-score" id="scoreA">0</div>
+      </div>
+      <div class="team-card team-b" id="cardTeamB" onclick="addScore('teamB')">
+        <div class="team-label">Team Omega (Press 'L' / +1)</div>
+        <div class="team-score" id="scoreB">0</div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="game-card" id="mainGameCard">
+      
+      <!-- Buzzer Overlay -->
+      <div id="buzzerBanner"></div>
+
+      <!-- Lightning Timer Bar -->
+      <div class="timer-container" id="timerBox" style="display:none;">
+        <div class="timer-bar" id="timerBar"></div>
+      </div>
+
+      <div class="mode-nav">
+        <button class="mode-btn active" id="btnQuiz" onclick="switchMode('quiz')">📖 Garden Masterpiece Quiz</button>
+        <button class="mode-btn" id="btnCreatures" onclick="switchMode('creatures')">🦁 Adam's Creature Quest</button>
+      </div>
+
+      <!-- QUIZ CONTAINER -->
+      <div id="quizContainer">
+        <div class="question-header">
+          <span class="q-badge" id="qBadge">Question 1 of 12</span>
+          <span style="font-size:15px; color:#94a3b8;">
+            <b>Buzzer Hotkeys:</b> 'A' = Team Alpha &bull; 'L' = Team Omega &bull; 'Space' = Reset Buzzers &bull; 1–4 = Answer
+          </span>
+        </div>
+        <div class="q-text" id="qText">Loading question...</div>
+        <div class="options-grid" id="optGrid"></div>
+        <div class="fact-box" id="factBox"></div>
+        <div class="controls-row" style="margin-top:12px;">
+          <button class="action-btn" onclick="prevQuestion()" style="background:#475569; color:#fff;">◀ Previous</button>
+          <button class="action-btn" onclick="resetBuzzer()" style="background:#0284c7; color:#fff;">🔔 Reset Buzzers (Space)</button>
+          <button class="action-btn" onclick="nextQuestion()">Next Question ▶</button>
+        </div>
+      </div>
+
+      <!-- CREATURE NAMING CONTAINER -->
+      <div id="creatureContainer" style="display:none;">
+        <div class="question-header">
+          <span class="q-badge" id="cBadge" style="color:#fde047;">Creature 1 of 12</span>
+          <span style="font-size:15px; color:#94a3b8;">What did Adam name this amazing animal?</span>
+        </div>
+        <div class="creature-card">
+          <div class="creature-avatar" id="cAvatar">🦁</div>
+          <div class="creature-details">
+            <div class="creature-title" id="cTitle">The King of Beasts</div>
+            <div class="creature-clues" id="cClues">Clues loading...</div>
+            <div class="creature-god-fact" id="cFact">God fact loading...</div>
+          </div>
+        </div>
+        <div class="controls-row">
+          <button class="action-btn" onclick="prevCreature()" style="background:#475569; color:#fff;">◀ Previous Animal</button>
+          <button class="action-btn" onclick="revealCreatureName()" style="background:#38bdf8; color:#04120b; font-size:18px;">Reveal Animal! 🔍</button>
+          <button class="action-btn" onclick="nextCreature()">Next Animal ▶</button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    // Audio Synthesizer (Zero MP3 dependencies)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playBeep(freq, type, duration, vol=0.25) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function playCorrectSound() {
+      playBeep(440, 'triangle', 0.1);
+      setTimeout(() => playBeep(554.37, 'triangle', 0.1), 90);
+      setTimeout(() => playBeep(659.25, 'triangle', 0.1), 180);
+      setTimeout(() => playBeep(880, 'triangle', 0.35), 270);
+    }
+
+    function playWrongSound() {
+      playBeep(260, 'sawtooth', 0.18);
+      setTimeout(() => playBeep(210, 'sawtooth', 0.2), 140);
+      setTimeout(() => playBeep(150, 'sawtooth', 0.4), 280);
+    }
+
+    function playBuzzerChime(freq, color) {
+      playBeep(freq, 'sine', 0.12, 0.4);
+      setTimeout(() => playBeep(freq * 1.5, 'sine', 0.3, 0.4), 100);
+    }
+
+    function playTrumpetFanfare() {
+      const notes = [523.25, 523.25, 523.25, 659.25, 783.99, 1046.50];
+      const times = [0, 120, 240, 360, 480, 650];
+      notes.forEach((f, i) => {
+        setTimeout(() => playBeep(f, 'triangle', 0.25, 0.35), times[i]);
+      });
+      launchConfetti(90);
+    }
+
+    function playRoarSound() {
+      playBeep(90, 'sawtooth', 0.6, 0.5);
+      setTimeout(() => playBeep(70, 'sawtooth', 0.8, 0.5), 200);
+    }
+
+    function playSirenSound() {
+      for (let i = 0; i < 4; i++) {
+        setTimeout(() => playBeep(600, 'square', 0.1, 0.2), i * 180);
+        setTimeout(() => playBeep(850, 'square', 0.1, 0.2), i * 180 + 90);
+      }
+    }
+
+    function playTick() {
+      playBeep(880, 'sine', 0.04, 0.15);
+    }
+
+    // Scoreboard & Buzzer Lockout
+    let scores = { teamA: 0, teamB: 0 };
+    let buzzedTeam = null;
+
+    function addScore(team) {
+      scores[team]++;
+      document.getElementById('scoreA').textContent = scores.teamA;
+      document.getElementById('scoreB').textContent = scores.teamB;
+      playBeep(600, 'sine', 0.15);
+      launchConfetti(40);
+    }
+
+    function triggerBuzzer(team) {
+      if (buzzedTeam) return; // Locked out!
+      buzzedTeam = team;
+      stopTimer();
+
+      const banner = document.getElementById('buzzerBanner');
+      const cardA = document.getElementById('cardTeamA');
+      const cardB = document.getElementById('cardTeamB');
+
+      if (team === 'A') {
+        playBuzzerChime(587.33, '#38bdf8');
+        banner.style.display = 'block';
+        banner.style.background = '#0284c7';
+        banner.style.color = '#fff';
+        banner.innerHTML = '🚨 TEAM ALPHA HAS THE FLOOR! (Press 1–4 to Answer)';
+        cardA.classList.add('buzzed');
+      } else {
+        playBuzzerChime(440, '#f43f5e');
+        banner.style.display = 'block';
+        banner.style.background = '#e11d48';
+        banner.style.color = '#fff';
+        banner.innerHTML = '🚨 TEAM OMEGA HAS THE FLOOR! (Press 1–4 to Answer)';
+        cardB.classList.add('buzzed');
+      }
+    }
+
+    function resetBuzzer() {
+      buzzedTeam = null;
+      document.getElementById('buzzerBanner').style.display = 'none';
+      document.getElementById('cardTeamA').classList.remove('buzzed');
+      document.getElementById('cardTeamB').classList.remove('buzzed');
+      playBeep(440, 'sine', 0.08);
+      if (timerEnabled) startTimer();
+    }
+
+    // 15-Second Lightning Timer
+    let timerEnabled = false;
+    let timerSeconds = 15;
+    let timerInterval = null;
+
+    function toggleTimer() {
+      timerEnabled = !timerEnabled;
+      document.getElementById('btnTimerToggle').textContent = timerEnabled ? '⚡ Timer: ON (15s)' : '⚡ Timer: OFF';
+      document.getElementById('timerBox').style.display = timerEnabled ? 'block' : 'none';
+      if (timerEnabled) {
+        startTimer();
+      } else {
+        stopTimer();
+      }
+    }
+
+    function startTimer() {
+      stopTimer();
+      timerSeconds = 15;
+      const bar = document.getElementById('timerBar');
+      bar.style.width = '100%';
+      bar.style.background = '#22c55e';
+
+      timerInterval = setInterval(() => {
+        timerSeconds -= 0.1;
+        const pct = Math.max(0, (timerSeconds / 15) * 100);
+        bar.style.width = pct + '%';
+
+        if (timerSeconds <= 5 && timerSeconds > 2) {
+          bar.style.background = '#f59e0b';
+        } else if (timerSeconds <= 2) {
+          bar.style.background = '#f43f5e';
+          if (Math.round(timerSeconds * 10) % 5 === 0) playTick();
+        }
+
+        if (timerSeconds <= 0) {
+          stopTimer();
+          playWrongSound();
+          triggerShake();
+          bar.style.width = '0%';
+        }
+      }, 100);
+    }
+
+    function stopTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+    }
+
+    function triggerShake() {
+      const card = document.getElementById('mainGameCard');
+      card.classList.add('shake');
+      setTimeout(() => card.classList.remove('shake'), 450);
+    }
+
+    // Mode Switcher
+    function switchMode(mode) {
+      document.getElementById('btnQuiz').classList.toggle('active', mode === 'quiz');
+      document.getElementById('btnCreatures').classList.toggle('active', mode === 'creatures');
+      document.getElementById('quizContainer').style.display = mode === 'quiz' ? 'block' : 'none';
+      document.getElementById('creatureContainer').style.display = mode === 'creatures' ? 'block' : 'none';
+      resetBuzzer();
+    }
+
+    // QUIZ DATA (Genesis 2)
+    const QUIZ_QUESTIONS = [
+      {
+        q: "What did God use to form the very first man in Genesis 2:7?",
+        opts: ["Gold and silver rocks", "Dust from the ground", "Seafoam from the ocean", "Starlight and clouds"],
+        ans: 1,
+        fact: "Genesis 2:7 says God formed man of dust from the ground, then breathed His very breath of life into his nostrils!"
+      },
+      {
+        q: "What special action caused man to become a 'living soul'?",
+        opts: ["God spoke a magical spell", "God breathed the breath of life into his nostrils", "A lightning bolt touched him", "He ate a special leaf"],
+        ans: 1,
+        fact: "Unlike animals that God spoke into existence, God personally breathed His own life into humanity. You are handmade by God!"
+      },
+      {
+        q: "What special Garden did the Lord plant in the east for man to live in?",
+        opts: ["The Hanging Gardens", "The Garden of Eden", "The Redwood Forest", "Mount Olympus"],
+        ans: 1,
+        fact: "Eden means 'delight' or 'paradise' in Hebrew. It was a lush, perfect home created especially for fellowship with God."
+      },
+      {
+        q: "What two special trees were located right in the middle of the Garden of Eden?",
+        opts: ["Apple Tree & Oak Tree", "Tree of Life & Tree of Knowledge of Good & Evil", "Pine Tree & Cedar Tree", "Olive Tree & Fig Tree"],
+        ans: 1,
+        fact: "Genesis 2:9 highlights the Tree of Life and the Tree of the Knowledge of Good and Evil in the midst of the garden."
+      },
+      {
+        q: "How many rivers flowed out of the Garden of Eden to water the earth?",
+        opts: ["1 river splitting into 4", "12 small streams", "2 giant rivers", "7 crystal waterfalls"],
+        ans: 0,
+        fact: "Genesis 2:10 tells us a river flowed out of Eden and divided into four rivers: Pishon, Gihon, Tigris, and Euphrates!"
+      },
+      {
+        q: "What job did God give Adam in the Garden of Eden?",
+        opts: ["To build a giant brick tower", "To work it and take care of it", "To dig for diamonds all day", "To sleep and do nothing"],
+        ans: 1,
+        fact: "Genesis 2:15 says the Lord took the man and put him in the Garden of Eden to cultivate and keep it. Work was a gift before sin ever entered the world!"
+      },
+      {
+        q: "What exciting task did God bring all the beasts and birds to Adam to do?",
+        opts: ["To count how fast they could run", "To see what he would name them", "To build cages for them", "To paint their feathers"],
+        ans: 1,
+        fact: "Genesis 2:19 says God brought every creature to Adam to see what he would call them, and whatever Adam called each living creature, that was its name!"
+      },
+      {
+        q: "What did God say was 'NOT good' in Genesis 2:18?",
+        opts: ["That it rained too much", "That the man should be alone", "That the fruit was sweet", "That the animals were noisy"],
+        ans: 1,
+        fact: "In Genesis 1 everything was 'good', but in Genesis 2 God said: 'It is not good for man to be alone. I will make a helper suitable for him.'"
+      },
+      {
+        q: "What did God cause to fall upon Adam while He made woman?",
+        opts: ["A heavy rainstorm", "A deep sleep", "A shower of flowers", "A golden light"],
+        ans: 1,
+        fact: "Genesis 2:21 says the Lord God caused a deep sleep to fall upon Adam, took one of his ribs, and closed up the flesh."
+      },
+      {
+        q: "From what part of Adam's body did God form Eve?",
+        opts: ["From a bone in his foot", "From his rib (side)", "From his hair", "From his thumb"],
+        ans: 1,
+        fact: "God took a rib from Adam's side so Eve would stand beside him as an equal partner, loved and protected close to his heart."
+      },
+      {
+        q: "What did God do on the 7th Day after completing creation in Genesis 2:2?",
+        opts: ["He started making another planet", "He rested from all His work and blessed the day", "He went to sleep forever", "He erased everything"],
+        ans: 1,
+        fact: "God rested not because He was tired, but because His creation was complete and perfect! He established the Sabbath blessing of rest."
+      },
+      {
+        q: "What tree was Adam commanded NOT to eat from in Genesis 2:17?",
+        opts: ["The Banana Tree", "The Tree of the Knowledge of Good and Evil", "The Orange Tree", "The Coconut Palm"],
+        ans: 1,
+        fact: "God gave Adam freedom to eat from thousands of trees, but one boundary for his protection and to allow real trust and love for God!"
+      }
+    ];
+
+    let currentQ = 0;
+    let qAnswered = false;
+
+    function renderQuestion() {
+      const qData = QUIZ_QUESTIONS[currentQ];
+      qAnswered = false;
+      resetBuzzer();
+      document.getElementById('qBadge').textContent = `Question ${currentQ + 1} of ${QUIZ_QUESTIONS.length}`;
+      document.getElementById('qText').textContent = qData.q;
+      document.getElementById('factBox').style.display = 'none';
+
+      const grid = document.getElementById('optGrid');
+      grid.innerHTML = '';
+      const letters = ['A', 'B', 'C', 'D'];
+
+      qData.opts.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'opt-btn';
+        btn.innerHTML = `<span class="opt-letter">${letters[idx]}</span> <span>${opt}</span>`;
+        btn.onclick = () => selectAnswer(idx, btn);
+        grid.appendChild(btn);
+      });
+
+      if (timerEnabled) startTimer();
+    }
+
+    function selectAnswer(idx, btn) {
+      if (qAnswered) return;
+      qAnswered = true;
+      stopTimer();
+      const qData = QUIZ_QUESTIONS[currentQ];
+      const buttons = document.querySelectorAll('.opt-btn');
+
+      if (idx === qData.ans) {
+        btn.classList.add('correct');
+        playCorrectSound();
+        launchConfetti(80);
+        // Award point to buzzed team if active
+        if (buzzedTeam === 'A') addScore('teamA');
+        if (buzzedTeam === 'B') addScore('teamB');
+      } else {
+        btn.classList.add('wrong');
+        buttons[qData.ans].classList.add('correct');
+        playWrongSound();
+        triggerShake();
+      }
+
+      const fact = document.getElementById('factBox');
+      fact.innerHTML = `💡 <b>Genesis Fact:</b> ${qData.fact}`;
+      fact.style.display = 'block';
+    }
+
+    function nextQuestion() {
+      currentQ = (currentQ + 1) % QUIZ_QUESTIONS.length;
+      renderQuestion();
+    }
+    function prevQuestion() {
+      currentQ = (currentQ - 1 + QUIZ_QUESTIONS.length) % QUIZ_QUESTIONS.length;
+      renderQuestion();
+    }
+
+    // Keyboard support:
+    // 'A' = Team Alpha Buzzer, 'L' = Team Omega Buzzer, Space = Reset Buzzer, 1-4 = Answer, Arrows = Nav
+    window.addEventListener('keydown', (e) => {
+      const key = e.key.toUpperCase();
+      if (key === 'A') {
+        triggerBuzzer('A');
+      } else if (key === 'L') {
+        triggerBuzzer('B');
+      } else if (e.key === ' ' || key === 'SPACE') {
+        e.preventDefault();
+        resetBuzzer();
+      } else if (['1','2','3','4'].includes(e.key)) {
+        const idx = parseInt(e.key) - 1;
+        const btns = document.querySelectorAll('.opt-btn');
+        if (btns[idx]) btns[idx].click();
+      } else if (e.key === 'ArrowRight') {
+        nextQuestion();
+      } else if (e.key === 'ArrowLeft') {
+        prevQuestion();
+      }
+    });
+
+    // CREATURE NAMING QUEST DATA (12 Animals)
+    const CREATURES = [
+      {
+        emoji: "🦁",
+        realName: "The Lion",
+        title: "The Golden Roarer",
+        clues: "I have a massive furry mane, a roar that can be heard 5 miles away, and I rest under the acacia trees with my family (called a pride).",
+        fact: "God designed the lion's roar to reach 114 decibels—louder than a lawnmower! Adam named the king of beasts."
+      },
+      {
+        emoji: "🐘",
+        realName: "The Elephant",
+        title: "The Gentle Giant with a Built-in Snorkel",
+        clues: "I weigh as much as a school bus, have giant ears that work like air conditioners, and my nose can pick up a single peanut or spray 2 gallons of water!",
+        fact: "An elephant's trunk has over 40,000 individual muscles. God coded pure mechanical engineering into this incredible animal!"
+      },
+      {
+        emoji: "🦘",
+        realName: "The Kangaroo",
+        title: "The Spring-Loaded Bouncer",
+        clues: "I have powerful back legs like giant pogo sticks, a huge tail for balance, and my babies sleep in a cozy built-in belly pouch.",
+        fact: "Kangaroos can leap 30 feet in a single bound. God gave them elastic tendons in their legs that recycle energy like bouncy balls!"
+      },
+      {
+        emoji: "🦆",
+        realName: "The Duck-Billed Platypus",
+        title: "The Creature That Stumped All Scientists",
+        clues: "I have a beaver tail, a duck bill, webbed feet, fur that glows under blacklight, and I lay eggs! Did God have a sense of humor?",
+        fact: "When scientists first found a platypus in 1798, they thought someone had glued a duck bill onto a beaver as a practical joke! God loves fun surprises."
+      },
+      {
+        emoji: "🦒",
+        realName: "The Giraffe",
+        title: "The 18-Foot Sky Scraper",
+        clues: "I am taller than two basketball hoops stacked together, my tongue is 20 inches of dark purple sunblock, and my neck has the exact same number of vertebrae as a human neck (7)!",
+        fact: "A giraffe's heart weighs 25 pounds and has special pressure valves in its neck so its head doesn't explode from blood pressure when it takes a drink of water!"
+      },
+      {
+        emoji: "🦅",
+        realName: "The Eagle",
+        title: "The Telescope of the Sky",
+        clues: "I soar high above the clouds without flapping my wings, and I can spot a tiny mouse in the grass from over a mile away!",
+        fact: "Eagles have eyes so powerful they can see in high definition 4 to 8 times better than any human. God's ultimate aerial binoculars."
+      },
+      {
+        emoji: "🐬",
+        realName: "The Dolphin",
+        title: "The Click-and-Whistle Ocean Explorer",
+        clues: "I am warm-blooded, breath air through a blowhole on top of my head, and use high-speed sound waves (echolocation) to 'see' underwater in the dark.",
+        fact: "Dolphins sleep with only half their brain at a time so they never forget to surface for air! God's design for safety and breathing."
+      },
+      {
+        emoji: "🦉",
+        realName: "The Owl",
+        title: "The Silent Night Glider",
+        clues: "My neck can turn 270 degrees around, my eyes can't move so I move my whole head, and my special velvety feathers let me fly in 100% total silence.",
+        fact: "Engineers study owl wings today to design quieter airplanes and wind turbines. God invented stealth flight thousands of years ago in Eden!"
+      },
+      {
+        emoji: "🦎",
+        realName: "The Chameleon",
+        title: "The Color-Shifting Secret Agent",
+        clues: "My eyes can look in two completely different directions at the exact same time, and my skin changes color when I am hot, cold, or excited!",
+        fact: "A chameleon's tongue launches out faster than a fighter jet—0 to 60 mph in a hundredth of a second! God’s precision aiming."
+      },
+      {
+        emoji: "🐝",
+        realName: "The Honeybee",
+        title: "The Master Architect & Pollinator",
+        clues: "I dance in circles to tell my sisters where the sweetest flowers are, and we build perfect 6-sided hexagonal wax nurseries.",
+        fact: "To make just 1 pound of honey, bees visit over 2 million flowers. God designed bees so flowers and fruit trees across the earth could grow!"
+      },
+      {
+        emoji: "🦥",
+        realName: "The Three-Toed Sloth",
+        title: "The World's Slowest Tree Hugger",
+        clues: "I sleep 18 hours a day hanging upside down, and I move so slow that actual green algae grows on my fur to camouflage me from eagles!",
+        fact: "Sloths have extra neck bones that let them turn their heads 270 degrees without moving their bodies. Maximum relaxation by design!"
+      },
+      {
+        emoji: "🐆",
+        realName: "The Cheetah",
+        title: "The Land Rocket",
+        clues: "I have black tear marks on my face that act like sunglasses against glare, and I can sprint from 0 to 60 miles per hour in just 3 seconds!",
+        fact: "A cheetah's spine flexes like a metal spring, and its claws don't retract so they grip the dirt like track spikes. God's fastest sprinter!"
+      }
+    ];
+
+    let currentC = 0;
+
+    function renderCreature() {
+      const c = CREATURES[currentC];
+      document.getElementById('cBadge').textContent = `Creature ${currentC + 1} of ${CREATURES.length}`;
+      document.getElementById('cAvatar').textContent = "❓";
+      document.getElementById('cTitle').textContent = c.title;
+      document.getElementById('cClues').textContent = c.clues;
+      document.getElementById('cFact').innerHTML = `🤔 <i>Ask the room: What would you name this creature? Click "Reveal Animal" to see!</i>`;
+    }
+
+    function revealCreatureName() {
+      const c = CREATURES[currentC];
+      document.getElementById('cAvatar').textContent = c.emoji;
+      document.getElementById('cTitle').textContent = `${c.realName} (${c.title})`;
+      document.getElementById('cFact').innerHTML = `✨ <b>God's Design:</b> ${c.fact}`;
+      playCorrectSound();
+      launchConfetti(80);
+    }
+
+    function nextCreature() {
+      currentC = (currentC + 1) % CREATURES.length;
+      renderCreature();
+    }
+    function prevCreature() {
+      currentC = (currentC - 1 + CREATURES.length) % CREATURES.length;
+      renderCreature();
+    }
+
+    // Garden Canvas Ambient Particles
+    const canvas = document.getElementById('gardenCanvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      confettiCanvas.width = window.innerWidth;
+      confettiCanvas.height = window.innerHeight;
+    }
+    const confettiCanvas = document.getElementById('confettiCanvas');
+    const cCtx = confettiCanvas.getContext('2d');
+    window.addEventListener('resize', resize);
+    resize();
+
+    for (let i = 0; i < 55; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 3 + 1,
+        dx: (Math.random() - 0.5) * 0.8,
+        dy: -Math.random() * 0.8 - 0.2,
+        alpha: Math.random() * 0.7 + 0.3
+      });
+    }
+
+    function animateGarden() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(74, 222, 128, ${p.alpha})`;
+        ctx.fill();
+        p.x += p.dx;
+        p.y += p.dy;
+        if (p.y < 0) { p.y = canvas.height; p.x = Math.random() * canvas.width; }
+      });
+      requestAnimationFrame(animateGarden);
+    }
+    animateGarden();
+
+    // 2D Confetti Cannon Engine
+    let confetti = [];
+    const colors = ['#fde047', '#4ade80', '#38bdf8', '#f43f5e', '#a855f7', '#fb923c'];
+
+    function launchConfetti(count=70) {
+      for (let i = 0; i < count; i++) {
+        confetti.push({
+          x: confettiCanvas.width / 2 + (Math.random() - 0.5) * 400,
+          y: confettiCanvas.height / 2 + (Math.random() - 0.5) * 100,
+          vx: (Math.random() - 0.5) * 16,
+          vy: -Math.random() * 14 - 4,
+          size: Math.random() * 8 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          rotation: Math.random() * 360,
+          vRot: (Math.random() - 0.5) * 15,
+          alpha: 1
+        });
+      }
+    }
+
+    function animateConfetti() {
+      cCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      for (let i = confetti.length - 1; i >= 0; i--) {
+        const c = confetti[i];
+        c.x += c.vx;
+        c.y += c.vy;
+        c.vy += 0.4; // gravity
+        c.rotation += c.vRot;
+        c.alpha -= 0.012;
+
+        cCtx.save();
+        cCtx.translate(c.x, c.y);
+        cCtx.rotate((c.rotation * Math.PI) / 180);
+        cCtx.fillStyle = c.color;
+        cCtx.globalAlpha = Math.max(0, c.alpha);
+        cCtx.fillRect(-c.size / 2, -c.size / 2, c.size, c.size * 0.7);
+        cCtx.restore();
+
+        if (c.alpha <= 0 || c.y > confettiCanvas.height) {
+          confetti.splice(i, 1);
+        }
+      }
+      requestAnimationFrame(animateConfetti);
+    }
+    animateConfetti();
+
+    // Start Game
+    renderQuestion();
+    renderCreature();
+  </script>
+<a href="../index.html" id="arcadeBackBtn" style="position:fixed; top:12px; left:12px; z-index:999999; background:rgba(15,23,42,0.85); color:#38BDF8; border:2px solid #38BDF8; border-radius:8px; padding:6px 14px; font-family:'Courier New', monospace; font-size:13px; font-weight:800; text-decoration:none; box-shadow:0 4px 15px rgba(0,0,0,0.5); backdrop-filter:blur(4px); display:flex; align-items:center; gap:6px; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='#38BDF8'; this.style.color='#0F172A';" onmouseout="this.style.background='rgba(15,23,42,0.85)'; this.style.color='#38BDF8';">
+  ⬅ ARCADE MENU
+</a>
+</body>
+</html>

@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Eden Sentinel: Defense of the Garden — Awana Arcade</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #05140b;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #fff;
+    }
+    #gameCanvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      background: radial-gradient(circle at center, #0d3b1e 0%, #051a0d 60%, #020b05 100%);
+    }
+    /* HUD Overlay */
+    #hud {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      display: flex;
+      gap: 20px;
+      z-index: 100;
+      pointer-events: none;
+    }
+    .hud-card {
+      background: rgba(5, 26, 13, 0.85);
+      border: 2px solid #10b981;
+      border-radius: 10px;
+      padding: 8px 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+      text-align: center;
+      backdrop-filter: blur(4px);
+    }
+    .hud-title {
+      font-size: 10px;
+      color: #6ee7b7;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+    }
+    .hud-value {
+      font-size: 20px;
+      font-weight: 900;
+      color: #fef08a;
+      text-shadow: 0 0 10px rgba(254, 240, 138, 0.5);
+    }
+    /* Tree Health Bar Top Center */
+    #treeHealthContainer {
+      position: absolute;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 340px;
+      background: rgba(5, 26, 13, 0.85);
+      border: 2px solid #eab308;
+      border-radius: 12px;
+      padding: 6px 12px;
+      z-index: 100;
+      pointer-events: none;
+      box-shadow: 0 4px 20px rgba(234, 179, 8, 0.3);
+    }
+    .tree-label {
+      font-size: 11px;
+      font-weight: 800;
+      color: #fef08a;
+      text-align: center;
+      margin-bottom: 4px;
+      letter-spacing: 1px;
+    }
+    .bar-bg {
+      width: 100%;
+      height: 14px;
+      background: rgba(0,0,0,0.6);
+      border-radius: 7px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    #treeHealthBar {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, #22c55e, #eab308);
+      transition: width 0.2s ease;
+    }
+    /* Modals & Overlays */
+    .overlay-modal {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(2, 11, 5, 0.88);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 200;
+      backdrop-filter: blur(8px);
+      text-align: center;
+      padding: 20px;
+    }
+    .modal-box {
+      max-width: 550px;
+      background: #092614;
+      border: 3px solid #10b981;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 10px 40px rgba(16, 185, 129, 0.4);
+    }
+    h1 {
+      font-size: 32px;
+      color: #6ee7b7;
+      margin-bottom: 12px;
+      text-shadow: 0 0 15px rgba(110, 231, 183, 0.6);
+    }
+    p {
+      font-size: 15px;
+      color: #d1fae5;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .btn {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      border: none;
+      padding: 14px 32px;
+      font-size: 18px;
+      font-weight: 800;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.5);
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.8);
+      background: linear-gradient(135deg, #34d399, #10b981);
+    }
+    .scripture-box {
+      background: rgba(0,0,0,0.4);
+      border-left: 4px solid #eab308;
+      padding: 10px 16px;
+      margin: 15px 0 25px 0;
+      font-style: italic;
+      color: #fef08a;
+      font-size: 14px;
+      text-align: left;
+    }
+    /* Touch Controls */
+    #touchJoy {
+      position: absolute;
+      bottom: 40px;
+      left: 40px;
+      width: 120px;
+      height: 120px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 2px dashed rgba(16, 185, 129, 0.4);
+      border-radius: 50%;
+      z-index: 90;
+      display: none;
+    }
+    #joyKnob {
+      position: absolute;
+      top: 35px;
+      left: 35px;
+      width: 50px;
+      height: 50px;
+      background: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 15px #10b981;
+    }
+    /* Back Button */
+    #arcadeBackBtn {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      z-index: 999999;
+      background: rgba(5, 26, 13, 0.9);
+      color: #6ee7b7;
+      border: 2px solid #10b981;
+      border-radius: 8px;
+      padding: 7px 16px;
+      font-size: 13px;
+      font-weight: 800;
+      text-decoration: none;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    #arcadeBackBtn:hover {
+      background: #10b981;
+      color: #051a0d;
+    }
+  </style>
+</head>
+<body>
+
+  <a href="../index.html" id="arcadeBackBtn">⬅ ARCADE MENU</a>
+
+  <div id="treeHealthContainer">
+    <div class="tree-label">🌳 TREE OF LIFE INTEGRITY</div>
+    <div class="bar-bg">
+      <div id="treeHealthBar"></div>
+    </div>
+  </div>
+
+  <div id="hud">
+    <div class="hud-card">
+      <div class="hud-title">WAVE</div>
+      <div class="hud-value" id="hudWave">1</div>
+    </div>
+    <div class="hud-card">
+      <div class="hud-title">SCORE</div>
+      <div class="hud-value" id="hudScore">0</div>
+    </div>
+    <div class="hud-card">
+      <div class="hud-title">SPECIAL NOVA</div>
+      <div class="hud-value" id="hudNova" style="font-size:14px; color:#38bdf8;">READY [SPACE]</div>
+    </div>
+  </div>
+
+  <canvas id="gameCanvas"></canvas>
+
+  <div id="touchJoy"><div id="joyKnob"></div></div>
+
+  <!-- Start Screen -->
+  <div id="startModal" class="overlay-modal">
+    <div class="modal-box">
+      <h1>EDEN SENTINEL</h1>
+      <p style="font-size:16px; font-weight:700; color:#a7f3d0; margin-bottom:6px;">Defense of the Tree of Life</p>
+      <p>The Lord God planted a garden eastward in Eden. In the center stands the Tree of Life. Protect the sacred tree from invading shadows, whispers of doubt, and the serpent!</p>
+      
+      <div class="scripture-box">
+        "The Lord God took the man and put him in the Garden of Eden to work it and take care of it."<br>
+        <strong>— Genesis 2:15</strong>
+      </div>
+
+      <div style="background:rgba(0,0,0,0.3); border-radius:10px; padding:12px; margin-bottom:20px; font-size:13px; text-align:left;">
+        <strong>🎮 CONTROLS:</strong><br>
+        • <strong>Move:</strong> W, A, S, D or Arrow Keys (or drag left screen on Touch)<br>
+        • <strong>Aim & Shoot:</strong> Aim with Mouse, hold Left Click to cast Seeds of Light<br>
+        • <strong>Spacebar:</strong> River of Life Nova (Screen Knockback Blast)<br>
+        • <strong>Goal:</strong> Do not let shadows corrupt the Tree of Life!
+      </div>
+
+      <button class="btn" onclick="startGame()">⚔️ ENTER THE GARDEN</button>
+    </div>
+  </div>
+
+  <!-- Wave Clear Modal -->
+  <div id="waveModal" class="overlay-modal" style="display:none;">
+    <div class="modal-box">
+      <h1 id="waveModalTitle">WAVE 1 CLEARED!</h1>
+      <p id="waveModalDesc">The garden stands pure and radiant. Prepare for the next wave of creeping shadows.</p>
+      
+      <div id="waveScripture" class="scripture-box">
+        "Put on the full armor of God, so that you can take your stand against the devil’s schemes."<br>
+        <strong>— Ephesians 6:11</strong>
+      </div>
+
+      <button class="btn" onclick="nextWave()">PROCEED TO NEXT WAVE ➔</button>
+    </div>
+  </div>
+
+  <!-- Game Over Modal -->
+  <div id="gameOverModal" class="overlay-modal" style="display:none;">
+    <div class="modal-box" style="border-color:#ef4444; box-shadow:0 10px 40px rgba(239,68,68,0.4);">
+      <h1 style="color:#f87171;">THE GARDEN WAS OVERRUN</h1>
+      <p>The shadows corrupted the sacred grounds. Stand firm in the faith and try again!</p>
+      
+      <div class="scripture-box" style="border-color:#ef4444;">
+        "Submit yourselves, then, to God. Resist the devil, and he will flee from you."<br>
+        <strong>— James 4:7</strong>
+      </div>
+
+      <button class="btn" style="background:#ef4444;" onclick="restartGame()">🔄 RE-ENTER EDEN</button>
+    </div>
+  </div>
+
+  <script>
+    // --- Procedural Web Audio Engine ---
+    let audioCtx = null;
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playSound(type) {
+      if (!audioCtx) return;
+      try {
+        const now = audioCtx.currentTime;
+        if (type === 'shoot') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(600, now);
+          osc.frequency.exponentialRampToValueAtTime(150, now + 0.12);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.12);
+        } else if (type === 'hit') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(120, now);
+          osc.frequency.exponentialRampToValueAtTime(30, now + 0.15);
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.15);
+        } else if (type === 'nova') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(200, now);
+          osc.frequency.exponentialRampToValueAtTime(800, now + 0.35);
+          gain.gain.setValueAtTime(0.4, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.4);
+        } else if (type === 'wave') {
+          const freqs = [330, 440, 550, 660];
+          freqs.forEach((f, idx) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.value = f;
+            gain.gain.setValueAtTime(0.15, now + idx * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.3);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now + idx * 0.08);
+            osc.stop(now + idx * 0.08 + 0.3);
+          });
+        }
+      } catch (e) {
+        console.warn('Audio error:', e);
+      }
+    }
+
+    // --- Game Engine & Canvas Setup ---
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height;
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Game State
+    let gameState = 'START';
+    let wave = 1;
+    let score = 0;
+    let kills = 0;
+    let novaCharge = 100;
+
+    // Tree of Life in exact Center
+    const tree = {
+      x: 0,
+      y: 0,
+      radius: 50,
+      health: 100,
+      maxHealth: 100
+    };
+
+    // Sentinel Player
+    const player = {
+      x: 0,
+      y: 0,
+      radius: 18,
+      speed: 4.8,
+      angle: 0,
+      health: 100,
+      shieldLevel: 1,
+      shootCooldown: 0
+    };
+
+    let bullets = [];
+    let enemies = [];
+    let particles = [];
+    let blossoms = [];
+
+    // Keys State
+    const keys = {};
+    window.addEventListener('keydown', (e) => {
+      keys[e.key.toLowerCase()] = true;
+      if (e.code === 'Space' && gameState === 'PLAYING') {
+        triggerNova();
+      }
+    });
+    window.addEventListener('keyup', (e) => {
+      keys[e.key.toLowerCase()] = false;
+    });
+
+    let mouse = { x: 0, y: 0, down: false };
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+    window.addEventListener('mousedown', (e) => {
+      initAudio();
+      mouse.down = true;
+    });
+    window.addEventListener('mouseup', () => {
+      mouse.down = false;
+    });
+
+    // Touch Support for Chromebooks
+    let touchControl = false;
+    window.addEventListener('touchstart', (e) => {
+      initAudio();
+      touchControl = true;
+      const t = e.touches[0];
+      mouse.x = t.clientX;
+      mouse.y = t.clientY;
+      mouse.down = true;
+    }, { passive: false });
+
+    window.addEventListener('touchmove', (e) => {
+      const t = e.touches[0];
+      mouse.x = t.clientX;
+      mouse.y = t.clientY;
+    }, { passive: false });
+
+    window.addEventListener('touchend', () => {
+      mouse.down = false;
+    });
+
+    // Background Decorative Garden Flowers & River
+    function initGarden() {
+      blossoms = [];
+      for (let i = 0; i < 45; i++) {
+        blossoms.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          color: ['#f472b6', '#c084fc', '#38bdf8', '#fef08a', '#fbbf24'][Math.floor(Math.random() * 5)],
+          size: 3 + Math.random() * 4,
+          glow: Math.random() * Math.PI
+        });
+      }
+    }
+
+    function startGame() {
+      initAudio();
+      document.getElementById('startModal').style.display = 'none';
+      wave = 1;
+      score = 0;
+      kills = 0;
+      tree.health = 100;
+      player.health = 100;
+      tree.x = width / 2;
+      tree.y = height / 2;
+      player.x = width / 2;
+      player.y = height / 2 + 90;
+      bullets = [];
+      enemies = [];
+      particles = [];
+      novaCharge = 100;
+      initGarden();
+      spawnWave();
+      gameState = 'PLAYING';
+      playSound('wave');
+    }
+
+    function restartGame() {
+      document.getElementById('gameOverModal').style.display = 'none';
+      startGame();
+    }
+
+    const scriptures = [
+      { ref: "Genesis 1:31", text: "God saw all that he had made, and it was very good." },
+      { ref: "Genesis 2:15", text: "The Lord God took the man and put him in the Garden of Eden to work it and take care of it." },
+      { ref: "Genesis 3:15", text: "He will crush your head, and you will strike his heel." },
+      { ref: "Ephesians 6:11", text: "Put on the full armor of God, so that you can take your stand against the devil's schemes." },
+      { ref: "Hebrews 4:9-10", text: "There remains, then, a Sabbath-rest for the people of God; for anyone who enters God’s rest also rests from their works." }
+    ];
+
+    function spawnWave() {
+      enemies = [];
+      document.getElementById('hudWave').textContent = wave;
+      let count = 8 + wave * 6;
+      for (let i = 0; i < count; i++) {
+        setTimeout(() => {
+          if (gameState !== 'PLAYING') return;
+          // Spawn around perimeter
+          let edge = Math.floor(Math.random() * 4);
+          let ex, ey;
+          if (edge === 0) { ex = Math.random() * width; ey = -40; }
+          else if (edge === 1) { ex = width + 40; ey = Math.random() * height; }
+          else if (edge === 2) { ex = Math.random() * width; ey = height + 40; }
+          else { ex = -40; ey = Math.random() * height; }
+
+          let type = 'shadow';
+          let hp = 1;
+          let spd = 1.6 + Math.random() * 0.8;
+          let sz = 16;
+          let col = '#a855f7';
+
+          // Enemy variety based on wave
+          if (wave >= 2 && Math.random() < 0.35) {
+            type = 'serpent';
+            hp = 3;
+            spd = 2.4;
+            sz = 20;
+            col = '#22c55e';
+          } else if (wave >= 3 && Math.random() < 0.25) {
+            type = 'brute';
+            hp = 6;
+            spd = 0.9;
+            sz = 28;
+            col = '#dc2626';
+          }
+
+          enemies.push({
+            x: ex,
+            y: ey,
+            type: type,
+            health: hp,
+            speed: spd,
+            radius: sz,
+            color: col,
+            pulse: 0
+          });
+        }, i * 450);
+      }
+    }
+
+    function triggerNova() {
+      if (novaCharge < 100) return;
+      novaCharge = 0;
+      playSound('nova');
+      document.getElementById('hudNova').textContent = "CHARGING...";
+      document.getElementById('hudNova').style.color = "#94a3b8";
+
+      // Knock back and damage all enemies
+      enemies.forEach(e => {
+        e.health -= 5;
+        const dx = e.x - tree.x;
+        const dy = e.y - tree.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        e.x += (dx / dist) * 150;
+        e.y += (dy / dist) * 150;
+      });
+
+      // Spawn blast particles
+      for (let i = 0; i < 60; i++) {
+        const ang = Math.random() * Math.PI * 2;
+        const spd = 4 + Math.random() * 8;
+        particles.push({
+          x: tree.x,
+          y: tree.y,
+          vx: Math.cos(ang) * spd,
+          vy: Math.sin(ang) * spd,
+          color: '#38bdf8',
+          radius: 4 + Math.random() * 4,
+          life: 30
+        });
+      }
+    }
+
+    function nextWave() {
+      document.getElementById('waveModal').style.display = 'none';
+      wave++;
+      tree.health = Math.min(tree.maxHealth, tree.health + 25);
+      spawnWave();
+      gameState = 'PLAYING';
+      playSound('wave');
+    }
+
+    // Main Game Loop
+    function update() {
+      if (gameState !== 'PLAYING') return;
+
+      // Player Movement
+      let mx = 0, my = 0;
+      if (keys['w'] || keys['arrowup']) my -= 1;
+      if (keys['s'] || keys['arrowdown']) my += 1;
+      if (keys['a'] || keys['arrowleft']) mx -= 1;
+      if (keys['d'] || keys['arrowright']) mx += 1;
+
+      if (mx !== 0 && my !== 0) {
+        mx *= 0.7071;
+        my *= 0.7071;
+      }
+      player.x += mx * player.speed;
+      player.y += my * player.speed;
+
+      // Bounds
+      player.x = Math.max(30, Math.min(width - 30, player.x));
+      player.y = Math.max(30, Math.min(height - 30, player.y));
+
+      // Player Rotation to Mouse
+      player.angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
+
+      // Auto-recharge Nova
+      if (novaCharge < 100) {
+        novaCharge += 0.08;
+        if (novaCharge >= 100) {
+          novaCharge = 100;
+          document.getElementById('hudNova').textContent = "READY [SPACE]";
+          document.getElementById('hudNova').style.color = "#38bdf8";
+        }
+      }
+
+      // Shooting
+      if (player.shootCooldown > 0) player.shootCooldown--;
+      if (mouse.down && player.shootCooldown <= 0) {
+        player.shootCooldown = 9;
+        playSound('shoot');
+        const spd = 12;
+        bullets.push({
+          x: player.x + Math.cos(player.angle) * 20,
+          y: player.y + Math.sin(player.angle) * 20,
+          vx: Math.cos(player.angle) * spd,
+          vy: Math.sin(player.angle) * spd,
+          radius: 5,
+          color: '#fef08a'
+        });
+      }
+
+      // Bullets Update
+      for (let i = bullets.length - 1; i >= 0; i--) {
+        const b = bullets[i];
+        b.x += b.vx;
+        b.y += b.vy;
+        if (b.x < 0 || b.x > width || b.y < 0 || b.y > height) {
+          bullets.splice(i, 1);
+        }
+      }
+
+      // Enemies Update
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        const e = enemies[i];
+        e.pulse += 0.05;
+
+        // Target: move toward the Tree of Life
+        const dx = tree.x - e.x;
+        const dy = tree.y - e.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        e.x += (dx / dist) * e.speed;
+        e.y += (dy / dist) * e.speed;
+
+        // Collision with Tree
+        if (dist < tree.radius + e.radius) {
+          tree.health -= e.type === 'brute' ? 12 : 5;
+          playSound('hit');
+          enemies.splice(i, 1);
+
+          // Impact particles
+          for (let p = 0; p < 8; p++) {
+            particles.push({
+              x: tree.x,
+              y: tree.y,
+              vx: (Math.random() - 0.5) * 6,
+              vy: (Math.random() - 0.5) * 6,
+              color: '#ef4444',
+              radius: 4,
+              life: 20
+            });
+          }
+
+          if (tree.health <= 0) {
+            tree.health = 0;
+            gameState = 'GAME_OVER';
+            document.getElementById('gameOverModal').style.display = 'flex';
+          }
+          continue;
+        }
+
+        // Bullet Collisions
+        for (let j = bullets.length - 1; j >= 0; j--) {
+          const b = bullets[j];
+          const bDist = Math.hypot(b.x - e.x, b.y - e.y);
+          if (bDist < b.radius + e.radius) {
+            e.health--;
+            bullets.splice(j, 1);
+            playSound('hit');
+
+            // Spark particles
+            for (let p = 0; p < 4; p++) {
+              particles.push({
+                x: e.x,
+                y: e.y,
+                vx: (Math.random() - 0.5) * 4,
+                vy: (Math.random() - 0.5) * 4,
+                color: '#fef08a',
+                radius: 3,
+                life: 15
+              });
+            }
+
+            if (e.health <= 0) {
+              kills++;
+              score += e.type === 'brute' ? 150 : 50;
+              document.getElementById('hudScore').textContent = score;
+
+              // Death particles
+              for (let p = 0; p < 12; p++) {
+                particles.push({
+                  x: e.x,
+                  y: e.y,
+                  vx: (Math.random() - 0.5) * 7,
+                  vy: (Math.random() - 0.5) * 7,
+                  color: e.color,
+                  radius: 5,
+                  life: 25
+                });
+              }
+              enemies.splice(i, 1);
+              break;
+            }
+          }
+        }
+      }
+
+      // Check Wave Clear
+      if (enemies.length === 0 && gameState === 'PLAYING') {
+        gameState = 'WAVE_CLEAR';
+        const sc = scriptures[Math.min(wave - 1, scriptures.length - 1)];
+        document.getElementById('waveModalTitle').textContent = `WAVE ${wave} PURIFIED!`;
+        document.getElementById('waveScripture').innerHTML = `"${sc.text}"<br><strong>— ${sc.ref}</strong>`;
+        document.getElementById('waveModal').style.display = 'flex';
+        playSound('wave');
+      }
+
+      // Particles Update
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life--;
+        if (p.life <= 0) particles.splice(i, 1);
+      }
+
+      // Update Health Bar UI
+      const hpPct = Math.max(0, (tree.health / tree.maxHealth) * 100);
+      document.getElementById('treeHealthBar').style.width = hpPct + '%';
+      if (hpPct < 30) {
+        document.getElementById('treeHealthBar').style.background = '#ef4444';
+      } else if (hpPct < 60) {
+        document.getElementById('treeHealthBar').style.background = '#eab308';
+      } else {
+        document.getElementById('treeHealthBar').style.background = 'linear-gradient(90deg, #22c55e, #eab308)';
+      }
+    }
+
+    // Render Function
+    function render() {
+      ctx.clearRect(0, 0, width, height);
+
+      // Draw Decorative River of Eden (Curved Path)
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+      ctx.lineWidth = 36;
+      ctx.beginPath();
+      ctx.moveTo(0, height * 0.2);
+      ctx.bezierCurveTo(width * 0.3, height * 0.35, width * 0.7, height * 0.65, width, height * 0.8);
+      ctx.stroke();
+
+      // River Water Highlights
+      ctx.strokeStyle = 'rgba(186, 230, 253, 0.4)';
+      ctx.lineWidth = 8;
+      ctx.stroke();
+
+      // Draw Flowers
+      blossoms.forEach(b => {
+        b.glow += 0.03;
+        ctx.fillStyle = b.color;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.size + Math.sin(b.glow) * 0.8, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Draw Sanctuary Aura around Tree
+      const treePulse = Math.sin(Date.now() * 0.003) * 8;
+      const grad = ctx.createRadialGradient(tree.x, tree.y, 10, tree.x, tree.y, tree.radius + 40 + treePulse);
+      grad.addColorStop(0, 'rgba(234, 179, 8, 0.4)');
+      grad.addColorStop(0.6, 'rgba(34, 197, 94, 0.2)');
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(tree.x, tree.y, tree.radius + 40 + treePulse, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Draw Tree of Life
+      ctx.fillStyle = '#854d0e';
+      ctx.beginPath();
+      ctx.arc(tree.x, tree.y, tree.radius * 0.45, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Tree Foliage (Lush Golden-Emerald Canopy)
+      ctx.fillStyle = '#22c55e';
+      ctx.beginPath();
+      ctx.arc(tree.x, tree.y, tree.radius * 0.85, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#eab308';
+      ctx.beginPath();
+      ctx.arc(tree.x, tree.y, tree.radius * 0.55, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Tree Trunk Heart Icon
+      ctx.font = '24px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🌳', tree.x, tree.y);
+
+      // Draw Bullets
+      bullets.forEach(b => {
+        ctx.fillStyle = b.color;
+        ctx.shadowColor = '#fef08a';
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      });
+
+      // Draw Enemies
+      enemies.forEach(e => {
+        ctx.save();
+        ctx.translate(e.x, e.y);
+        ctx.fillStyle = e.color;
+        ctx.shadowColor = e.color;
+        ctx.shadowBlur = 10;
+
+        if (e.type === 'serpent') {
+          // Snake shape
+          ctx.beginPath();
+          ctx.ellipse(0, 0, e.radius, e.radius * 0.5, e.pulse, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#fef08a';
+          ctx.font = '14px sans-serif';
+          ctx.fillText('🐍', 0, 0);
+        } else if (e.type === 'brute') {
+          // Heavy Shadow
+          ctx.beginPath();
+          ctx.arc(0, 0, e.radius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#fff';
+          ctx.font = '16px sans-serif';
+          ctx.fillText('👹', 0, 0);
+        } else {
+          // Doubt Wisp
+          ctx.beginPath();
+          ctx.arc(0, 0, e.radius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#fff';
+          ctx.font = '12px sans-serif';
+          ctx.fillText('👁️', 0, 0);
+        }
+        ctx.restore();
+      });
+
+      // Draw Particles
+      particles.forEach(p => {
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Draw Sentinel Player
+      ctx.save();
+      ctx.translate(player.x, player.y);
+      ctx.rotate(player.angle);
+
+      // Sentinel Robe / Body
+      ctx.fillStyle = '#38bdf8';
+      ctx.shadowColor = '#38bdf8';
+      ctx.shadowBlur = 14;
+      ctx.beginPath();
+      ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Staff / Light Rod
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(8, -3, 18, 6);
+
+      // Player Eyes / Direction Pointer
+      ctx.fillStyle = '#051a0d';
+      ctx.beginPath();
+      ctx.arc(6, -5, 3, 0, Math.PI * 2);
+      ctx.arc(6, 5, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+
+      // Aim Crosshair
+      if (gameState === 'PLAYING' && !touchControl) {
+        ctx.strokeStyle = 'rgba(254, 240, 138, 0.7)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(mouse.x, mouse.y, 10, 0, Math.PI * 2);
+        ctx.moveTo(mouse.x - 14, mouse.y);
+        ctx.lineTo(mouse.x + 14, mouse.y);
+        ctx.moveTo(mouse.x, mouse.y - 14);
+        ctx.lineTo(mouse.x, mouse.y + 14);
+        ctx.stroke();
+      }
+
+      requestAnimationFrame(() => {
+        update();
+        render();
+      });
+    }
+
+    render();
+  </script>
+</body>
+</html>
