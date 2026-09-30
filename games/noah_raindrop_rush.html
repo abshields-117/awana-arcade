@@ -337,7 +337,8 @@
     let score = 0;
     let timberCollected = 0;
     let animalsRescued = 0;
-    let hearts = 3;
+    let hearts = 5;
+    const maxHearts = 5;
     let wave = 1;
     let waveTimer = 0;
     let shieldTimer = 0;
@@ -352,7 +353,7 @@
       height: 52,
       vx: 0,
       vy: 0,
-      speed: 6.5,
+      speed: 7.2,
       isGrounded: true,
       facing: 1, // 1 = right, -1 = left
       invulnerableTimer: 0
@@ -416,7 +417,7 @@
       score = 0;
       timberCollected = 0;
       animalsRescued = 0;
-      hearts = 3;
+      hearts = 5;
       wave = 1;
       waveTimer = 0;
       shieldTimer = 0;
@@ -510,32 +511,35 @@
       }
 
       // Spawn Raindrops
-      // Spawn rate scales with wave
-      const dropSpawnRate = Math.min(2 + wave * 1.5, 14);
+      // Gentle curve suited for kids: slower fall speed, tighter spacing
+      const dropSpawnRate = Math.min(1 + Math.floor(wave * 0.8), 6);
       for (let i = 0; i < dropSpawnRate; i++) {
-        if (Math.random() < 0.35) {
-          const isGiant = wave >= 3 && Math.random() < 0.08;
+        if (Math.random() < 0.22) {
+          const isGiant = wave >= 3 && Math.random() < 0.05;
           raindrops.push({
-            x: Math.random() * (canvas.width + 100) - 50,
+            x: Math.random() * (canvas.width + 80) - 40,
             y: -20,
-            vx: wave >= 3 ? Math.sin(waveTimer * 0.02) * 2.5 : 0.5,
-            vy: 7 + Math.random() * 6 + wave * 0.6,
-            radius: isGiant ? 10 : 3.5 + Math.random() * 2,
+            vx: wave >= 3 ? Math.sin(waveTimer * 0.015) * 1.5 : 0.2,
+            vy: 3.5 + Math.random() * 2.2 + (wave - 1) * 0.35,
+            radius: isGiant ? 8 : 3.0 + Math.random() * 1.8,
             isGiant: isGiant,
             color: isGiant ? '#67e8f9' : '#38bdf8'
           });
         }
       }
 
-      // Spawn Items (Gopher Wood, Pitch Shield, Animals)
-      if (Math.random() < 0.025) {
+      // Spawn Items (Gopher Wood, Pitch Shield, Animals, Hearts)
+      if (Math.random() < 0.038) {
         const itemTypeRoll = Math.random();
         let type = 'wood';
         let icon = '🪵';
-        if (itemTypeRoll < 0.45) {
+        if (hearts < maxHearts && Math.random() < 0.22) {
+          type = 'heart';
+          icon = '❤️';
+        } else if (itemTypeRoll < 0.38) {
           type = 'wood';
           icon = '🪵';
-        } else if (itemTypeRoll < 0.75) {
+        } else if (itemTypeRoll < 0.68) {
           type = 'animal';
           const animals = ['🕊️', '🐑', '🦁', '🐘'];
           icon = animals[Math.floor(Math.random() * animals.length)];
@@ -547,7 +551,7 @@
         items.push({
           x: 40 + Math.random() * (canvas.width - 80),
           y: -30,
-          vy: 2.2 + Math.random() * 1.5,
+          vy: 1.8 + Math.random() * 1.2,
           type: type,
           icon: icon,
           size: 28
@@ -555,11 +559,11 @@
       }
 
       // Lightning Strikes in Wave 3+
-      if (wave >= 3 && Math.random() < 0.007) {
+      if (wave >= 3 && Math.random() < 0.005) {
         const strikeX = 60 + Math.random() * (canvas.width - 120);
         lightningStrikes.push({
           x: strikeX,
-          timer: 60, // 1 sec warning
+          timer: 90, // Generous 1.5s visual warning for kids
           struck: false
         });
       }
@@ -582,8 +586,8 @@
           continue;
         }
 
-        // Player Collision Check
-        const hitDist = d.radius + (player.width / 2);
+        // Player Collision Check: Forgiving inner-core hitbox
+        const hitDist = d.radius + 10;
         const px = player.x + player.width / 2;
         const py = player.y + player.height / 2;
         const dx = d.x - px;
@@ -601,7 +605,7 @@
           } else if (player.invulnerableTimer === 0) {
             hearts--;
             playSound('hit');
-            player.invulnerableTimer = 60; // 1s invulnerable
+            player.invulnerableTimer = 90; // 1.5s generous invulnerability
             flashTimer = 8;
             updateHUD();
             raindrops.splice(i, 1);
@@ -621,10 +625,10 @@
 
         // Collect check
         if (
-          it.x > player.x - 15 &&
-          it.x < player.x + player.width + 15 &&
-          it.y > player.y - 15 &&
-          it.y < player.y + player.height + 15
+          it.x > player.x - 20 &&
+          it.x < player.x + player.width + 20 &&
+          it.y > player.y - 20 &&
+          it.y < player.y + player.height + 20
         ) {
           if (it.type === 'wood') {
             timberCollected++;
@@ -633,11 +637,18 @@
           } else if (it.type === 'animal') {
             animalsRescued += 2; // pair!
             score += 150;
+            if (animalsRescued % 4 === 0 && hearts < maxHearts) {
+              hearts++; // Reward rescuing animals with health!
+            }
             playSound('pickup');
           } else if (it.type === 'pitch') {
-            shieldTimer = 360; // 6 seconds shield
+            shieldTimer = 600; // 10 seconds shield!
             score += 75;
             playSound('shield');
+          } else if (it.type === 'heart') {
+            if (hearts < maxHearts) hearts++;
+            score += 100;
+            playSound('pickup');
           }
           updateHUD();
           items.splice(i, 1);
@@ -658,10 +669,10 @@
           playSound('thunder');
           flashTimer = 12;
 
-          // Lightning kill zone
-          if (Math.abs(player.x + player.width / 2 - s.x) < 45 && player.invulnerableTimer === 0 && shieldTimer === 0) {
-            hearts -= 2;
-            player.invulnerableTimer = 60;
+          // Lightning kill zone (only 1 heart damage, not instant KO)
+          if (Math.abs(player.x + player.width / 2 - s.x) < 40 && player.invulnerableTimer === 0 && shieldTimer === 0) {
+            hearts -= 1;
+            player.invulnerableTimer = 90;
             updateHUD();
             if (hearts <= 0) {
               gameOver();
