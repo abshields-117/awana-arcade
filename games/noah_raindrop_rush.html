@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Noah's Raindrop Rush — Awana Retro Arcade</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    body {
+      background: #050b14;
+      color: #fff;
+      font-family: 'Courier New', Courier, monospace;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      touch-action: none;
+    }
+    #game-container {
+      position: relative;
+      width: 100%;
+      max-width: 850px;
+      height: 100vh;
+      max-height: 600px;
+      background: #020617;
+      box-shadow: 0 0 30px rgba(14, 165, 233, 0.3);
+      border: 3px solid #38bdf8;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: #0f172a;
+    }
+    .overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(3, 7, 18, 0.88);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+      padding: 20px;
+      text-align: center;
+    }
+    .overlay.hidden { display: none; }
+    h1 {
+      font-size: 32px;
+      color: #38bdf8;
+      text-shadow: 0 0 15px rgba(56, 189, 248, 0.8), 2px 2px #0369a1;
+      margin-bottom: 8px;
+      letter-spacing: 2px;
+    }
+    .subtitle {
+      font-size: 15px;
+      color: #94a3b8;
+      margin-bottom: 16px;
+    }
+    .scripture-pill {
+      background: rgba(14, 165, 233, 0.15);
+      border: 1px solid #38bdf8;
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 13px;
+      color: #7dd3fc;
+      margin-bottom: 20px;
+      max-width: 90%;
+      font-style: italic;
+    }
+    .btn {
+      background: #0284c7;
+      color: #fff;
+      border: 2px solid #38bdf8;
+      padding: 12px 28px;
+      font-size: 18px;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+      transition: all 0.15s ease;
+      font-family: inherit;
+      letter-spacing: 1px;
+      margin: 6px;
+    }
+    .btn:hover {
+      background: #0369a1;
+      transform: scale(1.05);
+      box-shadow: 0 0 25px rgba(56, 189, 248, 0.8);
+    }
+    .instructions {
+      font-size: 13px;
+      color: #cbd5e1;
+      max-width: 500px;
+      line-height: 1.5;
+      margin-top: 15px;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid #334155;
+    }
+    .hud {
+      position: absolute;
+      top: 10px;
+      left: 15px;
+      right: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 16px;
+      font-weight: bold;
+      color: #f8fafc;
+      text-shadow: 1px 1px 3px #000;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .hud-pill {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid #475569;
+      padding: 6px 12px;
+      border-radius: 12px;
+      display: flex;
+      gap: 10px;
+    }
+    .hud-shield {
+      color: #38bdf8;
+    }
+    /* Touch controls on mobile */
+    .touch-controls {
+      position: absolute;
+      bottom: 15px;
+      left: 0; right: 0;
+      display: none;
+      justify-content: space-between;
+      padding: 0 25px;
+      z-index: 15;
+    }
+    @media (max-width: 800px) {
+      .touch-controls { display: flex; }
+      #game-container { max-height: 100vh; border: none; border-radius: 0; }
+    }
+    .touch-btn {
+      width: 70px;
+      height: 70px;
+      background: rgba(2, 132, 199, 0.5);
+      border: 2px solid #38bdf8;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+    }
+    .touch-btn:active {
+      background: rgba(56, 189, 248, 0.8);
+      transform: scale(0.95);
+    }
+  </style>
+</head>
+<body>
+
+  <div id="game-container">
+    <canvas id="canvas" width="800" height="550"></canvas>
+
+    <!-- HUD -->
+    <div class="hud">
+      <div class="hud-pill">
+        <span>🌊 WAVE: <span id="hud-wave" style="color:#38bdf8;">1</span></span>
+        <span>🪵 TIMBER: <span id="hud-timber" style="color:#fbbf24;">0</span></span>
+        <span>🕊️ ANIMALS: <span id="hud-animals" style="color:#4ade80;">0</span></span>
+      </div>
+      <div class="hud-pill">
+        <span class="hud-shield" id="hud-shield-container" style="display:none;">🛡️ SHIELD: <span id="hud-shield-timer">5</span>s</span>
+        <span>❤️ HEARTS: <span id="hud-hearts" style="color:#f43f5e;">❤❤❤</span></span>
+        <span>🏆 SCORE: <span id="hud-score" style="color:#38bdf8;">0</span></span>
+      </div>
+    </div>
+
+    <!-- Start Overlay -->
+    <div id="start-overlay" class="overlay">
+      <h1>NOAH'S RAINDROP RUSH</h1>
+      <div class="subtitle">PRELUDE TO THE GREAT FLOOD</div>
+      <div class="scripture-pill">
+        "In the six hundredth year of Noah's life... all the fountains of the great deep were broken up, and the windows of heaven were opened." — Genesis 7:11
+      </div>
+      <button class="btn" id="start-btn">▶ START DELUGE RUSH</button>
+      <div class="instructions">
+        <strong>🎮 HOW TO PLAY:</strong><br>
+        • Move: <strong>A / D</strong> or <strong>Left / Right Arrows</strong> (or Drag/Touch)<br>
+        • Jump: <strong>W / Up Arrow / Spacebar</strong> to hop over rising puddle water!<br>
+        • <strong>Dodge</strong> the falling raindrops, giant hail, and lightning bolts!<br>
+        • <strong>Collect</strong> Gopher Wood (🪵), Pitch Jars (🏺) for rain shields, and Animal Pairs (🕊️🐑🦁) before the Ark door shuts!
+      </div>
+    </div>
+
+    <!-- Game Over Overlay -->
+    <div id="gameover-overlay" class="overlay hidden">
+      <h1 id="gameover-title" style="color:#f43f5e;">SOAKED BY THE STORM!</h1>
+      <div class="scripture-pill" id="gameover-scripture">
+        "Noah found grace in the eyes of the LORD." — Genesis 6:8
+      </div>
+      <div style="font-size: 22px; color: #fbbf24; margin-bottom: 8px;">
+        FINAL SCORE: <span id="final-score">0</span>
+      </div>
+      <div style="font-size: 15px; color: #94a3b8; margin-bottom: 20px;">
+        Timber Gathered: <span id="final-timber">0</span> &bull; Animals Rescued: <span id="final-animals">0</span>
+      </div>
+      <button class="btn" id="restart-btn">↺ TRY AGAIN</button>
+      <a href="../index.html" class="btn" style="background:#334155; border-color:#64748b; text-decoration:none;">⬅ BACK TO ARCADE</a>
+    </div>
+
+    <!-- Touch Controls -->
+    <div class="touch-controls">
+      <div style="display:flex; gap:12px;">
+        <div class="touch-btn" id="t-left">◀</div>
+        <div class="touch-btn" id="t-right">▶</div>
+      </div>
+      <div class="touch-btn" id="t-jump" style="background:rgba(16, 185, 129, 0.5); border-color:#34d399;">⬆</div>
+    </div>
+  </div>
+
+  <script>
+    // --- AUDIO SYSTEM (Procedural Web Audio) ---
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) audioCtx = new AudioCtx();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function playSound(type) {
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+
+      if (type === 'drop') {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600 + Math.random() * 200, now);
+        osc.frequency.exponentialRampToValueAtTime(150, now + 0.08);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.08);
+      } else if (type === 'hit') {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(160, now);
+        osc.frequency.linearRampToValueAtTime(40, now + 0.25);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.25);
+      } else if (type === 'pickup') {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(440, now);
+        osc.frequency.setValueAtTime(660, now + 0.08);
+        osc.frequency.setValueAtTime(880, now + 0.16);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.25);
+      } else if (type === 'shield') {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(300, now);
+        osc.frequency.linearRampToValueAtTime(900, now + 0.3);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.3);
+      } else if (type === 'thunder') {
+        // Synthesize rolling thunder
+        const bufferSize = audioCtx.sampleRate * 1.5;
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.4));
+        }
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(140, now);
+        filter.frequency.linearRampToValueAtTime(50, now + 1.5);
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(0.5, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 1.5);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(audioCtx.destination);
+        noise.start(now);
+      } else if (type === 'jump') {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.exponentialRampToValueAtTime(440, now + 0.12);
+        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.12);
+      }
+    }
+
+    // --- GAME ENGINE ---
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    let state = 'menu'; // menu, playing, gameover
+    let score = 0;
+    let timberCollected = 0;
+    let animalsRescued = 0;
+    let hearts = 3;
+    let wave = 1;
+    let waveTimer = 0;
+    let shieldTimer = 0;
+    let flashTimer = 0;
+    let waterLevel = 0; // rises in later waves
+
+    // Player (Noah)
+    const player = {
+      x: 400,
+      y: 470,
+      width: 36,
+      height: 52,
+      vx: 0,
+      vy: 0,
+      speed: 6.5,
+      isGrounded: true,
+      facing: 1, // 1 = right, -1 = left
+      invulnerableTimer: 0
+    };
+
+    // Arrays
+    let raindrops = [];
+    let items = []; // wood, pitch, animals
+    let splashes = [];
+    let lightningStrikes = [];
+    let backgroundClouds = [];
+
+    // Keys
+    const keys = { left: false, right: false, up: false };
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = true;
+      if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true;
+      if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') {
+        keys.up = true;
+        tryJump();
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = false;
+      if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = false;
+      if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') keys.up = false;
+    });
+
+    // Touch controls
+    const bindTouch = (id, key) => {
+      const el = document.getElementById(id);
+      el.addEventListener('touchstart', (e) => { e.preventDefault(); keys[key] = true; if(key === 'up') tryJump(); });
+      el.addEventListener('touchend', (e) => { e.preventDefault(); keys[key] = false; });
+    };
+    bindTouch('t-left', 'left');
+    bindTouch('t-right', 'right');
+    bindTouch('t-jump', 'up');
+
+    function tryJump() {
+      if (state !== 'playing') return;
+      if (player.isGrounded) {
+        player.vy = -12.5;
+        player.isGrounded = false;
+        playSound('jump');
+      }
+    }
+
+    // Init clouds
+    for (let i = 0; i < 6; i++) {
+      backgroundClouds.push({
+        x: Math.random() * 800,
+        y: 20 + Math.random() * 80,
+        width: 140 + Math.random() * 100,
+        speed: 0.2 + Math.random() * 0.4
+      });
+    }
+
+    function resetGame() {
+      score = 0;
+      timberCollected = 0;
+      animalsRescued = 0;
+      hearts = 3;
+      wave = 1;
+      waveTimer = 0;
+      shieldTimer = 0;
+      waterLevel = 0;
+      raindrops = [];
+      items = [];
+      splashes = [];
+      lightningStrikes = [];
+      player.x = 400;
+      player.y = 470;
+      player.vx = 0;
+      player.vy = 0;
+      player.isGrounded = true;
+      player.invulnerableTimer = 0;
+      updateHUD();
+    }
+
+    function updateHUD() {
+      document.getElementById('hud-wave').innerText = wave;
+      document.getElementById('hud-timber').innerText = timberCollected;
+      document.getElementById('hud-animals').innerText = animalsRescued;
+      document.getElementById('hud-score').innerText = score;
+      let heartStr = '';
+      for (let i = 0; i < hearts; i++) heartStr += '❤';
+      document.getElementById('hud-hearts').innerText = heartStr || '☠️';
+
+      const shieldCont = document.getElementById('hud-shield-container');
+      if (shieldTimer > 0) {
+        shieldCont.style.display = 'inline';
+        document.getElementById('hud-shield-timer').innerText = Math.ceil(shieldTimer / 60);
+      } else {
+        shieldCont.style.display = 'none';
+      }
+    }
+
+    // --- GAME LOOP ---
+    function update() {
+      if (state !== 'playing') return;
+
+      waveTimer++;
+      // Wave progression every 650 frames (~11 seconds)
+      if (waveTimer % 650 === 0) {
+        wave++;
+        playSound('thunder');
+        flashTimer = 10;
+        updateHUD();
+      }
+
+      if (shieldTimer > 0) {
+        shieldTimer--;
+        if (shieldTimer % 30 === 0) updateHUD();
+      }
+      if (player.invulnerableTimer > 0) player.invulnerableTimer--;
+      if (flashTimer > 0) flashTimer--;
+
+      // Water rises in wave 4+
+      if (wave >= 4 && waterLevel < 45) {
+        waterLevel += 0.04;
+      }
+
+      // Player Movement
+      if (keys.left) {
+        player.vx = -player.speed;
+        player.facing = -1;
+      } else if (keys.right) {
+        player.vx = player.speed;
+        player.facing = 1;
+      } else {
+        player.vx *= 0.8;
+      }
+
+      // Wind drift in later waves
+      if (wave >= 3) {
+        const wind = Math.sin(waveTimer * 0.02) * 1.2;
+        player.x += wind;
+      }
+
+      player.x += player.vx;
+      if (player.x < 15) player.x = 15;
+      if (player.x > canvas.width - player.width - 15) player.x = canvas.width - player.width - 15;
+
+      // Gravity & Ground
+      const groundY = 470 - waterLevel;
+      player.vy += 0.65; // gravity
+      player.y += player.vy;
+
+      if (player.y >= groundY) {
+        player.y = groundY;
+        player.vy = 0;
+        player.isGrounded = true;
+      }
+
+      // Spawn Raindrops
+      // Spawn rate scales with wave
+      const dropSpawnRate = Math.min(2 + wave * 1.5, 14);
+      for (let i = 0; i < dropSpawnRate; i++) {
+        if (Math.random() < 0.35) {
+          const isGiant = wave >= 3 && Math.random() < 0.08;
+          raindrops.push({
+            x: Math.random() * (canvas.width + 100) - 50,
+            y: -20,
+            vx: wave >= 3 ? Math.sin(waveTimer * 0.02) * 2.5 : 0.5,
+            vy: 7 + Math.random() * 6 + wave * 0.6,
+            radius: isGiant ? 10 : 3.5 + Math.random() * 2,
+            isGiant: isGiant,
+            color: isGiant ? '#67e8f9' : '#38bdf8'
+          });
+        }
+      }
+
+      // Spawn Items (Gopher Wood, Pitch Shield, Animals)
+      if (Math.random() < 0.025) {
+        const itemTypeRoll = Math.random();
+        let type = 'wood';
+        let icon = '🪵';
+        if (itemTypeRoll < 0.45) {
+          type = 'wood';
+          icon = '🪵';
+        } else if (itemTypeRoll < 0.75) {
+          type = 'animal';
+          const animals = ['🕊️', '🐑', '🦁', '🐘'];
+          icon = animals[Math.floor(Math.random() * animals.length)];
+        } else {
+          type = 'pitch';
+          icon = '🏺';
+        }
+
+        items.push({
+          x: 40 + Math.random() * (canvas.width - 80),
+          y: -30,
+          vy: 2.2 + Math.random() * 1.5,
+          type: type,
+          icon: icon,
+          size: 28
+        });
+      }
+
+      // Lightning Strikes in Wave 3+
+      if (wave >= 3 && Math.random() < 0.007) {
+        const strikeX = 60 + Math.random() * (canvas.width - 120);
+        lightningStrikes.push({
+          x: strikeX,
+          timer: 60, // 1 sec warning
+          struck: false
+        });
+      }
+
+      // Update Raindrops
+      for (let i = raindrops.length - 1; i >= 0; i--) {
+        const d = raindrops[i];
+        d.x += d.vx;
+        d.y += d.vy;
+
+        // Ground hit
+        if (d.y >= groundY + 35) {
+          splashes.push({
+            x: d.x,
+            y: groundY + 40,
+            radius: d.radius * 1.4,
+            life: 8
+          });
+          raindrops.splice(i, 1);
+          continue;
+        }
+
+        // Player Collision Check
+        const hitDist = d.radius + (player.width / 2);
+        const px = player.x + player.width / 2;
+        const py = player.y + player.height / 2;
+        const dx = d.x - px;
+        const dy = d.y - py;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < hitDist) {
+          // Check shield
+          if (shieldTimer > 0) {
+            playSound('drop');
+            // Deflect
+            splashes.push({ x: d.x, y: d.y, radius: 12, life: 10 });
+            score += 5;
+            raindrops.splice(i, 1);
+          } else if (player.invulnerableTimer === 0) {
+            hearts--;
+            playSound('hit');
+            player.invulnerableTimer = 60; // 1s invulnerable
+            flashTimer = 8;
+            updateHUD();
+            raindrops.splice(i, 1);
+
+            if (hearts <= 0) {
+              gameOver();
+              return;
+            }
+          }
+        }
+      }
+
+      // Update Items
+      for (let i = items.length - 1; i >= 0; i--) {
+        const it = items[i];
+        it.y += it.vy;
+
+        // Collect check
+        if (
+          it.x > player.x - 15 &&
+          it.x < player.x + player.width + 15 &&
+          it.y > player.y - 15 &&
+          it.y < player.y + player.height + 15
+        ) {
+          if (it.type === 'wood') {
+            timberCollected++;
+            score += 50;
+            playSound('pickup');
+          } else if (it.type === 'animal') {
+            animalsRescued += 2; // pair!
+            score += 150;
+            playSound('pickup');
+          } else if (it.type === 'pitch') {
+            shieldTimer = 360; // 6 seconds shield
+            score += 75;
+            playSound('shield');
+          }
+          updateHUD();
+          items.splice(i, 1);
+          continue;
+        }
+
+        if (it.y > canvas.height + 20) {
+          items.splice(i, 1);
+        }
+      }
+
+      // Update Lightning Strikes
+      for (let i = lightningStrikes.length - 1; i >= 0; i--) {
+        const s = lightningStrikes[i];
+        s.timer--;
+        if (s.timer === 0) {
+          s.struck = true;
+          playSound('thunder');
+          flashTimer = 12;
+
+          // Lightning kill zone
+          if (Math.abs(player.x + player.width / 2 - s.x) < 45 && player.invulnerableTimer === 0 && shieldTimer === 0) {
+            hearts -= 2;
+            player.invulnerableTimer = 60;
+            updateHUD();
+            if (hearts <= 0) {
+              gameOver();
+              return;
+            }
+          }
+        } else if (s.timer < -15) {
+          lightningStrikes.splice(i, 1);
+        }
+      }
+
+      // Splashes
+      for (let i = splashes.length - 1; i >= 0; i--) {
+        splashes[i].life--;
+        if (splashes[i].life <= 0) splashes.splice(i, 1);
+      }
+
+      // Score per frame survived
+      score += 1;
+      if (score % 60 === 0) updateHUD();
+    }
+
+    function gameOver() {
+      state = 'gameover';
+      document.getElementById('final-score').innerText = score;
+      document.getElementById('final-timber').innerText = timberCollected;
+      document.getElementById('final-animals').innerText = animalsRescued;
+      document.getElementById('gameover-overlay').classList.remove('hidden');
+    }
+
+    // --- RENDER ---
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Thunder flash
+      if (flashTimer > 0) {
+        ctx.fillStyle = `rgba(255, 255, 255, ${flashTimer * 0.08})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
+      // Storm Sky Gradient
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      skyGrad.addColorStop(0, '#020617');
+      skyGrad.addColorStop(0.6, '#0f172a');
+      skyGrad.addColorStop(1, '#1e293b');
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Background Mountains & Distant Ark
+      ctx.fillStyle = '#090d16';
+      ctx.beginPath();
+      ctx.moveTo(0, 480);
+      ctx.lineTo(150, 360);
+      ctx.lineTo(320, 480);
+      ctx.lineTo(550, 330);
+      ctx.lineTo(750, 480);
+      ctx.lineTo(800, 480);
+      ctx.fill();
+
+      // The Ark Silhouette on Mount Ararat
+      ctx.fillStyle = '#1c1917';
+      ctx.fillRect(500, 310, 110, 45);
+      ctx.beginPath();
+      ctx.moveTo(480, 335);
+      ctx.lineTo(500, 355);
+      ctx.lineTo(500, 310);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(610, 310);
+      ctx.lineTo(630, 335);
+      ctx.lineTo(610, 355);
+      ctx.fill();
+      // Ark Roof & Window
+      ctx.fillStyle = '#292524';
+      ctx.fillRect(520, 298, 70, 12);
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(550, 302, 10, 5); // lantern light
+
+      // Animated Rain Clouds
+      ctx.fillStyle = '#1e293b';
+      for (let c of backgroundClouds) {
+        c.x += c.speed;
+        if (c.x > canvas.width + 100) c.x = -150;
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, 45, 0, Math.PI * 2);
+        ctx.arc(c.x + 40, c.y - 15, 55, 0, Math.PI * 2);
+        ctx.arc(c.x + 85, c.y, 45, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Ground (Mount Ararat Plateau)
+      ctx.fillStyle = '#1e1b18';
+      ctx.fillRect(0, 500, canvas.width, 50);
+      ctx.fillStyle = '#14532d'; // grassy patches
+      ctx.fillRect(0, 498, canvas.width, 6);
+
+      // Rising Flood Waters
+      if (waterLevel > 0) {
+        ctx.fillStyle = 'rgba(14, 165, 233, 0.45)';
+        ctx.fillRect(0, 504 - waterLevel, canvas.width, waterLevel + 46);
+        // Water surface line
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let x = 0; x < canvas.width; x += 20) {
+          const waveY = 504 - waterLevel + Math.sin((x + waveTimer * 3) * 0.05) * 3;
+          if (x === 0) ctx.moveTo(x, waveY);
+          else ctx.lineTo(x, waveY);
+        }
+        ctx.stroke();
+      }
+
+      // Lightning Strikes
+      for (let s of lightningStrikes) {
+        if (!s.struck) {
+          // Warning indicator on ground
+          const pulse = Math.sin(s.timer * 0.3) * 0.5 + 0.5;
+          ctx.fillStyle = `rgba(245, 158, 11, ${pulse})`;
+          ctx.beginPath();
+          ctx.arc(s.x, 495, 25, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.font = '20px Arial';
+          ctx.fillText('⚡', s.x - 10, 485);
+        } else {
+          // Lightning bolt flash
+          ctx.strokeStyle = '#fef08a';
+          ctx.lineWidth = 6;
+          ctx.shadowColor = '#38bdf8';
+          ctx.shadowBlur = 20;
+          ctx.beginPath();
+          ctx.moveTo(s.x, 0);
+          ctx.lineTo(s.x - 15, 140);
+          ctx.lineTo(s.x + 20, 260);
+          ctx.lineTo(s.x - 10, 380);
+          ctx.lineTo(s.x, 500);
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+        }
+      }
+
+      // Splashes
+      ctx.strokeStyle = '#7dd3fc';
+      ctx.lineWidth = 2;
+      for (let sp of splashes) {
+        ctx.beginPath();
+        ctx.arc(sp.x, sp.y, sp.radius * (1 - sp.life / 10), 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Falling Items (Wood, Pitch, Animals)
+      ctx.textAlign = 'center';
+      for (let it of items) {
+        ctx.font = '26px Arial';
+        ctx.fillText(it.icon, it.x, it.y);
+      }
+
+      // Falling Raindrops
+      for (let d of raindrops) {
+        ctx.fillStyle = d.color;
+        ctx.shadowColor = d.color;
+        ctx.shadowBlur = d.isGiant ? 12 : 4;
+        ctx.beginPath();
+        // Teardrop shape
+        ctx.ellipse(d.x, d.y, d.radius * 0.8, d.radius * 1.8, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+
+      // Draw Player (Noah)
+      if (player.invulnerableTimer % 6 < 3) {
+        ctx.save();
+        ctx.translate(player.x + player.width / 2, player.y + player.height / 2);
+        if (player.facing === -1) ctx.scale(-1, 1);
+
+        // Pitch Shield Aura
+        if (shieldTimer > 0) {
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 3;
+          ctx.shadowColor = '#38bdf8';
+          ctx.shadowBlur = 15;
+          ctx.beginPath();
+          ctx.arc(0, 0, 36, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+          // Shield Umbrella
+          ctx.fillStyle = '#0284c7';
+          ctx.beginPath();
+          ctx.arc(0, -32, 28, Math.PI, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Noah's Robe (Blue/Tan)
+        ctx.fillStyle = '#b45309'; // brown outer coat
+        ctx.fillRect(-14, -8, 28, 34);
+        ctx.fillStyle = '#fde68a'; // inner tunic
+        ctx.fillRect(-8, -4, 16, 30);
+
+        // Head & Skin
+        ctx.fillStyle = '#fed7aa';
+        ctx.beginPath();
+        ctx.arc(0, -18, 12, 0, Math.PI * 2);
+        ctx.fill();
+
+        // White Beard
+        ctx.fillStyle = '#f8fafc';
+        ctx.beginPath();
+        ctx.arc(4, -14, 10, 0, Math.PI);
+        ctx.fill();
+
+        // Eyes
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(4, -20, 3, 4);
+
+        // Head covering
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(-12, -28, 24, 8);
+
+        ctx.restore();
+      }
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    function gameLoop() {
+      update();
+      draw();
+    }
+
+    // --- BUTTON HANDLERS ---
+    document.getElementById('start-btn').addEventListener('click', () => {
+      initAudio();
+      document.getElementById('start-overlay').classList.add('hidden');
+      resetGame();
+      state = 'playing';
+      playSound('thunder');
+    });
+
+    document.getElementById('restart-btn').addEventListener('click', () => {
+      document.getElementById('gameover-overlay').classList.add('hidden');
+      resetGame();
+      state = 'playing';
+      playSound('thunder');
+    });
+
+    // Start rendering loop
+    requestAnimationFrame(gameLoop);
+  </script>
+</body>
+</html>
