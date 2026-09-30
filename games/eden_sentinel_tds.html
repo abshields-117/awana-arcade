@@ -474,6 +474,8 @@
     function startGame() {
       initAudio();
       document.getElementById('startModal').style.display = 'none';
+      document.getElementById('waveModal').style.display = 'none';
+      document.getElementById('gameOverModal').style.display = 'none';
       spawnTimeouts.forEach(t => clearTimeout(t));
       spawnTimeouts = [];
       wave = 1;
@@ -497,6 +499,7 @@
 
     function restartGame() {
       document.getElementById('gameOverModal').style.display = 'none';
+      document.getElementById('waveModal').style.display = 'none';
       startGame();
     }
 
@@ -511,19 +514,37 @@
     let waveTotalEnemies = 0;
     let waveSpawnedEnemies = 0;
     let spawnTimeouts = [];
+    let waveStartTime = 0;
 
     function spawnWave() {
       // Clear any pending spawn timers from prior waves
       spawnTimeouts.forEach(t => clearTimeout(t));
       spawnTimeouts = [];
       enemies = [];
+      waveStartTime = Date.now();
 
       document.getElementById('hudWave').textContent = wave;
       let count = 8 + wave * 6;
       waveTotalEnemies = count;
-      waveSpawnedEnemies = 0;
 
-      for (let i = 0; i < count; i++) {
+      // Spawn initial enemy immediately so enemies array is NEVER empty at start of wave
+      let edge = Math.floor(Math.random() * 4);
+      let initX = (edge === 0 || edge === 2) ? Math.random() * width : (edge === 1 ? width + 30 : -30);
+      let initY = (edge === 0) ? -30 : ((edge === 2) ? height + 30 : Math.random() * height);
+      enemies.push({
+        x: initX,
+        y: initY,
+        type: 'shadow',
+        health: 1,
+        speed: 1.6,
+        radius: 16,
+        color: '#a855f7',
+        pulse: 0
+      });
+      waveSpawnedEnemies = 1;
+
+      // Stagger remaining enemies
+      for (let i = 1; i < count; i++) {
         const timeoutId = setTimeout(() => {
           if (gameState !== 'PLAYING') return;
           waveSpawnedEnemies++;
@@ -566,7 +587,7 @@
             color: col,
             pulse: 0
           });
-        }, 200 + i * 450);
+        }, 300 + i * 420);
         spawnTimeouts.push(timeoutId);
       }
     }
@@ -759,8 +780,9 @@
         }
       }
 
-      // Check Wave Clear: only triggers when all wave enemies have spawned AND all are destroyed
-      if (waveSpawnedEnemies >= waveTotalEnemies && enemies.length === 0 && gameState === 'PLAYING') {
+      // Check Wave Clear: requires at least 3 seconds of combat, all enemies spawned, and all enemies defeated
+      const waveElapsed = Date.now() - waveStartTime;
+      if (waveElapsed > 3000 && waveTotalEnemies > 0 && waveSpawnedEnemies >= waveTotalEnemies && enemies.length === 0 && gameState === 'PLAYING') {
         gameState = 'WAVE_CLEAR';
         const sc = scriptures[Math.min(wave - 1, scriptures.length - 1)];
         document.getElementById('waveModalTitle').textContent = `WAVE ${wave} PURIFIED!`;
