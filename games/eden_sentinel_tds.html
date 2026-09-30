@@ -474,6 +474,8 @@
     function startGame() {
       initAudio();
       document.getElementById('startModal').style.display = 'none';
+      spawnTimeouts.forEach(t => clearTimeout(t));
+      spawnTimeouts = [];
       wave = 1;
       score = 0;
       kills = 0;
@@ -506,13 +508,25 @@
       { ref: "Hebrews 4:9-10", text: "There remains, then, a Sabbath-rest for the people of God; for anyone who enters God’s rest also rests from their works." }
     ];
 
+    let waveTotalEnemies = 0;
+    let waveSpawnedEnemies = 0;
+    let spawnTimeouts = [];
+
     function spawnWave() {
+      // Clear any pending spawn timers from prior waves
+      spawnTimeouts.forEach(t => clearTimeout(t));
+      spawnTimeouts = [];
       enemies = [];
+
       document.getElementById('hudWave').textContent = wave;
       let count = 8 + wave * 6;
+      waveTotalEnemies = count;
+      waveSpawnedEnemies = 0;
+
       for (let i = 0; i < count; i++) {
-        setTimeout(() => {
+        const timeoutId = setTimeout(() => {
           if (gameState !== 'PLAYING') return;
+          waveSpawnedEnemies++;
           // Spawn around perimeter
           let edge = Math.floor(Math.random() * 4);
           let ex, ey;
@@ -552,7 +566,8 @@
             color: col,
             pulse: 0
           });
-        }, i * 450);
+        }, 200 + i * 450);
+        spawnTimeouts.push(timeoutId);
       }
     }
 
@@ -744,8 +759,8 @@
         }
       }
 
-      // Check Wave Clear
-      if (enemies.length === 0 && gameState === 'PLAYING') {
+      // Check Wave Clear: only triggers when all wave enemies have spawned AND all are destroyed
+      if (waveSpawnedEnemies >= waveTotalEnemies && enemies.length === 0 && gameState === 'PLAYING') {
         gameState = 'WAVE_CLEAR';
         const sc = scriptures[Math.min(wave - 1, scriptures.length - 1)];
         document.getElementById('waveModalTitle').textContent = `WAVE ${wave} PURIFIED!`;
