@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Eden Guardians: Defense of the Two Trees — Awana Arcade</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #031408;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #fff;
+    }
+    #gameCanvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      background: radial-gradient(circle at center, #0b3d1b 0%, #05200e 60%, #020e06 100%);
+    }
+
+    /* Top HUD */
+    #topHud {
+      position: absolute;
+      top: 15px;
+      left: 20px;
+      right: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+      pointer-events: none;
+    }
+    .hud-group {
+      display: flex;
+      gap: 12px;
+      pointer-events: auto;
+    }
+    .hud-card {
+      background: rgba(5, 32, 14, 0.88);
+      border: 2px solid #10b981;
+      border-radius: 10px;
+      padding: 6px 14px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+      text-align: center;
+      backdrop-filter: blur(4px);
+    }
+    .hud-title {
+      font-size: 10px;
+      color: #6ee7b7;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+    }
+    .hud-val {
+      font-size: 20px;
+      font-weight: 900;
+      color: #fef08a;
+      text-shadow: 0 0 10px rgba(254, 240, 138, 0.4);
+    }
+
+    /* Central Two Trees Status */
+    #treeStatusContainer {
+      display: flex;
+      gap: 20px;
+      background: rgba(5, 32, 14, 0.9);
+      border: 2px solid #eab308;
+      border-radius: 12px;
+      padding: 8px 18px;
+      box-shadow: 0 4px 20px rgba(234, 179, 8, 0.4);
+      pointer-events: auto;
+    }
+    .tree-box {
+      width: 150px;
+    }
+    .tree-label {
+      font-size: 11px;
+      font-weight: 800;
+      color: #fef08a;
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .tree-bar-bg {
+      width: 100%;
+      height: 10px;
+      background: #14532d;
+      border-radius: 5px;
+      overflow: hidden;
+      border: 1px solid #166534;
+    }
+    .tree-bar-fill {
+      height: 100%;
+      width: 100%;
+      transition: width 0.2s;
+    }
+    .tree-bar-fill.life {
+      background: linear-gradient(90deg, #10b981, #34d399);
+      box-shadow: 0 0 8px #34d399;
+    }
+    .tree-bar-fill.knowledge {
+      background: linear-gradient(90deg, #eab308, #facc15);
+      box-shadow: 0 0 8px #facc15;
+    }
+
+    /* Wisdom Power Button */
+    #btnWisdomFlash {
+      background: linear-gradient(135deg, #eab308, #ca8a04);
+      border: 2px solid #fef08a;
+      border-radius: 8px;
+      padding: 6px 14px;
+      color: #000;
+      font-weight: 900;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 0 15px rgba(250, 204, 21, 0.6);
+      transition: transform 0.1s;
+    }
+    #btnWisdomFlash:active {
+      transform: scale(0.95);
+    }
+    #btnWisdomFlash.cooldown {
+      background: #475569;
+      border-color: #64748b;
+      color: #94a3b8;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    /* Bottom Turret Build Bar */
+    #buildBar {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 15px;
+      background: rgba(5, 32, 14, 0.92);
+      border: 2px solid #10b981;
+      border-radius: 14px;
+      padding: 10px 18px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.8);
+      z-index: 100;
+      backdrop-filter: blur(6px);
+    }
+    .turret-btn {
+      background: #064e3b;
+      border: 2px solid #059669;
+      border-radius: 8px;
+      padding: 8px 14px;
+      color: white;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+      min-width: 120px;
+    }
+    .turret-btn:hover {
+      background: #047857;
+      transform: translateY(-3px);
+      box-shadow: 0 6px 15px rgba(16, 185, 129, 0.4);
+    }
+    .turret-btn.selected {
+      border-color: #facc15;
+      background: #0f766e;
+      box-shadow: 0 0 15px rgba(250, 204, 21, 0.8);
+    }
+    .turret-name {
+      font-size: 13px;
+      font-weight: 800;
+      color: #a7f3d0;
+    }
+    .turret-cost {
+      font-size: 11px;
+      color: #fef08a;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    /* Selected Turret Upgrade Card */
+    #upgradeCard {
+      position: absolute;
+      bottom: 110px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.95);
+      border: 2px solid #38bdf8;
+      border-radius: 12px;
+      padding: 12px 20px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.9);
+      display: none;
+      z-index: 110;
+      min-width: 320px;
+      backdrop-filter: blur(6px);
+    }
+    .upgrade-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .upgrade-title {
+      font-size: 15px;
+      font-weight: 900;
+      color: #38bdf8;
+    }
+    .upgrade-stars {
+      color: #facc15;
+      font-size: 14px;
+    }
+    .upgrade-stats {
+      font-size: 12px;
+      color: #cbd5e1;
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+    .upgrade-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .act-btn {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-weight: 800;
+      font-size: 12px;
+      cursor: pointer;
+      border: none;
+      text-align: center;
+    }
+    .act-btn.upgrade {
+      background: #10b981;
+      color: white;
+    }
+    .act-btn.upgrade:hover { background: #059669; }
+    .act-btn.sell {
+      background: #ef4444;
+      color: white;
+    }
+    .act-btn.sell:hover { background: #dc2626; }
+    .act-btn.close {
+      background: #64748b;
+      color: white;
+    }
+
+    /* Center Wave / Game Over Overlay */
+    #modalOverlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(2, 14, 6, 0.85);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 200;
+      backdrop-filter: blur(8px);
+    }
+    .modal-box {
+      background: #064e3b;
+      border: 3px solid #facc15;
+      border-radius: 16px;
+      padding: 30px 40px;
+      text-align: center;
+      max-width: 500px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+    }
+    .modal-box h2 {
+      font-size: 32px;
+      color: #fef08a;
+      margin-bottom: 12px;
+      text-shadow: 0 0 15px rgba(254, 240, 138, 0.6);
+    }
+    .modal-box p {
+      font-size: 15px;
+      color: #d1fae5;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .play-btn {
+      background: #facc15;
+      border: none;
+      color: #064e3b;
+      font-size: 18px;
+      font-weight: 900;
+      padding: 12px 28px;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 6px 0 #b45309;
+      transition: transform 0.1s;
+    }
+    .play-btn:hover {
+      transform: translateY(-2px);
+    }
+    .play-btn:active {
+      transform: translateY(2px);
+      box-shadow: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Canvas -->
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- Top HUD -->
+  <div id="topHud">
+    <div class="hud-group">
+      <div class="hud-card">
+        <div class="hud-title">Grace Seeds (Gold)</div>
+        <div class="hud-val" id="valGold">350</div>
+      </div>
+      <div class="hud-card">
+        <div class="hud-title">Wave</div>
+        <div class="hud-val" id="valWave">1 / 5</div>
+      </div>
+      <div class="hud-card">
+        <div class="hud-title">Score</div>
+        <div class="hud-val" id="valScore">0</div>
+      </div>
+    </div>
+
+    <!-- Central Two Trees Health -->
+    <div id="treeStatusContainer">
+      <div class="tree-box">
+        <div class="tree-label">
+          <span>🌿 Tree of Life</span>
+          <span id="txtLifeHp">100%</span>
+        </div>
+        <div class="tree-bar-bg">
+          <div class="tree-bar-fill life" id="barLife" style="width: 100%;"></div>
+        </div>
+      </div>
+      <div class="tree-box">
+        <div class="tree-label">
+          <span>🍎 Tree of Knowledge</span>
+          <span id="txtKnowledgeHp">100%</span>
+        </div>
+        <div class="tree-bar-bg">
+          <div class="tree-bar-fill knowledge" id="barKnowledge" style="width: 100%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Special Power & Exit -->
+    <div class="hud-group">
+      <button id="btnWisdomFlash" onclick="triggerWisdomFlash()">⚡ Wisdom Flash (Freeze 3s)</button>
+      <a href="../index.html" class="hud-card" style="text-decoration:none; display:flex; align-items:center; justify-content:center; color:#fef08a; font-weight:800; font-size:14px;">🏠 Arcade</a>
+    </div>
+  </div>
+
+  <!-- Bottom Turret Build Bar -->
+  <div id="buildBar">
+    <div class="turret-btn" id="btnT1" onclick="selectTurretToBuild(0)">
+      <div class="turret-name">⚔️ Flame Blade</div>
+      <div class="turret-cost">Cost: 100</div>
+    </div>
+    <div class="turret-btn" id="btnT2" onclick="selectTurretToBuild(1)">
+      <div class="turret-name">💧 Living Water</div>
+      <div class="turret-cost">Cost: 125</div>
+    </div>
+    <div class="turret-btn" id="btnT3" onclick="selectTurretToBuild(2)">
+      <div class="turret-name">✨ Truth Beacon</div>
+      <div class="turret-cost">Cost: 150</div>
+    </div>
+    <div class="turret-btn" id="btnT4" onclick="selectTurretToBuild(3)">
+      <div class="turret-name">🌲 Cedar Ballista</div>
+      <div class="turret-cost">Cost: 200</div>
+    </div>
+  </div>
+
+  <!-- Upgrade Modal for Placed Turret -->
+  <div id="upgradeCard">
+    <div class="upgrade-header">
+      <span class="upgrade-title" id="upTitle">Flame Blade</span>
+      <span class="upgrade-stars" id="upStars">⭐ Tier 1</span>
+    </div>
+    <div class="upgrade-stats" id="upStats">Damage: 25 | Range: 110 | Speed: 1.2s</div>
+    <div class="upgrade-actions">
+      <button class="act-btn upgrade" id="btnUpgradeTurret" onclick="upgradeSelectedTurret()">⬆️ Upgrade (150)</button>
+      <button class="act-btn sell" onclick="sellSelectedTurret()">💰 Sell</button>
+      <button class="act-btn close" onclick="closeUpgradeCard()">✖️ Close</button>
+    </div>
+  </div>
+
+  <!-- Modal Overlay (Start / Next Wave / Game Over) -->
+  <div id="modalOverlay">
+    <div class="modal-box" id="modalBox">
+      <h2 id="modalTitle">🛡️ Eden Guardians 🌿</h2>
+      <p id="modalDesc">
+        Welcome to the Garden of Eden! Place Guardian Turrets along the stone pathways to protect both the <strong>Tree of Life</strong> and the <strong>Tree of Knowledge</strong> from creeping shadows, weeds, and the ancient serpent!
+      </p>
+      <button class="play-btn" id="modalBtn" onclick="startNextWave()">Start Wave 1</button>
+    </div>
+  </div>
+
+  <script>
+    // --- Web Audio API Sound FX ---
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let actx = null;
+    function getAudio() {
+      if (!actx) actx = new AudioCtx();
+      return actx;
+    }
+
+    function soundLaser() {
+      try {
+        const a = getAudio();
+        const osc = a.createOscillator();
+        const g = a.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(600, a.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(150, a.currentTime + 0.12);
+        g.gain.setValueAtTime(0.15, a.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.01, a.currentTime + 0.12);
+        osc.connect(g); g.connect(a.destination);
+        osc.start(); osc.stop(a.currentTime + 0.12);
+      } catch (e) {}
+    }
+
+    function soundSplash() {
+      try {
+        const a = getAudio();
+        const osc = a.createOscillator();
+        const g = a.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(300, a.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(80, a.currentTime + 0.18);
+        g.gain.setValueAtTime(0.2, a.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.01, a.currentTime + 0.18);
+        osc.connect(g); g.connect(a.destination);
+        osc.start(); osc.stop(a.currentTime + 0.18);
+      } catch (e) {}
+    }
+
+    function soundChime() {
+      try {
+        const a = getAudio();
+        [523.25, 659.25, 783.99].forEach((f, i) => {
+          setTimeout(() => {
+            const osc = a.createOscillator();
+            const g = a.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(f, a.currentTime);
+            g.gain.setValueAtTime(0.2, a.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.01, a.currentTime + 0.25);
+            osc.connect(g); g.connect(a.destination);
+            osc.start(); osc.stop(a.currentTime + 0.25);
+          }, i * 60);
+        });
+      } catch (e) {}
+    }
+
+    function soundFreeze() {
+      try {
+        const a = getAudio();
+        const osc = a.createOscillator();
+        const g = a.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, a.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1760, a.currentTime + 0.4);
+        g.gain.setValueAtTime(0.3, a.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.01, a.currentTime + 0.4);
+        osc.connect(g); g.connect(a.destination);
+        osc.start(); osc.stop(a.currentTime + 0.4);
+      } catch (e) {}
+    }
+
+    // --- Game Variables ---
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    let gold = 350;
+    let wave = 1;
+    let score = 0;
+    let lifeHp = 100;
+    let knowledgeHp = 100;
+    let gameState = 'START'; // 'START', 'PLAYING', 'WAVE_CLEAR', 'GAME_OVER'
+
+    let wisdomCooldown = false;
+    let freezeTimer = 0;
+
+    // Turret Blueprints
+    const TURRET_TYPES = [
+      {
+        id: 'blade',
+        name: 'Flame Blade',
+        icon: '⚔️',
+        cost: 100,
+        range: 110,
+        rate: 0.6, // seconds
+        dmg: 30,
+        tiers: [
+          { tier: 1, name: 'Flame Blade', dmg: 30, range: 110, rate: 0.6, upCost: 140 },
+          { tier: 2, name: 'Blazing Arc', dmg: 60, range: 130, rate: 0.5, upCost: 240 },
+          { tier: 3, name: 'Archangel Inferno', dmg: 120, range: 160, rate: 0.4, upCost: 0 }
+        ]
+      },
+      {
+        id: 'water',
+        name: 'Living Water',
+        icon: '💧',
+        cost: 125,
+        range: 130,
+        rate: 1.0,
+        dmg: 20,
+        slow: 0.5,
+        tiers: [
+          { tier: 1, name: 'Spring Geyser', dmg: 20, range: 130, rate: 1.0, upCost: 160 },
+          { tier: 2, name: 'River Torrent', dmg: 40, range: 155, rate: 0.85, upCost: 260 },
+          { tier: 3, name: 'Waterfall of Life', dmg: 80, range: 190, rate: 0.7, upCost: 0 }
+        ]
+      },
+      {
+        id: 'beacon',
+        name: 'Truth Beacon',
+        icon: '✨',
+        cost: 150,
+        range: 190,
+        rate: 1.4,
+        dmg: 75,
+        tiers: [
+          { tier: 1, name: 'Sun Prism', dmg: 75, range: 190, rate: 1.4, upCost: 200 },
+          { tier: 2, name: 'Dawn Beam', dmg: 140, range: 230, rate: 1.1, upCost: 320 },
+          { tier: 3, name: 'Divine Sunburst', dmg: 260, range: 280, rate: 0.9, upCost: 0 }
+        ]
+      },
+      {
+        id: 'ballista',
+        name: 'Cedar Ballista',
+        icon: '🌲',
+        cost: 200,
+        range: 160,
+        rate: 1.8,
+        dmg: 110,
+        splash: 65,
+        tiers: [
+          { tier: 1, name: 'Cedar Ballista', dmg: 110, range: 160, rate: 1.8, upCost: 260 },
+          { tier: 2, name: 'Ironwood Catapult', dmg: 220, range: 190, rate: 1.5, upCost: 400 },
+          { tier: 3, name: 'Thunder of Lebanon', dmg: 420, range: 230, rate: 1.2, upCost: 0 }
+        ]
+      }
+    ];
+
+    let selectedBuildType = null;
+    let selectedTurret = null;
+    const turrets = [];
+    const enemies = [];
+    const projectiles = [];
+    const particles = [];
+
+    // The Two Central Sacred Trees
+    function getTrees() {
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      return {
+        life: { x: cx - 110, y: cy, r: 42, name: 'Tree of Life', color: '#10b981' },
+        knowledge: { x: cx + 110, y: cy, r: 42, name: 'Tree of Knowledge', color: '#eab308' }
+      };
+    }
+
+    // Winding Paths for Enemies
+    function getPaths() {
+      const trees = getTrees();
+      const w = canvas.width;
+      const h = canvas.height;
+      return [
+        // Path 1 (From Left/Top to Tree of Life)
+        [
+          { x: 0, y: h * 0.25 },
+          { x: w * 0.25, y: h * 0.25 },
+          { x: w * 0.25, y: h * 0.65 },
+          { x: trees.life.x - 50, y: h * 0.65 },
+          { x: trees.life.x, y: trees.life.y }
+        ],
+        // Path 2 (From Right/Top to Tree of Knowledge)
+        [
+          { x: w, y: h * 0.25 },
+          { x: w * 0.75, y: h * 0.25 },
+          { x: w * 0.75, y: h * 0.65 },
+          { x: trees.knowledge.x + 50, y: h * 0.65 },
+          { x: trees.knowledge.x, y: trees.knowledge.y }
+        ],
+        // Path 3 (From Bottom Center, splitting between both)
+        [
+          { x: w * 0.5, y: h },
+          { x: w * 0.5, y: h * 0.72 },
+          { x: trees.life.x, y: trees.life.y }
+        ],
+        [
+          { x: w * 0.5, y: h },
+          { x: w * 0.5, y: h * 0.72 },
+          { x: trees.knowledge.x, y: trees.knowledge.y }
+        ]
+      ];
+    }
+
+    // Select Turret to build
+    function selectTurretToBuild(idx) {
+      if (selectedBuildType === idx) {
+        selectedBuildType = null;
+        document.querySelectorAll('.turret-btn').forEach(b => b.classList.remove('selected'));
+      } else {
+        selectedBuildType = idx;
+        document.querySelectorAll('.turret-btn').forEach((b, i) => b.classList.toggle('selected', i === idx));
+        closeUpgradeCard();
+      }
+    }
+
+    // Canvas Click to Build or Select
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      // Check if clicking existing turret
+      const clickedTurret = turrets.find(t => Math.hypot(t.x - x, t.y - y) <= 25);
+      if (clickedTurret) {
+        openUpgradeCard(clickedTurret);
+        return;
+      }
+
+      // If building a new turret
+      if (selectedBuildType !== null) {
+        const bp = TURRET_TYPES[selectedBuildType];
+        if (gold < bp.cost) {
+          alert("Not enough Grace Seeds!");
+          return;
+        }
+
+        // Cannot build on paths or trees
+        const trees = getTrees();
+        if (Math.hypot(trees.life.x - x, trees.life.y - y) < 65 ||
+            Math.hypot(trees.knowledge.x - x, trees.knowledge.y - y) < 65) {
+          return;
+        }
+
+        gold -= bp.cost;
+        updateHud();
+        turrets.push({
+          x: x,
+          y: y,
+          typeIdx: selectedBuildType,
+          tier: 1,
+          cooldown: 0,
+          target: null
+        });
+        soundChime();
+        selectedBuildType = null;
+        document.querySelectorAll('.turret-btn').forEach(b => b.classList.remove('selected'));
+      } else {
+        closeUpgradeCard();
+      }
+    });
+
+    // Upgrade Modal Logic
+    function openUpgradeCard(t) {
+      selectedTurret = t;
+      const bp = TURRET_TYPES[t.typeIdx];
+      const tierInfo = bp.tiers[t.tier - 1];
+      const nextTier = bp.tiers[t.tier];
+
+      document.getElementById('upgradeCard').style.display = 'block';
+      document.getElementById('upTitle').textContent = tierInfo.name;
+      document.getElementById('upStars').textContent = '⭐ Tier ' + t.tier;
+      document.getElementById('upStats').textContent = `Damage: ${tierInfo.dmg} | Range: ${tierInfo.range} | Speed: ${tierInfo.rate}s`;
+
+      const upBtn = document.getElementById('btnUpgradeTurret');
+      if (nextTier) {
+        upBtn.style.display = 'block';
+        upBtn.textContent = `⬆️ Upgrade to Tier ${t.tier + 1} (${tierInfo.upCost})`;
+      } else {
+        upBtn.style.display = 'none';
+      }
+    }
+
+    function closeUpgradeCard() {
+      selectedTurret = null;
+      document.getElementById('upgradeCard').style.display = 'none';
+    }
+
+    function upgradeSelectedTurret() {
+      if (!selectedTurret) return;
+      const bp = TURRET_TYPES[selectedTurret.typeIdx];
+      const currentTier = bp.tiers[selectedTurret.tier - 1];
+      if (gold >= currentTier.upCost && selectedTurret.tier < 3) {
+        gold -= currentTier.upCost;
+        selectedTurret.tier++;
+        updateHud();
+        soundChime();
+        openUpgradeCard(selectedTurret);
+      } else {
+        alert("Not enough Grace Seeds to upgrade!");
+      }
+    }
+
+    function sellSelectedTurret() {
+      if (!selectedTurret) return;
+      const idx = turrets.indexOf(selectedTurret);
+      if (idx !== -1) {
+        gold += 60 * selectedTurret.tier;
+        turrets.splice(idx, 1);
+        updateHud();
+        closeUpgradeCard();
+        soundSplash();
+      }
+    }
+
+    // Wisdom Flash Ability (Freeze enemies for 3 seconds)
+    function triggerWisdomFlash() {
+      if (wisdomCooldown || gameState !== 'PLAYING') return;
+      wisdomCooldown = true;
+      freezeTimer = 3.0;
+      soundFreeze();
+      const btn = document.getElementById('btnWisdomFlash');
+      btn.classList.add('cooldown');
+      btn.textContent = '⚡ Wisdom Cooling...';
+
+      // 25 second cooldown
+      setTimeout(() => {
+        wisdomCooldown = false;
+        btn.classList.remove('cooldown');
+        btn.textContent = '⚡ Wisdom Flash (Freeze 3s)';
+      }, 25000);
+    }
+
+    // Wave Spawner
+    let waveSpawning = false;
+    let waveRemaining = 0;
+    let spawnTimer = 0;
+
+    function startNextWave() {
+      document.getElementById('modalOverlay').style.display = 'none';
+      gameState = 'PLAYING';
+      waveSpawning = true;
+      waveRemaining = 12 + wave * 6;
+      spawnTimer = 0;
+      updateHud();
+      soundChime();
+    }
+
+    function spawnEnemy() {
+      const paths = getPaths();
+      const pathIdx = Math.floor(Math.random() * paths.length);
+      const chosenPath = paths[pathIdx];
+
+      // Enemy types based on wave
+      let hp = 45 + wave * 25;
+      let speed = 1.2 + wave * 0.15;
+      let color = '#4ade80'; // creeping weed
+      let radius = 12;
+      let isBoss = false;
+
+      const roll = Math.random();
+      if (wave >= 3 && roll < 0.25) {
+        // Thorns & Briers (armored)
+        hp *= 2.0; speed *= 0.65; color = '#ef4444'; radius = 16;
+      } else if (wave >= 4 && roll > 0.7) {
+        // Serpent Deceiver
+        hp *= 1.3; speed *= 1.4; color = '#a855f7'; radius = 14;
+      }
+
+      // Wave 5 Boss
+      if (wave === 5 && waveRemaining === 1) {
+        isBoss = true;
+        hp = 1800; speed = 0.55; color = '#dc2626'; radius = 28;
+      }
+
+      enemies.push({
+        path: chosenPath,
+        nodeIdx: 0,
+        x: chosenPath[0].x,
+        y: chosenPath[0].y,
+        hp: hp,
+        maxHp: hp,
+        speed: speed,
+        color: color,
+        radius: radius,
+        slowTimer: 0,
+        targetTree: pathIdx % 2 === 0 ? 'life' : 'knowledge',
+        isBoss: isBoss
+      });
+    }
+
+    function updateHud() {
+      document.getElementById('valGold').textContent = gold;
+      document.getElementById('valWave').textContent = `${wave} / 5`;
+      document.getElementById('valScore').textContent = score;
+      document.getElementById('txtLifeHp').textContent = `${Math.max(0, Math.round(lifeHp))}%`;
+      document.getElementById('barLife').style.width = `${Math.max(0, lifeHp)}%`;
+      document.getElementById('txtKnowledgeHp').textContent = `${Math.max(0, Math.round(knowledgeHp))}%`;
+      document.getElementById('barKnowledge').style.width = `${Math.max(0, knowledgeHp)}%`;
+    }
+
+    // --- Main Game Loop ---
+    let lastTime = performance.now();
+
+    function loop(now) {
+      const dt = Math.min((now - lastTime) / 1000, 0.1);
+      lastTime = now;
+
+      update(dt);
+      render();
+
+      requestAnimationFrame(loop);
+    }
+
+    function update(dt) {
+      if (gameState !== 'PLAYING') return;
+
+      if (freezeTimer > 0) {
+        freezeTimer -= dt;
+      }
+
+      // Spawning enemies
+      if (waveSpawning) {
+        spawnTimer -= dt;
+        if (spawnTimer <= 0) {
+          spawnEnemy();
+          waveRemaining--;
+          spawnTimer = 1.1 - Math.min(0.5, wave * 0.08);
+          if (waveRemaining <= 0) {
+            waveSpawning = false;
+          }
+        }
+      }
+
+      // Update Enemies
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        const e = enemies[i];
+
+        // If frozen, don't move
+        if (freezeTimer <= 0) {
+          let spd = e.speed;
+          if (e.slowTimer > 0) {
+            e.slowTimer -= dt;
+            spd *= 0.5;
+          }
+
+          const targetNode = e.path[e.nodeIdx + 1];
+          if (targetNode) {
+            const dx = targetNode.x - e.x;
+            const dy = targetNode.y - e.y;
+            const dist = Math.hypot(dx, dy);
+            if (dist < spd * 60 * dt) {
+              e.nodeIdx++;
+            } else {
+              e.x += (dx / dist) * spd * 60 * dt;
+              e.y += (dy / dist) * spd * 60 * dt;
+            }
+          } else {
+            // Reached Tree! Damage Tree
+            if (e.targetTree === 'life') {
+              lifeHp -= e.isBoss ? 50 : 10;
+            } else {
+              knowledgeHp -= e.isBoss ? 50 : 10;
+            }
+            soundSplash();
+            enemies.splice(i, 1);
+            updateHud();
+
+            if (lifeHp <= 0 || knowledgeHp <= 0) {
+              gameOver();
+              return;
+            }
+            continue;
+          }
+        }
+
+        // Enemy Defeated
+        if (e.hp <= 0) {
+          gold += e.isBoss ? 200 : 15;
+          score += e.isBoss ? 1000 : 50;
+          soundSplash();
+          enemies.splice(i, 1);
+          updateHud();
+        }
+      }
+
+      // Check Wave Complete
+      if (!waveSpawning && enemies.length === 0) {
+        if (wave < 5) {
+          wave++;
+          gold += 120; // Bonus seeds
+          lifeHp = Math.min(100, lifeHp + 25);
+          knowledgeHp = Math.min(100, knowledgeHp + 25);
+          updateHud();
+          soundChime();
+          showWaveClear();
+        } else {
+          showVictory();
+        }
+      }
+
+      // Update Turrets (Targeting and Firing)
+      turrets.forEach(t => {
+        const bp = TURRET_TYPES[t.typeIdx];
+        const stats = bp.tiers[t.tier - 1];
+
+        t.cooldown -= dt;
+        if (t.cooldown <= 0) {
+          // Find closest enemy within range
+          let closest = null;
+          let minD = stats.range;
+          enemies.forEach(e => {
+            const d = Math.hypot(e.x - t.x, e.y - t.y);
+            if (d <= minD) {
+              minD = d;
+              closest = e;
+            }
+          });
+
+          if (closest) {
+            t.cooldown = stats.rate;
+            t.target = closest;
+
+            // Attack logic
+            if (bp.id === 'blade') {
+              soundLaser();
+              closest.hp -= stats.dmg;
+              spawnSlashParticles(closest.x, closest.y);
+            } else if (bp.id === 'water') {
+              soundSplash();
+              closest.hp -= stats.dmg;
+              closest.slowTimer = 2.5;
+            } else if (bp.id === 'beacon') {
+              soundLaser();
+              closest.hp -= stats.dmg;
+            } else if (bp.id === 'ballista') {
+              soundSplash();
+              // Splash damage
+              enemies.forEach(other => {
+                if (Math.hypot(other.x - closest.x, other.y - closest.y) <= 80) {
+                  other.hp -= stats.dmg;
+                }
+              });
+            }
+          }
+        }
+      });
+    }
+
+    function spawnSlashParticles(x, y) {
+      for (let i = 0; i < 4; i++) {
+        particles.push({
+          x: x, y: y,
+          vx: (Math.random() - 0.5) * 6,
+          vy: (Math.random() - 0.5) * 6,
+          life: 0.3,
+          color: '#facc15'
+        });
+      }
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const trees = getTrees();
+      const paths = getPaths();
+
+      // Draw Paths
+      ctx.lineWidth = 32;
+      ctx.strokeStyle = '#143d22';
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      paths.forEach(p => {
+        ctx.beginPath();
+        ctx.moveTo(p[0].x, p[0].y);
+        for (let i = 1; i < p.length; i++) ctx.lineTo(p[i].x, p[i].y);
+        ctx.stroke();
+      });
+
+      // Path inner glow
+      ctx.lineWidth = 18;
+      ctx.strokeStyle = '#1b522e';
+      paths.forEach(p => {
+        ctx.beginPath();
+        ctx.moveTo(p[0].x, p[0].y);
+        for (let i = 1; i < p.length; i++) ctx.lineTo(p[i].x, p[i].y);
+        ctx.stroke();
+      });
+
+      // Draw The Two Sacred Trees in Garden Center
+      // Tree of Life
+      ctx.beginPath();
+      ctx.arc(trees.life.x, trees.life.y, trees.life.r + 10, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(16, 185, 129, 0.2)';
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(trees.life.x, trees.life.y, trees.life.r, 0, Math.PI * 2);
+      ctx.fillStyle = '#059669';
+      ctx.fill();
+      ctx.strokeStyle = '#34d399';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      ctx.fillStyle = '#fff';
+      ctx.font = '24px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🌿', trees.life.x, trees.life.y);
+
+      // Tree of Knowledge
+      ctx.beginPath();
+      ctx.arc(trees.knowledge.x, trees.knowledge.y, trees.knowledge.r + 10, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(234, 179, 8, 0.2)';
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(trees.knowledge.x, trees.knowledge.y, trees.knowledge.r, 0, Math.PI * 2);
+      ctx.fillStyle = '#ca8a04';
+      ctx.fill();
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      ctx.fillText('🍎', trees.knowledge.x, trees.knowledge.y);
+
+      // Draw Turrets
+      turrets.forEach(t => {
+        const bp = TURRET_TYPES[t.typeIdx];
+        const stats = bp.tiers[t.tier - 1];
+
+        // Draw Range if selected
+        if (selectedTurret === t) {
+          ctx.beginPath();
+          ctx.arc(t.x, t.y, stats.range, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(56, 189, 248, 0.15)';
+          ctx.fill();
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+
+        // Turret Base
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, 22, 0, Math.PI * 2);
+        ctx.fillStyle = '#064e3b';
+        ctx.fill();
+        ctx.strokeStyle = t.tier === 3 ? '#facc15' : (t.tier === 2 ? '#38bdf8' : '#10b981');
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        ctx.font = '16px sans-serif';
+        ctx.fillText(bp.icon, t.x, t.y);
+
+        // Laser beam if firing
+        if (t.target && bp.id === 'beacon' && t.cooldown > stats.rate - 0.2) {
+          ctx.strokeStyle = '#fef08a';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(t.x, t.y);
+          ctx.lineTo(t.target.x, t.target.y);
+          ctx.stroke();
+        }
+      });
+
+      // Draw Enemies
+      enemies.forEach(e => {
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
+        ctx.fillStyle = freezeTimer > 0 ? '#38bdf8' : (e.slowTimer > 0 ? '#60a5fa' : e.color);
+        ctx.fill();
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // HP bar above enemy
+        const bw = e.radius * 2;
+        ctx.fillStyle = '#000';
+        ctx.fillRect(e.x - e.radius, e.y - e.radius - 8, bw, 4);
+        ctx.fillStyle = '#22c55e';
+        ctx.fillRect(e.x - e.radius, e.y - e.radius - 8, bw * (e.hp / e.maxHp), 4);
+      });
+
+      // Draw Particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx; p.y += p.vy;
+        p.life -= 0.03;
+        if (p.life <= 0) {
+          particles.splice(i, 1);
+          continue;
+        }
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = p.life;
+        ctx.fillRect(p.x, p.y, 4, 4);
+      }
+      ctx.globalAlpha = 1.0;
+    }
+
+    function showWaveClear() {
+      gameState = 'WAVE_CLEAR';
+      document.getElementById('modalTitle').textContent = `🌿 Wave ${wave - 1} Cleared! 🌟`;
+      document.getElementById('modalDesc').textContent = `Great defense! You protected the Trees and earned +120 bonus seeds! Prepare for Wave ${wave}!`;
+      document.getElementById('modalBtn').textContent = `Start Wave ${wave}`;
+      document.getElementById('modalOverlay').style.display = 'flex';
+    }
+
+    function showVictory() {
+      gameState = 'GAME_OVER';
+      document.getElementById('modalTitle').textContent = `🏆 VICTORY IN EDEN! 🎉`;
+      document.getElementById('modalDesc').textContent = `Incredible job, Guardians! Both the Tree of Life and the Tree of Knowledge remain safe in the Garden! Final Score: ${score}`;
+      document.getElementById('modalBtn').textContent = `Play Again`;
+      document.getElementById('modalBtn').onclick = () => location.reload();
+      document.getElementById('modalOverlay').style.display = 'flex';
+    }
+
+    function gameOver() {
+      gameState = 'GAME_OVER';
+      document.getElementById('modalTitle').textContent = `🥀 The Garden Fell!`;
+      document.getElementById('modalDesc').textContent = `The creeping shadows reached the sacred trees. Don't worry, reset your defenses and try again!`;
+      document.getElementById('modalBtn').textContent = `Try Again`;
+      document.getElementById('modalBtn').onclick = () => location.reload();
+      document.getElementById('modalOverlay').style.display = 'flex';
+    }
+
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>

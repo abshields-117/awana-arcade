@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Henry's Eden Craft & Color — Awana Arcade</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    body {
+      background: #1e293b;
+      font-family: 'Courier New', Courier, monospace, sans-serif;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+    /* Top Header Bar */
+    header {
+      background: #0f172a;
+      border-bottom: 4px solid #38bdf8;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    .title-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .minecraft-icon {
+      width: 44px;
+      height: 44px;
+      background: #4ade80;
+      border: 4px solid #166534;
+      border-top-color: #86efac;
+      border-left-color: #86efac;
+      box-shadow: inset 0 -18px 0 #78350f;
+      image-rendering: pixelated;
+    }
+    h1 {
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      color: #fef08a;
+      text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+    }
+    .mode-switch {
+      display: flex;
+      gap: 10px;
+    }
+    .big-btn {
+      background: #3b82f6;
+      border: 4px solid #1d4ed8;
+      border-top-color: #93c5fd;
+      border-left-color: #93c5fd;
+      color: white;
+      font-family: inherit;
+      font-size: 18px;
+      font-weight: 800;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #1e3a8a;
+      transition: transform 0.1s;
+    }
+    .big-btn:hover {
+      transform: translateY(-2px);
+    }
+    .big-btn:active {
+      transform: translateY(2px);
+      box-shadow: none;
+    }
+    .big-btn.celebrate {
+      background: #eab308;
+      border-color: #a16207;
+      border-top-color: #fef08a;
+      border-left-color: #fef08a;
+      box-shadow: 0 4px 0 #713f12;
+      color: #000;
+      font-weight: 900;
+    }
+    .big-btn.active {
+      background: #10b981;
+      border-color: #047857;
+      border-top-color: #6ee7b7;
+      border-left-color: #6ee7b7;
+      box-shadow: 0 4px 0 #064e3b;
+    }
+
+    /* Main Workspace */
+    main {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* Left Block Palette */
+    #palette {
+      width: 220px;
+      background: #1e293b;
+      border-right: 4px solid #475569;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+    }
+    .palette-title {
+      font-size: 16px;
+      font-weight: 900;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-align: center;
+      margin-bottom: 5px;
+    }
+    .block-choice {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #334155;
+      border: 3px solid #64748b;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .block-choice:hover {
+      background: #475569;
+      transform: scale(1.02);
+    }
+    .block-choice.selected {
+      border-color: #facc15;
+      background: #475569;
+      box-shadow: 0 0 15px rgba(250, 204, 21, 0.6);
+      transform: scale(1.04);
+    }
+    .block-preview {
+      width: 40px;
+      height: 40px;
+      border-radius: 4px;
+      border: 2px solid #000;
+      image-rendering: pixelated;
+      flex-shrink: 0;
+    }
+    .block-name {
+      font-size: 15px;
+      font-weight: 800;
+      color: #f8fafc;
+    }
+
+    /* Center Play Canvas */
+    #canvas-container {
+      flex: 1;
+      position: relative;
+      background: #0f172a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    #gameCanvas {
+      background: #60a5fa;
+      border: 6px solid #334155;
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      image-rendering: pixelated;
+      cursor: crosshair;
+    }
+
+    /* Right Tools Panel */
+    #tools {
+      width: 180px;
+      background: #1e293b;
+      border-left: 4px solid #475569;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .tool-btn {
+      width: 100%;
+      background: #475569;
+      border: 3px solid #64748b;
+      border-top-color: #94a3b8;
+      border-left-color: #94a3b8;
+      color: white;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 800;
+      padding: 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .tool-btn:hover {
+      background: #64748b;
+    }
+    .tool-btn:active {
+      transform: translateY(2px);
+    }
+    .tool-btn.danger {
+      background: #ef4444;
+      border-color: #b91c1c;
+      border-top-color: #fca5a5;
+      border-left-color: #fca5a5;
+    }
+
+    /* Confetti Canvas */
+    #confettiCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 200;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="title-box">
+      <div class="minecraft-icon"></div>
+      <h1>Henry's Eden Craft & Color 🌟</h1>
+    </div>
+    <div class="mode-switch">
+      <button class="big-btn active" id="btnColorMode" onclick="setMode('color')">🎨 Color Garden</button>
+      <button class="big-btn" id="btnBuildMode" onclick="setMode('build')">🧱 Block Builder</button>
+      <button class="big-btn celebrate" onclick="fireCelebration()">🎉 CELEBRATE!</button>
+      <a href="../index.html" class="big-btn" style="text-decoration:none; background:#64748b; border-color:#334155;">🏠 Arcade</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- Left: Minecraft Block Palette -->
+    <div id="palette">
+      <div class="palette-title">Choose Color / Block</div>
+      <!-- Items dynamically populated -->
+    </div>
+
+    <!-- Center: The Big Friendly Canvas -->
+    <div id="canvas-container">
+      <canvas id="gameCanvas" width="800" height="600"></canvas>
+      <canvas id="confettiCanvas"></canvas>
+    </div>
+
+    <!-- Right: Helpful Tools -->
+    <div id="tools">
+      <div class="palette-title">Options</div>
+      <button class="tool-btn" id="btnNextPic" onclick="nextColoringPicture()">🖼️ Next Picture</button>
+      <button class="tool-btn" onclick="saveImage()">📸 Save Picture</button>
+      <button class="tool-btn danger" onclick="clearCanvas()">✨ Clear Canvas</button>
+      
+      <div style="margin-top:auto; background:#0f172a; padding:12px; border-radius:6px; border:2px solid #334155; text-align:center;">
+        <div style="font-size:13px; color:#fef08a; font-weight:800; margin-bottom:5px;">TIP FOR HENRY:</div>
+        <div style="font-size:11px; color:#cbd5e1; line-height:1.4;">Pick any block on the left and tap the screen to paint or build! 🌟</div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // --- Audio Synthesis (Offline, gentle Minecraft-style pops) ---
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let actx = null;
+
+    function initAudio() {
+      if (!actx) actx = new AudioCtx();
+    }
+
+    function playPop(freq = 440) {
+      initAudio();
+      if (!actx) return;
+      const osc = actx.createOscillator();
+      const gain = actx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, actx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.5, actx.currentTime + 0.08);
+      gain.gain.setValueAtTime(0.2, actx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, actx.currentTime + 0.1);
+      osc.connect(gain);
+      gain.connect(actx.destination);
+      osc.start();
+      osc.stop(actx.currentTime + 0.1);
+    }
+
+    function playFanfare() {
+      initAudio();
+      if (!actx) return;
+      const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99];
+      notes.forEach((freq, idx) => {
+        setTimeout(() => {
+          const osc = actx.createOscillator();
+          const gain = actx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, actx.currentTime);
+          gain.gain.setValueAtTime(0.25, actx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, actx.currentTime + 0.35);
+          osc.connect(gain);
+          gain.connect(actx.destination);
+          osc.start();
+          osc.stop(actx.currentTime + 0.35);
+        }, idx * 75);
+      });
+    }
+
+    // --- Block Types (Minecraft Eden Palette) ---
+    const BLOCKS = [
+      { id: 'grass', name: 'Grass Block', color: '#4ade80', topColor: '#86efac', sideColor: '#78350f', pitch: 350 },
+      { id: 'dirt', name: 'Dirt Block', color: '#78350f', topColor: '#92400e', sideColor: '#592507', pitch: 280 },
+      { id: 'wood', name: 'Oak Wood', color: '#b45309', topColor: '#d97706', sideColor: '#92400e', pitch: 320 },
+      { id: 'leaves', name: 'Oak Leaves', color: '#15803d', topColor: '#22c55e', sideColor: '#166534', pitch: 480 },
+      { id: 'gold_apple', name: 'Golden Apple', color: '#facc15', topColor: '#fef08a', sideColor: '#ca8a04', pitch: 600 },
+      { id: 'diamond', name: 'Diamond Block', color: '#38bdf8', topColor: '#7dd3fc', sideColor: '#0284c7', pitch: 700 },
+      { id: 'water', name: 'Living Water', color: '#2563eb', topColor: '#60a5fa', sideColor: '#1d4ed8', pitch: 500 },
+      { id: 'flower', name: 'Red Poppy', color: '#ef4444', topColor: '#f87171', sideColor: '#b91c1c', pitch: 550 },
+      { id: 'dandelion', name: 'Dandelion', color: '#fef08a', topColor: '#ffffff', sideColor: '#facc15', pitch: 580 },
+      { id: 'sheep', name: 'Fluffy Sheep', color: '#f8fafc', topColor: '#ffffff', sideColor: '#cbd5e1', pitch: 420 },
+      { id: 'stone', name: 'Cobblestone', color: '#64748b', topColor: '#94a3b8', sideColor: '#475569', pitch: 250 },
+      { id: 'air', name: 'Eraser (Sky)', color: '#60a5fa', topColor: '#93c5fd', sideColor: '#3b82f6', pitch: 200 }
+    ];
+
+    let currentBlock = BLOCKS[0];
+    let currentMode = 'color'; // 'color' or 'build'
+    let currentPictureIndex = 0;
+
+    // Canvas Setup
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const confettiCanvas = document.getElementById('confettiCanvas');
+    const cctx = confettiCanvas.getContext('2d');
+
+    function resizeConfetti() {
+      confettiCanvas.width = window.innerWidth;
+      confettiCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeConfetti);
+    resizeConfetti();
+
+    // Populate Left Palette
+    const paletteEl = document.getElementById('palette');
+    BLOCKS.forEach((block, idx) => {
+      const item = document.createElement('div');
+      item.className = 'block-choice' + (idx === 0 ? ' selected' : '');
+      item.onclick = () => selectBlock(block, item);
+      
+      const prev = document.createElement('div');
+      prev.className = 'block-preview';
+      prev.style.background = block.color;
+      prev.style.borderTopColor = block.topColor;
+      prev.style.borderLeftColor = block.topColor;
+      prev.style.borderBottomColor = block.sideColor;
+      prev.style.borderRightColor = block.sideColor;
+
+      const name = document.createElement('span');
+      name.className = 'block-name';
+      name.textContent = block.name;
+
+      item.appendChild(prev);
+      item.appendChild(name);
+      paletteEl.appendChild(item);
+    });
+
+    function selectBlock(block, el) {
+      currentBlock = block;
+      document.querySelectorAll('.block-choice').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+      playPop(block.pitch);
+    }
+
+    // --- Mode 1: Coloring Book Pictures (Pixel Voxel Scenes) ---
+    // Scenes are represented as 20x15 grids
+    const GRID_W = 20;
+    const GRID_H = 15;
+    const CELL_SIZE = 40; // 20*40 = 800, 15*40 = 600
+
+    // Picture 1: Tree of Life & Golden Apples
+    function createPicture1() {
+      const grid = Array(GRID_H).fill(null).map(() => Array(GRID_W).fill('#60a5fa')); // Sky
+      // Ground
+      for (let x = 0; x < GRID_W; x++) {
+        grid[12][x] = '#4ade80'; // grass
+        grid[13][x] = '#78350f'; // dirt
+        grid[14][x] = '#78350f'; // dirt
+      }
+      // Tree Trunk
+      for (let y = 6; y <= 11; y++) {
+        grid[y][9] = '#b45309';
+        grid[y][10] = '#b45309';
+      }
+      // Tree Leaves
+      for (let y = 2; y <= 6; y++) {
+        for (let x = 6; x <= 13; x++) {
+          grid[y][x] = '#15803d';
+        }
+      }
+      for (let x = 7; x <= 12; x++) grid[1][x] = '#15803d';
+      // Golden Apples
+      grid[3][8] = '#facc15';
+      grid[4][11] = '#facc15';
+      grid[5][7] = '#facc15';
+      grid[3][12] = '#facc15';
+      // Flowers on grass
+      grid[11][3] = '#ef4444';
+      grid[11][5] = '#fef08a';
+      grid[11][15] = '#ef4444';
+      grid[11][17] = '#38bdf8';
+      return grid;
+    }
+
+    // Picture 2: Adam & Fluffy Sheep
+    function createPicture2() {
+      const grid = Array(GRID_H).fill(null).map(() => Array(GRID_W).fill('#60a5fa'));
+      // Ground
+      for (let x = 0; x < GRID_W; x++) {
+        grid[12][x] = '#4ade80';
+        grid[13][x] = '#78350f';
+        grid[14][x] = '#78350f';
+      }
+      // Sun
+      grid[1][1] = '#facc15'; grid[1][2] = '#facc15';
+      grid[2][1] = '#facc15'; grid[2][2] = '#facc15';
+
+      // Adam (Blocky Steve-style)
+      // Head
+      grid[5][5] = '#fed7aa'; grid[5][6] = '#fed7aa';
+      grid[6][5] = '#fed7aa'; grid[6][6] = '#fed7aa';
+      // Body (Shirt)
+      grid[7][5] = '#38bdf8'; grid[7][6] = '#38bdf8';
+      grid[8][5] = '#38bdf8'; grid[8][6] = '#38bdf8';
+      // Legs
+      grid[9][5] = '#1e3a8a'; grid[9][6] = '#1e3a8a';
+      grid[10][5] = '#1e3a8a'; grid[10][6] = '#1e3a8a';
+      grid[11][5] = '#64748b'; grid[11][6] = '#64748b';
+
+      // Fluffy Sheep
+      for (let y = 8; y <= 10; y++) {
+        for (let x = 11; x <= 15; x++) {
+          grid[y][x] = '#f8fafc';
+        }
+      }
+      // Sheep Head
+      grid[8][10] = '#fed7aa';
+      grid[9][10] = '#fed7aa';
+      // Legs
+      grid[11][11] = '#cbd5e1';
+      grid[11][12] = '#cbd5e1';
+      grid[11][14] = '#cbd5e1';
+      grid[11][15] = '#cbd5e1';
+      return grid;
+    }
+
+    // Picture 3: Eden Waterfall & Stream
+    function createPicture3() {
+      const grid = Array(GRID_H).fill(null).map(() => Array(GRID_W).fill('#60a5fa'));
+      // Mountain
+      for (let y = 4; y <= 14; y++) {
+        for (let x = 0; x <= 6; x++) grid[y][x] = '#64748b';
+      }
+      // Waterfall
+      for (let y = 4; y <= 11; y++) {
+        grid[y][7] = '#38bdf8';
+        grid[y][8] = '#2563eb';
+      }
+      // River
+      for (let y = 12; y <= 14; y++) {
+        for (let x = 7; x < GRID_W; x++) grid[y][x] = '#2563eb';
+      }
+      // Grassy Hills
+      for (let y = 10; y <= 11; y++) {
+        for (let x = 11; x < GRID_W; x++) grid[y][x] = '#4ade80';
+      }
+      // Tree on hill
+      for (let y = 7; y <= 9; y++) grid[y][15] = '#b45309';
+      for (let y = 4; y <= 6; y++) {
+        for (let x = 13; x <= 17; x++) grid[y][x] = '#15803d';
+      }
+      grid[4][14] = '#facc15'; // apple
+      return grid;
+    }
+
+    const PICTURE_FACTORIES = [createPicture1, createPicture2, createPicture3];
+    let currentGrid = createPicture1();
+
+    // Mode Switcher
+    function setMode(mode) {
+      currentMode = mode;
+      document.getElementById('btnColorMode').classList.toggle('active', mode === 'color');
+      document.getElementById('btnBuildMode').classList.toggle('active', mode === 'build');
+      document.getElementById('btnNextPic').style.display = mode === 'color' ? 'block' : 'none';
+      if (mode === 'build') {
+        // Blank canvas for building
+        currentGrid = Array(GRID_H).fill(null).map(() => Array(GRID_W).fill('#60a5fa'));
+        for (let x = 0; x < GRID_W; x++) currentGrid[14][x] = '#4ade80';
+      } else {
+        currentGrid = PICTURE_FACTORIES[currentPictureIndex]();
+      }
+      draw();
+    }
+
+    function nextColoringPicture() {
+      currentPictureIndex = (currentPictureIndex + 1) % PICTURE_FACTORIES.length;
+      currentGrid = PICTURE_FACTORIES[currentPictureIndex]();
+      draw();
+      playPop(520);
+    }
+
+    function clearCanvas() {
+      currentGrid = Array(GRID_H).fill(null).map(() => Array(GRID_W).fill('#60a5fa'));
+      draw();
+      playPop(220);
+    }
+
+    // Drawing the Grid (Minecraft Isometric Block Shading)
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let y = 0; y < GRID_H; y++) {
+        for (let x = 0; x < GRID_W; x++) {
+          const color = currentGrid[y][x];
+          const px = x * CELL_SIZE;
+          const py = y * CELL_SIZE;
+
+          // Main block face
+          ctx.fillStyle = color;
+          ctx.fillRect(px, py, CELL_SIZE, CELL_SIZE);
+
+          // Subtle Minecraft bevel for satisfying 3D effect
+          if (color !== '#60a5fa') { // Not sky
+            ctx.fillStyle = 'rgba(255,255,255,0.2)';
+            ctx.fillRect(px, py, CELL_SIZE, 3);
+            ctx.fillRect(px, py, 3, CELL_SIZE);
+
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+            ctx.fillRect(px, py + CELL_SIZE - 3, CELL_SIZE, 3);
+            ctx.fillRect(px + CELL_SIZE - 3, py, 3, CELL_SIZE);
+          }
+
+          // Subtle grid outline
+          ctx.strokeStyle = 'rgba(15, 23, 42, 0.25)';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(px, py, CELL_SIZE, CELL_SIZE);
+        }
+      }
+    }
+
+    // Handle Clicks/Taps (Painting / Placing Blocks)
+    let isDrawing = false;
+
+    function paintCell(clientX, clientY) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const x = Math.floor(((clientX - rect.left) * scaleX) / CELL_SIZE);
+      const y = Math.floor(((clientY - rect.top) * scaleY) / CELL_SIZE);
+
+      if (x >= 0 && x < GRID_W && y >= 0 && y < GRID_H) {
+        if (currentGrid[y][x] !== currentBlock.color) {
+          currentGrid[y][x] = currentBlock.color;
+          draw();
+          playPop(currentBlock.pitch);
+          spawnStar(clientX, clientY, currentBlock.color);
+        }
+      }
+    }
+
+    canvas.addEventListener('mousedown', (e) => {
+      isDrawing = true;
+      paintCell(e.clientX, e.clientY);
+    });
+
+    window.addEventListener('mouseup', () => { isDrawing = false; });
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (isDrawing) paintCell(e.clientX, e.clientY);
+    });
+
+    // Touch support for Chromebooks
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      isDrawing = true;
+      const t = e.touches[0];
+      paintCell(t.clientX, t.clientY);
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (isDrawing) {
+        const t = e.touches[0];
+        paintCell(t.clientX, t.clientY);
+      }
+    }, { passive: false });
+
+    window.addEventListener('touchend', () => { isDrawing = false; });
+
+    // Sparkle Particle Animation
+    const particles = [];
+    function spawnStar(x, y, color) {
+      for (let i = 0; i < 4; i++) {
+        particles.push({
+          x: x,
+          y: y,
+          vx: (Math.random() - 0.5) * 4,
+          vy: (Math.random() - 0.5) * 4 - 2,
+          size: Math.random() * 8 + 4,
+          color: color,
+          life: 1.0
+        });
+      }
+    }
+
+    function updateParticles() {
+      cctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= 0.04;
+        if (p.life <= 0) {
+          particles.splice(i, 1);
+          continue;
+        }
+        cctx.fillStyle = p.color;
+        cctx.globalAlpha = p.life;
+        cctx.fillRect(p.x, p.y, p.size, p.size);
+      }
+      cctx.globalAlpha = 1.0;
+      requestAnimationFrame(updateParticles);
+    }
+    updateParticles();
+
+    // Celebration Fireworks & Confetti
+    function fireCelebration() {
+      playFanfare();
+      const colors = ['#facc15', '#4ade80', '#38bdf8', '#ef4444', '#f472b6', '#a855f7'];
+      for (let i = 0; i < 150; i++) {
+        particles.push({
+          x: window.innerWidth / 2,
+          y: window.innerHeight / 2,
+          vx: (Math.random() - 0.5) * 16,
+          vy: (Math.random() - 0.5) * 16 - 3,
+          size: Math.random() * 12 + 6,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          life: 2.0
+        });
+      }
+    }
+
+    function saveImage() {
+      const link = document.createElement('a');
+      link.download = "henrys_eden_creation.png";
+      link.href = canvas.toDataURL();
+      link.click();
+      playPop(700);
+    }
+
+    // Initial Render
+    draw();
+  </script>
+</body>
+</html>
