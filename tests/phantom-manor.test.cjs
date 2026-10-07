@@ -115,6 +115,7 @@ test('standalone UI installs one animation chain and no restart listeners or tim
   const window={addEventListener:name=>listeners.push('win'+name),matchMedia:()=>({matches:false})};
   const context={window,document,console,performance:{now:()=>0},requestAnimationFrame:()=>{frames++;},setTimeout:()=>assert.fail('no background timeout required'),setInterval:()=>assert.fail('no interval loops'),Math};
   vm.runInNewContext(html.match(/<script id="manor-engine">([\s\S]*?)<\/script>/)[1],context);
+  vm.runInNewContext(html.match(/<script id="manor-audio">([\s\S]*?)<\/script>/)[1],context);
   vm.runInNewContext(ui[1],context);
   const initial=listeners.length;assert.ok(initial>0);assert.equal(frames,1);
   for(let i=0;i<20;i++){window.PhantomManor.reset();window.PhantomManor.start();}
@@ -148,5 +149,14 @@ test('a nearby bat is stunned by lantern light and contact causes a gentle hit',
   g.lantern();assert.equal(g.getState().enemies.library[0].stun,3.5);const before=g.getState().hearts;g.tick(.1);assert.equal(g.getState().hearts,before);
   for(let i=0;i<40;i++)g.tick(.1);
   assert.equal(g.getState().hearts,before-1,'contact after stun ends costs exactly one heart');
+});
+test('semantic sound events drain once, reward sounds are idempotent and rejected actions stay quiet',()=>{
+  const g=load();assert.deepEqual(Array.from(g.drainEvents()),[]);g.start();g.interact('foyer-page');g.lantern();assert.equal(g.drainEvents().length,0);
+  use(g,'to-conservatory');assert.deepEqual(Array.from(g.drainEvents()),['locked']);
+  read(g,'foyer-page');assert.deepEqual(Array.from(g.drainEvents()),['page']);assert.equal(g.drainEvents().length,0);
+  use(g,'to-library');assert.deepEqual(Array.from(g.drainEvents()),['door']);read(g,'library-page');g.drainEvents();
+  use(g,'books');g.choose('Tree');assert.deepEqual(Array.from(g.drainEvents()),['wrong']);for(const v of ['Seed','Tree','Stars'])g.choose(v);assert.deepEqual(Array.from(g.drainEvents()),['pickup','pickup','correct']);g.closeDialog();read(g,'books');assert.equal(g.drainEvents().length,0);
+  g.lantern();assert.deepEqual(Array.from(g.drainEvents()),['lantern']);g.lantern();assert.equal(g.drainEvents().length,0);
+  g.reset();reachAttic(g);g.drainEvents();use(g,'keeper');g.choose('together');assert.deepEqual(Array.from(g.drainEvents()),['ending']);g.choose('together');assert.equal(g.drainEvents().length,0);
 });
 module.exports = {load,walkTo,use,read,solve,reachAttic};

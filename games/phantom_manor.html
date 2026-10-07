@@ -5,11 +5,24 @@
 @media(max-width:850px){.app{padding:9px 12px}.layout{grid-template-columns:1fr;gap:10px}.sidebar{display:grid;grid-template-columns:1fr auto;gap:0 12px;padding:10px 13px;grid-row:1}.sidebar .mission{grid-column:1}.sidebar .eyebrow{font-size:9px}#objective{font-size:12px;line-height:1.35;margin:3px 0}.sidebar .inventory-block{grid-column:1;grid-row:2}.sidebar .inventory-block .eyebrow{display:none}.inventory{min-height:0;margin-top:6px;font-size:10px}.sidebar .divider{border:0;padding:0;margin:0}.sidebar .journal-button{grid-column:2;grid-row:1 / 3;width:auto;margin:0;align-self:center;font-size:12px}.sidebar .map-block,.sidebar .legend{display:none}.view{max-height:calc(100svh - 390px)}.message{min-height:34px;font-size:12px;line-height:1.35;margin-top:7px}.brand{font-size:16px}.tools button{min-height:38px}.keyhint{margin-top:7px}header{margin-bottom:9px}.roomline{min-height:24px}.footer{margin-top:6px}}
 @media(max-width:440px){.brand{display:none}.app{padding:8px}.actions{gap:4px}.actions button{padding:7px;font-size:11px}.dpad{grid-template-columns:37px 37px 37px}.keyhint{font-size:10px}.card{padding:20px}.howto{font-size:11px}.card p{font-size:14px}.sidebar{padding:9px}.view{max-height:none}.roomline span{font-size:11px}.title-card .scene{height:78px}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}.overlay{backdrop-filter:none}}
 header{position:sticky;top:0;z-index:5;background:#111c27ed;border-radius:8px}.roomline strong{overflow-wrap:anywhere}.roomline span{flex-shrink:0}
+/* View modes change only presentation: the world stays 480 × 320. */
+header{flex-wrap:wrap}.tools{flex-wrap:wrap;align-items:center}.tools button{min-height:44px}.brand{flex:1;text-align:center}
+.audio-settings{position:relative;font-size:12px}.audio-settings summary,.map-block summary{cursor:pointer;min-height:44px;padding:12px 8px}.audio-settings>div{position:absolute;right:0;top:44px;width:230px;padding:14px;background:#172330;border:1px solid #59717d;border-radius:8px;z-index:6}.audio-settings label{display:block}.audio-settings input{display:block;width:100%;min-height:36px}.audio-settings small{display:block;color:var(--muted)}
+#view-status:empty{display:none}#view-status{font-size:12px;color:var(--gold)}
+.view{width:min(100%,calc((100svh - 280px)*1.5));max-height:none;margin-inline:auto}.roomline{flex-wrap:wrap}.roomline strong{flex:1;min-width:170px}
+.large-view .app,:fullscreen .app{max-width:1600px}.large-view .layout,:fullscreen .layout{grid-template-columns:minmax(0,1fr)}
+.large-view .view,:fullscreen .view{width:min(100%,calc((100svh - 250px)*1.5))}
+.large-view .sidebar,:fullscreen .sidebar{grid-row:auto;display:flex;align-items:center;flex-wrap:wrap;gap:8px 16px;padding:4px 12px}
+.large-view .sidebar .mission,.large-view .sidebar .inventory-block,.large-view .sidebar .legend,:fullscreen .sidebar .mission,:fullscreen .sidebar .inventory-block,:fullscreen .sidebar .legend{display:none}
+.large-view .sidebar .journal-button,:fullscreen .sidebar .journal-button{width:auto;margin:0}.large-view .sidebar .map-block,:fullscreen .sidebar .map-block{display:block;border:0;padding:0;margin:0}
+:fullscreen{overflow:auto;background:#0c131e}.large-view .keyhint,:fullscreen .keyhint{margin-top:4px}
+@media(max-width:850px){.sidebar{grid-row:auto}.sidebar .map-block{display:block;grid-column:1 / -1}.view{width:min(100%,calc((100svh - 320px)*1.5))}.brand{display:none}.tools{gap:4px}.sidebar .map-block summary{padding:8px 0}.large-view .view,:fullscreen .view{width:min(100%,calc((100svh - 270px)*1.5))}}
+@media(max-width:440px){header{position:relative}.tools{width:100%}.tools button{flex:1;padding:6px}.view,.large-view .view,:fullscreen .view{width:100%}.controls{flex-wrap:wrap;justify-content:center}.audio-settings>div{right:0}.roomline strong{font-size:14px}.keyhint{overflow-wrap:anywhere}}
 </style></head><body>
 <div class="app">
-<header><a class="menu" href="../index.html">← ARCADE MENU</a><div class="brand">Phantom Manor</div><div class="tools"><button id="sound" data-action="sound" aria-pressed="false">Sound: off</button><button id="pause" data-action="pause">Pause · P</button></div></header>
+<header><a class="menu" href="../index.html">← ARCADE MENU</a><div class="brand">Phantom Manor</div><div class="tools"><button id="sound" data-action="sound" aria-pressed="false">Sound: off</button><button id="pause" data-action="pause">Pause · P</button><button id="large" data-action="large" aria-pressed="false">Large view</button><button id="fullscreen" data-action="fullscreen">Fullscreen</button><details class="audio-settings"><summary>Audio</summary><div><label for="music-volume">Music</label><input id="music-volume" type="range" min="0" max="100" value="55"><label for="effects-volume">Effects</label><input id="effects-volume" type="range" min="0" max="100" value="65"><small>0 = off · Sound / M mutes both</small></div></details></div></header><p id="view-status" role="status"></p>
 <main class="layout"><section class="world" aria-label="The manor adventure"><div class="roomline"><strong id="room-name">Foyer</strong><span id="vitals" aria-label="Five hearts">♥ ♥ ♥ ♥ ♥</span></div><div class="view"><canvas id="game" width="480" height="320" tabindex="0" aria-label="Top-down manor. Move with arrow keys or WASD. Press E near objects. Use the Journal button for collected clues.">Your browser needs Canvas to explore Phantom Manor.</canvas><div id="prompt"></div></div><p id="message" class="message" aria-live="polite"></p><div class="controls" id="touch-controls"><div class="dpad" aria-label="Movement controls"><button class="up" data-hold="up" aria-label="Move up">↑</button><button class="left" data-hold="left" aria-label="Move left">←</button><button class="down" data-hold="down" aria-label="Move down">↓</button><button class="right" data-hold="right" aria-label="Move right">→</button></div><div class="actions"><button data-action="quiet" id="quiet" aria-pressed="false">Quiet</button><button data-action="interact">Interact · E</button><button data-action="lantern" id="lantern">Lantern · Space</button></div></div><div class="keyhint">WASD / arrows: move · E: interact · Space: lantern · Shift: quiet · P: pause · M: sound · J: journal</div></section>
-<aside class="sidebar"><div class="mission"><div class="eyebrow">The next small mystery</div><p id="objective"></p></div><div class="inventory-block divider"><div class="eyebrow">Your satchel</div><div id="inventory" class="inventory"></div></div><button class="journal-button" data-action="journal" id="journal">Journal · 0/6</button><div class="map-block divider"><div class="eyebrow">The old manor</div><div class="map" id="map"></div></div><p class="legend divider">Gold pages hold clues.<br>Blue cloth hides a secret.<br>Still shadows with lantern light.<br>Rest in the Foyer to refill hearts.</p></aside></main>
+<aside class="sidebar"><div class="mission"><div class="eyebrow">The next small mystery</div><p id="objective"></p></div><div class="inventory-block divider"><div class="eyebrow">Your satchel</div><div id="inventory" class="inventory"></div></div><button class="journal-button" data-action="journal" id="journal">Journal · 0/6</button><details class="map-block divider"><summary>Manor map</summary><div class="map" id="map"></div></details><p class="legend divider">Gold pages hold clues.<br>Blue cloth hides a secret.<br>Still shadows with lantern light.<br>Rest in the Foyer to refill hearts.</p></aside></main>
 <p class="footer">Chapter I · The Lantern Keeper · A gentle fictional mystery · Session-only progress; reloading starts over.</p>
 </div><div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="dialog-title" hidden><div class="card" id="card"></div></div>
 <script id="manor-engine">
@@ -40,8 +53,9 @@ header{position:sticky;top:0;z-index:5;background:#111c27ed;border-radius:8px}.r
     clocktower:{name:'Clocktower',subtitle:'The hours remember',palette:['#322c27','#494036','#70614b','#e2c78d'],obstacles:[[88,92,52,42],[344,92,48,42],[342,218,46,28]],objects:[door('to-garden','Conservatory',240,288,'garden',[240,76]),door('passage-back','Gallery passage',32,168,'gallery',[420,168],'silverKey',true),door('to-attic','Attic stairs',240,48,'attic',[240,262],'atticKey'),obj('clock-page','Bell schedule',154,228,'page'),obj('clock','Memory bells',245,125,'puzzle')]},
     attic:{name:'Attic',subtitle:'A promise kept',palette:['#242b40','#343d56','#5b6885','#d8d5b1'],obstacles:[[78,78,58,32],[344,82,48,30],[94,220,42,26],[336,216,54,30]],objects:[door('to-clocktower','Clocktower',240,288,'clocktower',[240,76]),obj('attic-page','Ada’s last letter',160,140,'page'),obj('keeper','Rowan, the keeper',278,126,'spirit')]}
   };
-  let s;
-  function reset() { s = {mode:'title',room:'foyer',x:240,y:258,hearts:5,inventory:[],journals:[],solved:[],quiet:false,mercy:0,lantern:0,cooldown:0,time:0,dialog:null,message:'Find the keeper’s journal, then explore the west door.',checkpoint:{room:'foyer',x:240,y:258},passage:false,visited:['foyer'],sequence:[],enemies:makeEnemies()}; }
+  let s,events=[];
+  const emit=name=>{if(events.length<64)events.push(name);};
+  function reset() { events=[];s = {mode:'title',room:'foyer',x:240,y:258,hearts:5,inventory:[],journals:[],solved:[],quiet:false,mercy:0,lantern:0,cooldown:0,time:0,dialog:null,message:'Find the keeper’s journal, then explore the west door.',checkpoint:{room:'foyer',x:240,y:258},passage:false,visited:['foyer'],sequence:[],enemies:makeEnemies()}; }
   function makeEnemies(){
     const patrol=(type,x,y,tx,ty)=>({type,x,y,home:[x,y],away:[tx,ty],target:1,stun:0,alert:false});
     return {foyer:[],library:[patrol('bat',276,228,380,150)],garden:[patrol('ghost',290,205,188,152)],gallery:[patrol('bat',340,240,374,122)],clocktower:[patrol('ghost',190,170,302,200),patrol('bat',360,176,280,238)],attic:[]};
@@ -51,17 +65,17 @@ header{position:sticky;top:0;z-index:5;background:#111c27ed;border-radius:8px}.r
   function detectionRadius(){return s.quiet?22:76;}
   function hurt(){
     if(!active()||s.mercy>0)return;
-    s.hearts--;s.mercy=1.5;s.message='Just a little startle! A gold outline keeps you safe for a moment.';
-    if(s.hearts<=0){Object.assign(s,s.checkpoint);s.hearts=5;s.mercy=3;s.enemies=makeEnemies();s.message='A friendly light guides you back. All keys, pages, and keepsakes kept!';}
+    s.hearts--;s.mercy=1.5;emit('hit');s.message='Just a little startle! A gold outline keeps you safe for a moment.';
+    if(s.hearts<=0){emit('checkpoint');Object.assign(s,s.checkpoint);s.hearts=5;s.mercy=3;s.enemies=makeEnemies();s.message='A friendly light guides you back. All keys, pages, and keepsakes kept!';}
   }
   function lantern(){
     if(!active())return false;
     if(!s.inventory.includes('amulet')){s.message='The lantern amulet is hidden in the Library storybook lock.';return false;}
     if(s.cooldown>0){s.message='Your lantern is gathering its glow. It will be ready soon.';return false;}
-    s.lantern=1.1;s.cooldown=2.6;
+    s.lantern=1.1;s.cooldown=2.6;emit('lantern');
     for(const e of s.enemies[s.room])if(Math.hypot(e.x-s.x,e.y-s.y)<92){e.stun=3.5;e.alert=false;}
     if(rooms[s.room].objects.some(o=>o.hidden&&Math.hypot(o.x-s.x,o.y-s.y)<84)){
-      s.passage=true;s.message='A secret passage appears behind the blue tapestry! Use the silver key to enter.';
+      if(!s.passage)emit('passage');s.passage=true;s.message='A secret passage appears behind the blue tapestry! Use the silver key to enter.';
     }else s.message='Gentle lantern light stills nearby shadows. Keep exploring!';
     return true;
   }
@@ -79,7 +93,7 @@ header{position:sticky;top:0;z-index:5;background:#111c27ed;border-radius:8px}.r
       if(Math.hypot(s.x-e.x,s.y-e.y)<10)hurt();
     }
   }
-  function openJournal(){if(active())s.dialog={kind:'book',title:'The keeper’s journal',text:'Six pages • three keepsakes • one promise'};}
+  function openJournal(){if(active()){emit('page');s.dialog={kind:'book',title:'The keeper’s journal',text:'Six pages • three keepsakes • one promise'};}}
   function objective(){
     if(!s.journals.includes('foyer-page'))return 'Read the keeper’s journal in the Foyer.';
     if(!s.solved.includes('books'))return 'Explore the west Library. Read its clue and unlock the storybooks.';
@@ -98,7 +112,7 @@ header{position:sticky;top:0;z-index:5;background:#111c27ed;border-radius:8px}.r
     const speed=s.quiet?43:82, distance=speed*Math.min(.1,dt),steps=Math.ceil(distance/3);
     for(let i=0;i<steps;i++){const x=s.x+dx/n*distance/steps,y=s.y+dy/n*distance/steps;if(canWalk(x,s.y))s.x=x;if(canWalk(s.x,y))s.y=y;}
   }
-  function grant(item){if(!s.inventory.includes(item)){s.inventory.push(item);s.hearts=Math.min(5,s.hearts+1);}}
+  function grant(item){if(!s.inventory.includes(item)){s.inventory.push(item);emit('pickup');s.hearts=Math.min(5,s.hearts+1);}}
   function closeDialog(){if(s.mode==='paused')return;s.dialog=null;s.sequence=[];}
   function nearest(){return rooms[s.room].objects.filter(o=>Math.hypot(o.x-s.x,o.y-s.y)<=34).sort((a,b)=>Math.hypot(a.x-s.x,a.y-s.y)-Math.hypot(b.x-s.x,b.y-s.y))[0]||null;}
   function interact(id){
@@ -107,14 +121,14 @@ header{position:sticky;top:0;z-index:5;background:#111c27ed;border-radius:8px}.r
     if(!o||Math.hypot(o.x-s.x,o.y-s.y)>34)return false;
     if(o.type==='door'){
       if(o.hidden&&!s.passage){s.message='A blue tapestry shimmers here. Try your lantern nearby.';return false;}
-      if(o.key&&!s.inventory.includes(o.key)){s.message='Locked: find the '+items[o.key]+'. Check the journal clues.';return false;}
-      s.room=o.to;[s.x,s.y]=o.spawn;s.checkpoint={room:s.room,x:s.x,y:s.y};s.mercy=1.5;
+      if(o.key&&!s.inventory.includes(o.key)){emit('locked');s.message='Locked: find the '+items[o.key]+'. Check the journal clues.';return false;}
+      emit('door');s.room=o.to;[s.x,s.y]=o.spawn;s.checkpoint={room:s.room,x:s.x,y:s.y};s.mercy=1.5;
       if(!s.visited.includes(s.room))s.visited.push(s.room);
       s.message=rooms[s.room].subtitle;return true;
     }
     if(o.type==='page'){
       if(!s.journals.includes(o.id)){s.journals.push(o.id);s.hearts=Math.min(5,s.hearts+1);}
-      s.dialog={kind:'page',title:pages[o.id].title,text:pages[o.id].text};
+      emit('page');s.dialog={kind:'page',title:pages[o.id].title,text:pages[o.id].text};
     }else if(o.type==='puzzle'){
       const p=puzzles[o.id];s.sequence=[];
       if(s.solved.includes(o.id))s.dialog={kind:'page',title:p.title,text:'Already restored. '+p.success};
@@ -123,7 +137,7 @@ header{position:sticky;top:0;z-index:5;background:#111c27ed;border-radius:8px}.r
     }else if(o.type==='item'){
       grant(o.item);s.dialog={kind:'page',title:'A familiar face',text:'Family portrait collected. Ada, Father, and Grandmother smile together. Rowan will remember them. Keepsakes stay with you, even if a shadow startles you.'};
     }else if(o.type==='rest'){
-      s.hearts=5;s.checkpoint={room:s.room,x:s.x,y:s.y};s.message='Five hearts restored. The keeper’s lantern is a safe place to rest.';
+      emit('checkpoint');s.hearts=5;s.checkpoint={room:s.room,x:s.x,y:s.y};s.message='Five hearts restored. The keeper’s lantern is a safe place to rest.';
     }else if(o.type==='spirit'){
       const missing=['portrait','musicBox','ribbon'].filter(i=>!s.inventory.includes(i));
       if(missing.length||s.journals.length<6)s.dialog={kind:'page',title:'Help Rowan remember',text:'“Did they find one another?” Bring all six journal pages ('+s.journals.length+'/6 found) and three keepsakes. Still needed: '+(missing.map(i=>items[i]).join(', ')||'only the missing journal pages')+'. Every door stays open behind you.'};
@@ -136,16 +150,59 @@ header{position:sticky;top:0;z-index:5;background:#111c27ed;border-radius:8px}.r
     const d=s.dialog;
     if(d.kind==='puzzle'){
       const p=puzzles[d.id];if(!p.choices.includes(value))return;
-      if(p.answer[s.sequence.length]!==value){s.sequence=[];d.text='Not quite. No harm done! '+p.hint;return;}
+      if(p.answer[s.sequence.length]!==value){emit('wrong');s.sequence=[];d.text='Not quite. No harm done! '+p.hint;return;}
       s.sequence.push(value);d.text=p.hint+' • '+s.sequence.join(' → ');
-      if(s.sequence.length===p.answer.length){s.solved.push(d.id);p.rewards.forEach(grant);s.dialog={kind:'page',title:'Memory restored',text:p.success};s.sequence=[];}
+      if(s.sequence.length===p.answer.length){s.solved.push(d.id);p.rewards.forEach(grant);emit('correct');s.dialog={kind:'page',title:'Memory restored',text:p.success};s.sequence=[];}
     }else if(d.kind==='spirit'){
-      if(value==='together'){s.mode='won';s.dialog=null;s.message='The family was safe. The keeper can rest.';}
-      else if(value==='alone')d.text='Rowan tilts his head. “Look at Ada’s last letter again. Where did everyone go?” Try again; your kindness matters more than a first guess.';
+      if(value==='together'){emit('ending');s.mode='won';s.dialog=null;s.message='The family was safe. The keeper can rest.';}
+      else if(value==='alone'){emit('wrong');d.text='Rowan tilts his head. “Look at Ada’s last letter again. Where did everyone go?” Try again; your kindness matters more than a first guess.';}
     }
   }
   reset();
-  window.PhantomManor={getState:()=>copy(s),getRooms:()=>copy(rooms),getPages:()=>copy(pages),getItems:()=>copy(items),reset,start,move,canWalk,interact,choose,closeDialog,togglePause,setQuiet,detectionRadius,hurt,lantern,tick,openJournal,objective,nearest:()=>copy(nearest())};
+  window.PhantomManor={drainEvents:()=>events.splice(0),getState:()=>copy(s),getRooms:()=>copy(rooms),getPages:()=>copy(pages),getItems:()=>copy(items),reset,start,move,canWalk,interact,choose,closeDialog,togglePause,setQuiet,detectionRadius,hurt,lantern,tick,openJournal,objective,nearest:()=>copy(nearest())};
+})();
+</script>
+<script id="manor-audio">
+(function(){
+  'use strict';
+  // Original 16-step music-box phrase; A minor → F → C → E minor.
+  // One look-ahead clock, driven by the existing animation chain (no timers).
+  window.createManorAudio=function(makeContext){
+    let ac=null,on=false,paused=false,next=0,step=0,music=.55,effects=.65;
+    const voices=new Set();
+    const midi=n=>440*Math.pow(2,(n-69)/12);
+    function stop(channel){for(const v of voices){if(channel&&v.channel!==channel)continue;try{v.o.stop();}catch(_){}v.o.disconnect();v.g.disconnect();voices.delete(v);}if(!channel||channel==='music')next=0;}
+    function suspend(){stop();if(ac&&ac.suspend)Promise.resolve(ac.suspend()).catch(()=>{});}
+    function tone(n,t,d,volume,type='sine',channel='music'){
+      if(!volume||voices.size>=48)return;
+      const o=ac.createOscillator(),g=ac.createGain(),v={o,g,channel};voices.add(v);
+      o.type=type;o.frequency.value=midi(n);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(volume,t+.025);g.gain.exponentialRampToValueAtTime(.00001,t+d);
+      o.connect(g);g.connect(ac.destination);o.onended=()=>{o.disconnect();g.disconnect();voices.delete(v);};o.start(t);o.stop(t+d+.03);
+    }
+    async function enable(value){
+      on=!!value;
+      if(!on){suspend();return false;}
+      try{if(!ac)ac=makeContext();if(!ac)throw Error('unavailable');if(!paused)await ac.resume();if(!on||paused)suspend();return on;}
+      catch(_){on=false;stop();return false;}
+    }
+    function setPaused(value){value=!!value;if(value===paused)return;paused=value;if(paused)suspend();}
+    function tick(room){
+      if(!on||paused||!ac||ac.state!=='running'||!music)return;
+      const now=ac.currentTime;if(next<now)next=now+.025;
+      const roots=[45,41,48,40],phrase=[0,7,12,7,3,10,7,3,0,7,14,12,7,3,10,7];
+      const variation={foyer:0,library:0,garden:12,gallery:0,clocktower:-12,attic:12}[room]||0;
+      while(next<now+.16){const beat=step%16,root=roots[Math.floor(step/16)%4];
+        tone(root+24+phrase[beat]+variation,next,.7,.032*music,'sine');
+        tone(root+36+phrase[beat]+variation,next,.23,.008*music,'sine');
+        if(beat%4===0){tone(root,next,1.5,.018*music);tone(root+12,next,1.7,.011*music);tone(root+19,next,1.7,.009*music);}
+        step++;next+=.42;
+      }
+    }
+    const sounds={door:[48,55,60],locked:[50,49],page:[81,76],pickup:[72,79,84],correct:[72,76,79],wrong:[64,62],lantern:[69,76,81],hit:[57,52],checkpoint:[60,67,72],passage:[69,72,76,83],ending:[69,72,76,81,84,88]};
+    function effect(name){if(!on||paused||!ac||ac.state!=='running'||!effects)return;const notes=sounds[name];if(!notes)return;notes.forEach((n,i)=>tone(n,ac.currentTime+.015+i*.1,name==='ending'?1.1:.38,.035*effects,'sine','effects'));}
+    function setVolume(channel,value){value=Math.max(0,Math.min(1,Number(value)||0));if(channel==='music')music=value;else if(channel==='effects')effects=value;stop(channel);}
+    return {enable,setPaused,tick,effect,setVolume,status:()=>({on,paused,voices:voices.size,music,effects,state:ac?ac.state:'unavailable'})};
+  };
 })();
 </script>
 <script id="manor-ui">
@@ -153,33 +210,39 @@ header{position:sticky;top:0;z-index:5;background:#111c27ed;border-radius:8px}.r
   'use strict';
   const G=window.PhantomManor,rooms=G.getRooms(),pages=G.getPages(),items=G.getItems();
   const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d');
-  const keys=new Set(),touch=new Map();let quietToggle=false,last=0,modalKey='',hudKey='',soundOn=false,audio=null,master=null,noteAt=0,noteIndex=0;
+  const keys=new Set(),touch=new Map();let quietToggle=false,last=0,modalKey='',hudKey='';
   const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const button=(action,text,extra='')=>'<button data-action="'+action+'" '+extra+'>'+text+'</button>';
   function clearInput(){keys.clear();touch.clear();quietToggle=false;G.setQuiet(false);}
-  function audioToggle(){
-    try{
-      if(!audio){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)throw Error('unavailable');audio=new AC();master=audio.createGain();master.gain.value=0;master.connect(audio.destination);}
-      soundOn=!soundOn;if(soundOn){audio.resume();noteAt=0;}master.gain.setTargetAtTime(soundOn?.065:0,audio.currentTime,.1);
-      $('sound').textContent='Sound: '+(soundOn?'on':'off');$('sound').setAttribute('aria-pressed',String(soundOn));
-    }catch(_){soundOn=false;$('sound').textContent='Sound unavailable';}
+  const audio=window.PhantomManorAudio=window.createManorAudio(()=>{const AC=window.AudioContext||window.webkitAudioContext;return AC?new AC():null;});
+  async function audioToggle(){
+    const wanted=!audio.status().on;const enabled=await audio.enable(wanted);
+    $('sound').textContent=wanted&&!enabled?'Sound unavailable':'Sound: '+(enabled?'on':'off');$('sound').setAttribute('aria-pressed',String(enabled));
   }
-  function note(freq,length=.8){
-    if(!soundOn||!audio)return;const t=audio.currentTime,o=audio.createOscillator(),gain=audio.createGain();o.type='sine';o.frequency.value=freq;gain.gain.setValueAtTime(0,t);gain.gain.linearRampToValueAtTime(.18,t+.07);gain.gain.exponentialRampToValueAtTime(.001,t+length);o.connect(gain);gain.connect(master);o.start(t);o.stop(t+length+.04);o.onended=()=>{o.disconnect();gain.disconnect();};
+  function syncAudio(gesture=false){
+    const s=G.getState();audio.setPaused(document.hidden||s.mode==='paused'||s.mode==='title');
+    if(gesture&&audio.status().on&&!audio.status().paused)audio.enable(true);
+    G.drainEvents().forEach(audio.effect);
   }
+  function viewMode(){const large=document.documentElement.classList.toggle('large-view');$('large').setAttribute('aria-pressed',String(large));$('large').textContent=large?'Standard view':'Large view';}
+  async function fullscreen(){try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();$('view-status').textContent='';}catch(_){$('view-status').textContent='Fullscreen unavailable here. Try Large view instead.';}}
+  document.addEventListener('fullscreenchange',()=>{$('fullscreen').textContent=document.fullscreenElement?'Exit fullscreen':'Fullscreen';});
+  document.addEventListener('input',e=>{if(e.target.id==='music-volume'||e.target.id==='effects-volume')audio.setVolume(e.target.id.split('-')[0],Number(e.target.value)/100);});
   function perform(action,value){
     if(action==='sound'){audioToggle();return;}
+    if(action==='large'){viewMode();return;}
+    if(action==='fullscreen'){fullscreen();return;}
     if(action==='start'){clearInput();G.start();canvas.focus();}
     else if(action==='restart'){clearInput();G.reset();modalKey='';}
     else if(action==='pause'){clearInput();G.togglePause();}
     else if(action==='close'){clearInput();G.closeDialog();canvas.focus();}
     else if(action==='journal'){clearInput();G.openJournal();}
     else if(action==='interact'){G.interact();if(G.getState().dialog)clearInput();}
-    else if(action==='lantern'){if(G.lantern())note(392,.7);}
+    else if(action==='lantern'){G.lantern();}
     else if(action==='quiet'){if(G.getState().mode==='playing'&&!G.getState().dialog){quietToggle=!quietToggle;G.setQuiet(quietToggle);}}
-    else if(action==='choose'){G.choose(value);note(261.63,.35);}
-    render();
+    else if(action==='choose'){G.choose(value);}
+    syncAudio(true);render();
   }
   document.addEventListener('click',e=>{const b=e.target.closest('[data-action]');if(b){perform(b.dataset.action,b.dataset.value);}});
   const dirs={ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right'};
@@ -188,6 +251,7 @@ header{position:sticky;top:0;z-index:5;background:#111c27ed;border-radius:8px}.r
       const focusable=Array.from($('card').querySelectorAll('button,a,summary'));if(focusable.length){const first=focusable[0],end=focusable[focusable.length-1];if(e.shiftKey&&document.activeElement===first){end.focus();e.preventDefault();}else if(!e.shiftKey&&document.activeElement===end){first.focus();e.preventDefault();}}return;
     }
     if(e.code==='KeyM'){if(!e.repeat)perform('sound');return;}
+    if(e.target&&e.target.tagName==='INPUT')return;
     if(e.code==='KeyP'){e.preventDefault();if(!e.repeat)perform('pause');return;}
     const s=G.getState();
     if(s.mode==='title'){if(e.code==='Enter'&&!e.repeat&&(!document.activeElement||document.activeElement.tagName!=='BUTTON'))perform('start');return;}
@@ -202,7 +266,7 @@ header{position:sticky;top:0;z-index:5;background:#111c27ed;border-radius:8px}.r
   $('touch-controls').addEventListener('pointerdown',e=>{const b=e.target.closest('[data-hold]');if(!b)return;e.preventDefault();if(G.getState().mode!=='playing'||G.getState().dialog)return;touch.set(e.pointerId,b.dataset.hold);b.setPointerCapture(e.pointerId);});
   function release(e){touch.delete(e.pointerId);}
   document.addEventListener('pointerup',release);document.addEventListener('pointercancel',release);document.addEventListener('lostpointercapture',release);
-  function loseFocus(){clearInput();if(G.getState().mode==='playing')G.togglePause();render();}
+  function loseFocus(){clearInput();if(G.getState().mode==='playing')G.togglePause();audio.setPaused(true);render();}
   window.addEventListener('blur',loseFocus);document.addEventListener('visibilitychange',()=>{if(document.hidden)loseFocus();});
   function render(){
     const s=G.getState(),n=G.nearest();
@@ -288,7 +352,7 @@ header{position:sticky;top:0;z-index:5;background:#111c27ed;border-radius:8px}.r
   function frame(now){
     const dt=last?Math.min(.05,(now-last)/1000):0;last=now;const s=G.getState();
     if(s.mode==='playing'&&!s.dialog){const held=new Set([...keys,...touch.values()]);G.setQuiet(quietToggle||keys.has('quiet'));G.move(Number(held.has('right'))-Number(held.has('left')),Number(held.has('down'))-Number(held.has('up')),dt);G.tick(dt);}
-    if(soundOn&&audio&&s.mode==='playing'&&!s.dialog&&audio.currentTime>noteAt){note([196,261.63,293.66,392,329.63,261.63,220,293.66][noteIndex++%8],1.5);noteAt=audio.currentTime+2.4;}
+    syncAudio();if(G.getState().mode==='playing')audio.tick(G.getState().room);
     render();draw(G.getState());requestAnimationFrame(frame);
   }
   render();draw(G.getState());requestAnimationFrame(frame);
