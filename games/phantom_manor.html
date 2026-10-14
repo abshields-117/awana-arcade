@@ -18,12 +18,13 @@ header{flex-wrap:wrap}.tools{flex-wrap:wrap;align-items:center}.tools button{min
 :fullscreen{overflow:auto;background:#0c131e}.large-view .keyhint,:fullscreen .keyhint{margin-top:4px}
 @media(max-width:850px){.sidebar{grid-row:auto}.sidebar .map-block{display:block;grid-column:1 / -1}.view{width:min(100%,calc((100svh - 320px)*1.5))}.brand{display:none}.tools{gap:4px}.sidebar .map-block summary{padding:8px 0}.large-view .view,:fullscreen .view{width:min(100%,calc((100svh - 270px)*1.5))}}
 @media(max-width:440px){header{position:relative}.tools{width:100%}.tools button{flex:1;padding:6px}.view,.large-view .view,:fullscreen .view{width:100%}.controls{flex-wrap:wrap;justify-content:center}.audio-settings>div{right:0}.roomline strong{font-size:14px}.keyhint{overflow-wrap:anywhere}}
+.map{display:block!important}.map svg{width:100%;height:auto;display:block}.map .map-caption{font-size:11px;color:var(--gold);margin:5px 0}.choices button[aria-pressed=true]{background:#e0c68d;color:#182a35;border:2px solid #fff0c4}.trail-badge{color:#e8cb87;font-weight:700}.map-block{min-width:200px;max-width:440px}.map-block summary{color:var(--gold)}
 </style></head><body>
 <div class="app">
 <header><a class="menu" href="../index.html">← ARCADE MENU</a><div class="brand">Phantom Manor</div><div class="tools"><button id="sound" data-action="sound" aria-pressed="false">Sound: off</button><button id="pause" data-action="pause">Pause · P</button><button id="calm" data-action="calm" aria-pressed="false">Calm scenery</button><button id="large" data-action="large" aria-pressed="false">Large view</button><button id="fullscreen" data-action="fullscreen">Fullscreen</button><details class="audio-settings"><summary>Audio</summary><div><label for="music-volume">Music</label><input id="music-volume" type="range" min="0" max="100" value="55"><label for="effects-volume">Effects</label><input id="effects-volume" type="range" min="0" max="100" value="65"><small>0 = off · Sound / M mutes both</small></div></details></div></header><p id="view-status" role="status"></p>
 <main class="layout"><section class="world" aria-label="The manor adventure"><div class="roomline"><strong id="room-name">Foyer</strong><span id="vitals" aria-label="Five hearts">♥ ♥ ♥ ♥ ♥</span></div><div class="view"><canvas id="game" width="480" height="320" tabindex="0" aria-label="Top-down manor. Move with arrow keys or WASD. Press E near objects. Use the Journal button for collected clues.">Your browser needs Canvas to explore Phantom Manor.</canvas><div id="prompt"></div></div><p id="message" class="message" aria-live="polite"></p><div class="controls" id="touch-controls"><div class="dpad" aria-label="Movement controls"><button class="up" data-hold="up" aria-label="Move up">↑</button><button class="left" data-hold="left" aria-label="Move left">←</button><button class="down" data-hold="down" aria-label="Move down">↓</button><button class="right" data-hold="right" aria-label="Move right">→</button></div><div class="actions"><button data-action="quiet" id="quiet" aria-pressed="false">Quiet</button><button data-action="interact">Interact · E</button><button data-action="lantern" id="lantern">Lantern · Space</button></div></div><div class="keyhint">WASD / arrows: move · E: interact · Space: lantern · Shift: quiet · P: pause · M: sound · J: journal</div></section>
-<aside class="sidebar"><div class="mission"><div class="eyebrow">The next small mystery</div><p id="objective"></p></div><div class="inventory-block divider"><div class="eyebrow">Your satchel</div><div id="inventory" class="inventory"></div></div><button class="journal-button" data-action="journal" id="journal">Journal · 0/6</button><details class="map-block divider"><summary>Manor map</summary><div class="map" id="map"></div></details><p class="legend divider">Gold pages hold clues.<br>Blue cloth hides a secret.<br>Still shadows with lantern light.<br>Rest in the Foyer to refill hearts.</p></aside></main>
-<p class="footer">Chapter I · The Lantern Keeper · A gentle fictional mystery · Session-only progress; reloading starts over.</p>
+<aside class="sidebar"><div class="mission"><div class="eyebrow">The next small mystery</div><p id="objective"></p></div><div class="inventory-block divider"><div class="eyebrow">Your satchel</div><div id="inventory" class="inventory"></div></div><button class="journal-button" data-action="journal" id="journal">Journal · 0/6</button><details class="map-block divider" open><summary>Explorer map · fold / unfold</summary><div class="map" id="map"></div></details><p class="legend divider">Gold pages hold clues.<br>Blue cloth hides a secret.<br>Still shadows with lantern light.<br>Rest in the Foyer to refill hearts.</p></aside></main>
+<p class="footer">The Lantern Keeper + Moonlit Grounds · A gentle fictional mystery · Session-only progress; reloading starts over.</p>
 </div><div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="dialog-title" hidden><div class="card" id="card"></div></div>
 <script id="manor-engine">
 (function () {
@@ -53,12 +54,37 @@ header{flex-wrap:wrap}.tools{flex-wrap:wrap;align-items:center}.tools button{min
     clocktower:{name:'Clocktower',subtitle:'The hours remember',palette:['#322c27','#494036','#70614b','#e2c78d'],obstacles:[[88,92,52,42],[344,92,48,42],[342,218,46,28]],objects:[door('to-garden','Conservatory',240,288,'garden',[240,76]),door('passage-back','Gallery passage',32,168,'gallery',[420,168],'silverKey',true),door('to-attic','Attic stairs',240,48,'attic',[240,262],'atticKey'),obj('clock-page','Bell schedule',154,228,'page'),obj('clock','Memory bells',245,125,'puzzle')]},
     attic:{name:'Attic',subtitle:'A promise kept',palette:['#242b40','#343d56','#5b6885','#d8d5b1'],obstacles:[[78,78,58,32],[344,82,48,30],[94,220,42,26],[336,216,54,30]],objects:[door('to-clocktower','Clocktower',240,288,'clocktower',[240,76]),obj('attic-page','Ada’s last letter',160,140,'page'),obj('keeper','Rowan, the keeper',278,126,'spirit')]}
   };
+  rooms.foyer.objects.push(door('to-courtyard','Moonlit grounds',240,288,'courtyard',[240,76]));
+  Object.assign(rooms,{
+    courtyard:{name:'Moonlit Courtyard',subtitle:'Follow the lantern trail',outdoor:true,palette:['#172d32','#254039','#526f60','#e0cb94'],obstacles:[[85,100,58,40],[337,100,58,40],[90,218,60,25],[330,218,60,25]],objects:[door('to-foyer','Manor',240,48,'foyer',[240,258]),door('to-graveyard','Graveyard',32,168,'graveyard',[420,168]),door('to-cottage','Keeper cottage',448,168,'cottage',[60,168],'oakToken'),door('to-observatory','Observatory',240,288,'observatory',[240,76],'starLens'),obj('grounds-map','Folded grounds map',240,132,'map'),obj('courtyard-rest','Lantern bench',174,236,'rest')]},
+    graveyard:{name:'Remembrance Garden',subtitle:'A peaceful graveyard of kind memories',outdoor:true,palette:['#1e2939','#2b3b49','#697b88','#ced5b0'],obstacles:[[100,80,42,38],[216,80,42,38],[332,80,42,38]],objects:[door('to-courtyard','Courtyard',448,168,'courtyard',[60,168])]},
+    cottage:{name:'Keeper Cottage',subtitle:'Small inventions, warm welcomes',palette:['#302b32','#494239','#8d7963','#ecd29d'],obstacles:[[90,80,80,28],[315,80,65,28],[325,215,60,28]],objects:[door('to-courtyard','Courtyard',32,168,'courtyard',[420,168])]},
+    observatory:{name:'Starlight Observatory',subtitle:'The sky remembers the way',outdoor:true,palette:['#141f3b','#253651','#596b8e','#d8d2a7'],obstacles:[[88,100,48,40],[344,100,48,40]],objects:[door('to-courtyard','Courtyard',240,48,'courtyard',[240,258])]}
+  });
+  const notes={
+    'grave-note':{title:'Trail I • The kindness wreaths',text:'These old stones remember neighbors who helped the village. Mira planted a ROSE before Theo planted a DAISY. Theo planted his DAISY before Elsie planted a LILY. Lay their flowers from first to last. Nobody is hiding here; this is a quiet place to remember kindness.'},
+    'cottage-note':{title:'Trail II • Night-watch workshop',text:'Rowan made a lamp for each picture: OWL, FOX, SUN and MOON. Switch on ONLY the two ANIMALS that visit at night. The sky pictures must stay off. Tap a lamp again to turn it off, then Check lights. A star lens waits in the drawer.'},
+    'star-note':{title:'Trail III • The missing star',text:'Ada sketched three constellations: the first has TWO stars, the next FOUR. Each new constellation adds TWO more stars. How many belong in the empty third frame? Set the telescope dial to that number. The trail star will light the courtyard beacon.'}
+  };
+  Object.assign(items,{oakToken:'Oak cottage token',starLens:'Star lens',trailStar:'Trail star'});
+  Object.assign(puzzles,{
+    wreaths:{title:'The kindness wreaths',page:'grave-note',choices:['Lily','Rose','Daisy'],answer:['Rose','Daisy','Lily'],rewards:['oakToken'],hint:'Use the before-and-after clues: which flower came first, next, last?',success:'Three wreaths bloom. The oak token opens the keeper cottage east of the Courtyard. First trail light restored!'},
+    lamps:{title:'The night-watch lamps',page:'cottage-note',kind:'set',choices:['Owl','Fox','Sun','Moon','Check lights'],answer:['Owl','Fox'],rewards:['starLens'],hint:'Turn on only the two night animals. Tap again to turn off. Then Check lights.',success:'The animal lamps glow! A star lens opens the Observatory south of the Courtyard. Second trail light restored!'},
+    telescope:{title:'The constellation dial',page:'star-note',choices:['4','5','6','8'],answer:['6'],rewards:['trailStar'],hint:'Two stars, four stars, then… add the same number again.',success:'A tiny star settles into your lantern! Carry it north to the Courtyard welcome beacon to finish the lantern trail.'}
+  });
+  rooms.graveyard.objects.push(obj('grave-note','Kindness inscription',146,222,'note'),obj('wreaths','Kindness wreaths',270,172,'puzzle'));
+  rooms.cottage.objects.push(obj('cottage-note','Workshop instructions',144,232,'note'),obj('lamps','Night-watch lamps',240,130,'puzzle'));
+  rooms.observatory.objects.push(obj('star-note','Ada’s star sketch',144,224,'note'),obj('telescope','Constellation dial',264,154,'puzzle'));
+  rooms.courtyard.objects.push(obj('beacon','Welcome beacon',310,236,'beacon'));
+  function continueExploring(){if(s.mode==='won'){s.mode='playing';s.message='The manor story is complete. The lantern trail is yours to explore!';}}
+  const mapPositions={foyer:[180,70],library:[60,70],garden:[300,70],gallery:[420,70],clocktower:[300,25],attic:[420,25],courtyard:[180,160],graveyard:[60,160],cottage:[300,160],observatory:[180,235]};
+  function getMap(){return {discovered:s.mapFound,current:s.room,player:[s.x,s.y],nodes:Object.entries(rooms).map(([id,r])=>({id,name:r.name,position:mapPositions[id],visited:s.visited.includes(id)})),edges:Object.entries(rooms).flatMap(([id,r])=>r.objects.filter(o=>o.type==='door'&&(!o.hidden||s.passage)&&s.visited.includes(id)&&s.visited.includes(o.to)&&id<o.to).map(o=>[id,o.to]))};}
   let s,events=[];
   const emit=name=>{if(events.length<64)events.push(name);};
-  function reset() { events=[];s = {mode:'title',room:'foyer',x:240,y:258,hearts:5,inventory:[],journals:[],solved:[],quiet:false,mercy:0,lantern:0,cooldown:0,time:0,dialog:null,message:'Find the keeper’s journal, then explore the west door.',checkpoint:{room:'foyer',x:240,y:258},passage:false,visited:['foyer'],sequence:[],enemies:makeEnemies()}; }
+  function reset() { events=[];s = {trailComplete:false,mapFound:false,notes:[],storyComplete:false,mode:'title',room:'foyer',x:240,y:258,hearts:5,inventory:[],journals:[],solved:[],quiet:false,mercy:0,lantern:0,cooldown:0,time:0,dialog:null,message:'Read the Foyer journal, or take the south door to discover the grounds map.',checkpoint:{room:'foyer',x:240,y:258},passage:false,visited:['foyer'],sequence:[],enemies:makeEnemies()}; }
   function makeEnemies(){
     const patrol=(type,x,y,tx,ty)=>({type,x,y,home:[x,y],away:[tx,ty],target:1,stun:0,alert:false});
-    return {foyer:[],library:[patrol('bat',276,228,380,150)],garden:[patrol('ghost',290,205,188,152)],gallery:[patrol('bat',340,240,374,122)],clocktower:[patrol('ghost',190,170,302,200),patrol('bat',360,176,280,238)],attic:[]};
+    return {courtyard:[],graveyard:[],cottage:[],observatory:[],foyer:[],library:[patrol('bat',276,228,380,150)],garden:[patrol('ghost',290,205,188,152)],gallery:[patrol('bat',340,240,374,122)],clocktower:[patrol('ghost',190,170,302,200),patrol('bat',360,176,280,238)],attic:[]};
   }
   function togglePause(){if(s.mode==='playing'){s.mode='paused';s.quiet=false;}else if(s.mode==='paused')s.mode='playing';}
   function setQuiet(value){if(active())s.quiet=!!value;}
@@ -95,6 +121,14 @@ header{flex-wrap:wrap}.tools{flex-wrap:wrap;align-items:center}.tools button{min
   }
   function openJournal(){if(active()){emit('page');s.dialog={kind:'book',title:'The keeper’s journal',text:'Six pages • three keepsakes • one promise'};}}
   function objective(){
+    if(['courtyard','graveyard','cottage','observatory'].includes(s.room)){
+      if(!s.mapFound)return 'Find the folded map in the middle of the Courtyard.';
+      if(!s.solved.includes('wreaths'))return 'West: read the graveyard inscription and arrange the kindness wreaths.';
+      if(!s.solved.includes('lamps'))return 'East: use the oak token at the cottage. Read its note and light only the night animals.';
+      if(!s.solved.includes('telescope'))return 'South: bring the star lens to the Observatory. Read Ada’s star sketch.';
+      return s.trailComplete?'Trail Keeper badge earned! Explore freely or return north to the manor.':'Bring your trail star to the Courtyard welcome beacon.';
+    }
+    if(s.storyComplete)return 'Rowan’s story is complete. Take the Foyer south door to explore the lantern trail.';
     if(!s.journals.includes('foyer-page'))return 'Read the keeper’s journal in the Foyer.';
     if(!s.solved.includes('books'))return 'Explore the west Library. Read its clue and unlock the storybooks.';
     if(!s.solved.includes('wheel'))return 'Use the brass key in the Foyer’s east door. Restore the sky wheel.';
@@ -126,14 +160,21 @@ header{flex-wrap:wrap}.tools{flex-wrap:wrap;align-items:center}.tools button{min
       if(!s.visited.includes(s.room))s.visited.push(s.room);
       s.message=rooms[s.room].subtitle;return true;
     }
-    if(o.type==='page'){
+    if(o.type==='map'){
+      s.mapFound=true;emit('pickup');s.dialog={kind:'page',title:'Grounds map discovered!',text:'Your mini-map now follows your steps. Gold marks you; lines connect places you have visited. The graveyard lies west, the keeper cottage east, and the observatory south. Find three trail lights to welcome travelers home. You can return to the original manor story at any time.'};
+    }else if(o.type==='beacon'){
+      if(!s.inventory.includes('trailStar'))s.dialog={kind:'page',title:'The welcome beacon',text:'Three discoveries light the way: wreaths in the west graveyard, animal lamps in the east cottage, and a constellation in the south observatory. Bring the trail star here. There is no hurry.'};
+      else {if(!s.trailComplete)emit('ending');s.trailComplete=true;s.hearts=5;s.dialog={kind:'page',title:'Lantern trail complete!',text:'Your star lights every path. Golden lanterns welcome the village walkers, and a little owl settles on the beacon. You earned the Trail Keeper badge! All five hearts restored. Keep exploring or return to Rowan’s story inside the manor.'};}
+    }else if(o.type==='note'){
+      if(!s.notes.includes(o.id))s.notes.push(o.id);emit('page');s.dialog={kind:'page',title:notes[o.id].title,text:notes[o.id].text};
+    }else if(o.type==='page'){
       if(!s.journals.includes(o.id)){s.journals.push(o.id);s.hearts=Math.min(5,s.hearts+1);}
       emit('page');s.dialog={kind:'page',title:pages[o.id].title,text:pages[o.id].text};
     }else if(o.type==='puzzle'){
       const p=puzzles[o.id];s.sequence=[];
       if(s.solved.includes(o.id))s.dialog={kind:'page',title:p.title,text:'Already restored. '+p.success};
-      else if(!s.journals.includes(p.page))s.dialog={kind:'page',title:p.title,text:'There must be a clue nearby. Find and read this room’s journal page first.'};
-      else s.dialog={kind:'puzzle',id:o.id,title:p.title,text:p.hint,choices:p.choices};
+      else if(!s.journals.includes(p.page)&&!s.notes.includes(p.page))s.dialog={kind:'page',title:p.title,text:'There must be a clue nearby. Find and read this room’s gold clue page first.'};
+      else s.dialog={kind:'puzzle',id:o.id,title:p.title,text:p.hint,choices:p.choices,clue:(pages[p.page]||notes[p.page]).text};
     }else if(o.type==='item'){
       grant(o.item);s.dialog={kind:'page',title:'A familiar face',text:'Family portrait collected. Ada, Father, and Grandmother smile together. Rowan will remember them. Keepsakes stay with you, even if a shadow startles you.'};
     }else if(o.type==='rest'){
@@ -150,16 +191,21 @@ header{flex-wrap:wrap}.tools{flex-wrap:wrap;align-items:center}.tools button{min
     const d=s.dialog;
     if(d.kind==='puzzle'){
       const p=puzzles[d.id];if(!p.choices.includes(value))return;
-      if(p.answer[s.sequence.length]!==value){emit('wrong');s.sequence=[];d.text='Not quite. No harm done! '+p.hint;return;}
-      s.sequence.push(value);d.text=p.hint+' • '+s.sequence.join(' → ');
+      if(p.kind==='set'){
+        if(value!=='Check lights'){s.sequence=s.sequence.includes(value)?s.sequence.filter(v=>v!==value):[...s.sequence,value];d.text=p.hint+' • On: '+(s.sequence.join(', ')||'none');return;}
+        if(s.sequence.length!==p.answer.length||!p.answer.every(v=>s.sequence.includes(v))){emit('wrong');d.text='Not quite. Keep adjusting; no harm done! On: '+(s.sequence.join(', ')||'none')+'. '+p.hint;return;}
+      }else{
+        if(p.answer[s.sequence.length]!==value){emit('wrong');s.sequence=[];d.text='Not quite. No harm done! '+p.hint;return;}
+        s.sequence.push(value);d.text=p.hint+' • '+s.sequence.join(' → ');
+      }
       if(s.sequence.length===p.answer.length){s.solved.push(d.id);p.rewards.forEach(grant);emit('correct');s.dialog={kind:'page',title:'Memory restored',text:p.success};s.sequence=[];}
     }else if(d.kind==='spirit'){
-      if(value==='together'){emit('ending');s.mode='won';s.dialog=null;s.message='The family was safe. The keeper can rest.';}
+      if(value==='together'){emit('ending');s.storyComplete=true;s.mode='won';s.dialog=null;s.message='The family was safe. The keeper can rest.';}
       else if(value==='alone'){emit('wrong');d.text='Rowan tilts his head. “Look at Ada’s last letter again. Where did everyone go?” Try again; your kindness matters more than a first guess.';}
     }
   }
   reset();
-  window.PhantomManor={drainEvents:()=>events.splice(0),getState:()=>copy(s),getRooms:()=>copy(rooms),getPages:()=>copy(pages),getItems:()=>copy(items),reset,start,move,canWalk,interact,choose,closeDialog,togglePause,setQuiet,detectionRadius,hurt,lantern,tick,openJournal,objective,nearest:()=>copy(nearest())};
+  window.PhantomManor={continueExploring,getNotes:()=>copy(notes),getMap,drainEvents:()=>events.splice(0),getState:()=>copy(s),getRooms:()=>copy(rooms),getPages:()=>copy(pages),getItems:()=>copy(items),reset,start,move,canWalk,interact,choose,closeDialog,togglePause,setQuiet,detectionRadius,hurt,lantern,tick,openJournal,objective,nearest:()=>copy(nearest())};
 })();
 </script>
 <script id="manor-audio">
@@ -236,6 +282,7 @@ header{flex-wrap:wrap}.tools{flex-wrap:wrap;align-items:center}.tools button{min
     if(action==='fullscreen'){fullscreen();return;}
     if(action==='start'){clearInput();G.start();canvas.focus();}
     else if(action==='restart'){clearInput();G.reset();modalKey='';}
+    else if(action==='explore'){clearInput();G.continueExploring();canvas.focus();}
     else if(action==='pause'){clearInput();G.togglePause();}
     else if(action==='close'){clearInput();G.closeDialog();canvas.focus();}
     else if(action==='journal'){clearInput();G.openJournal();}
@@ -269,24 +316,30 @@ header{flex-wrap:wrap}.tools{flex-wrap:wrap;align-items:center}.tools button{min
   document.addEventListener('pointerup',release);document.addEventListener('pointercancel',release);document.addEventListener('lostpointercapture',release);
   function loseFocus(){clearInput();if(G.getState().mode==='playing')G.togglePause();audio.setPaused(true);render();}
   window.addEventListener('blur',loseFocus);document.addEventListener('visibilitychange',()=>{if(document.hidden)loseFocus();});
+  function mapHTML(s){
+    if(!s.mapFound)return '<p class="map-caption">A map waits outside. Take the Foyer’s south door and read the folded map in the Courtyard.</p>';
+    const m=G.getMap(),pos=Object.fromEntries(m.nodes.map(n=>[n.id,n.position]));
+    return '<p class="map-caption">● You: '+escape(rooms[s.room].name)+'</p><svg viewBox="0 0 480 270" role="img" aria-label="Visited areas and connecting paths. Gold is your current area.">'+m.edges.map(([a,b])=>'<path d="M'+pos[a].join(' ')+'L'+pos[b].join(' ')+'" stroke="#94b5ad" stroke-width="3"/>').join('')+m.nodes.map(n=>'<g><rect x="'+(n.position[0]-51)+'" y="'+(n.position[1]-13)+'" width="102" height="28" rx="6" fill="'+(n.id===s.room?'#e4c68b':n.visited?'#35505b':'#182a36')+'" stroke="#76918e"/><text x="'+n.position[0]+'" y="'+(n.position[1]+5)+'" text-anchor="middle" font-family="system-ui" font-size="12" fill="'+(n.id===s.room?'#142431':'#d7e3db')+'">'+escape(n.visited?({courtyard:'Courtyard',graveyard:'Graveyard',observatory:'Observatory',cottage:'Cottage'}[n.id]||n.name):'?')+'</text></g>').join('')+'</svg><p class="map-caption">Lines = connections · ? = unexplored<br>Inset: gold dot = you · blue marks = exits</p>'+(s.trailComplete?'<p class="trail-badge">✦ Trail Keeper badge earned</p>':'<p class="map-caption">Trail lights: '+['wreaths','lamps','telescope'].filter(id=>s.solved.includes(id)).length+'/3</p>');
+  }
   function render(){
     const s=G.getState(),n=G.nearest();
-    const hud=JSON.stringify([s.room,s.hearts,s.inventory,s.journals,s.solved,s.quiet,s.message,s.visited,s.passage,Math.ceil(s.cooldown),s.mode]);
-    if(hud!==hudKey){hudKey=hud;$('room-name').textContent=rooms[s.room].name+' / '+rooms[s.room].subtitle;$('vitals').textContent='♥ '.repeat(s.hearts)+'♡ '.repeat(5-s.hearts);$('vitals').setAttribute('aria-label',s.hearts+' of 5 hearts');$('objective').textContent=G.objective();$('message').textContent=s.message;$('inventory').innerHTML=s.inventory.length?s.inventory.map(i=>'<span class="chip '+(['portrait','musicBox','ribbon'].includes(i)?'keepsake':'')+'">'+items[i]+'</span>').join(''):'<span class="empty">An empty satchel, a curious heart.</span>';$('journal').textContent='Journal · '+s.journals.length+'/6';$('quiet').setAttribute('aria-pressed',String(s.quiet));$('quiet').textContent=s.quiet?'Quiet: on':'Quiet';$('pause').textContent=s.mode==='paused'?'Resume · P':'Pause · P';$('lantern').textContent=s.cooldown>0?'Glow: '+Math.ceil(s.cooldown)+'s':'Lantern · Space';$('map').innerHTML=Object.entries(rooms).map(([id,r])=>'<div class="'+(id===s.room?'here':'')+'">'+(id===s.room?'▸ ':s.visited.includes(id)?'✓ ':'◇ ')+r.name+'</div>').join('')+'<div>'+(s.passage?'↔ Gallery passage found':'⋯ One hidden passage')+'</div>';}
+    const hud=JSON.stringify([s.room,s.hearts,s.inventory,s.journals,s.solved,s.quiet,s.message,s.visited,s.passage,s.mapFound,s.trailComplete,s.notes,Math.ceil(s.cooldown),s.mode]);
+    if(hud!==hudKey){hudKey=hud;$('room-name').textContent=rooms[s.room].name+' / '+rooms[s.room].subtitle;$('vitals').textContent='♥ '.repeat(s.hearts)+'♡ '.repeat(5-s.hearts);$('vitals').setAttribute('aria-label',s.hearts+' of 5 hearts');$('objective').textContent=G.objective();$('message').textContent=s.message;$('inventory').innerHTML=s.inventory.length?s.inventory.map(i=>'<span class="chip '+(['portrait','musicBox','ribbon'].includes(i)?'keepsake':'')+'">'+items[i]+'</span>').join(''):'<span class="empty">An empty satchel, a curious heart.</span>';$('journal').textContent='Journal · '+s.journals.length+'/6';$('quiet').setAttribute('aria-pressed',String(s.quiet));$('quiet').textContent=s.quiet?'Quiet: on':'Quiet';$('pause').textContent=s.mode==='paused'?'Resume · P':'Pause · P';$('lantern').textContent=s.cooldown>0?'Glow: '+Math.ceil(s.cooldown)+'s':'Lantern · Space';$('map').innerHTML=mapHTML(s);}
     $('prompt').textContent=s.mode==='playing'&&!s.dialog&&n?'E · '+(n.hidden&&!s.passage?'Blue tapestry · try lantern':n.name):'';
     const key=JSON.stringify([s.mode,s.dialog,s.mode==='won'?s.journals:null,s.dialog&&s.dialog.kind==='book'?s.journals:null]);
     if(key===modalKey)return;const wasHidden=$('overlay').hidden;modalKey=key;
     const card=$('card');card.className='card';let html='';
     if(s.mode==='title'){
-      card.className='card title-card';html='<div class="eyebrow">A gentle mystery • Chapter I</div><h1 id="dialog-title">Phantom Manor</h1><div class="subtitle">The Lantern Keeper</div><svg class="scene" viewBox="0 0 400 88" role="img" aria-label="A moonlit pixel manor with welcoming golden windows" shape-rendering="crispEdges"><circle cx="322" cy="24" r="15" fill="#d5d4b4"/><path d="M0 72H400V88H0Z" fill="#182b35"/><path d="M99 83V34H130V18H153V32H242V12H265V35H298V83Z" fill="#101d2d"/><path d="M94 34L114 17L134 34M128 18L141 4L157 18M236 13L253 0L270 13M261 36L280 18L301 36" fill="#0c1524"/><path d="M159 36H234V83H159Z" fill="#273541"/><path d="M179 38V23H214V38" fill="#1c2b39"/><path d="M171 23L197 7L221 23" fill="#0d192b"/><path d="M185 83V61H208V83" fill="#c3a970"/><path d="M106 44H115V57H106ZM122 44H131V57H122ZM143 35H151V48H143ZM164 47H176V57H164ZM217 47H229V57H217ZM246 29H254V42H246ZM270 45H280V58H270ZM287 45H294V58H287Z" fill="#d8bd80"/><path d="M19 70H119V75H19ZM288 67H381V72H288ZM132 78H261V81H132Z" fill="#667a7f" opacity=".5"/><path d="M54 76V34H58V76M34 76V48H38V76M351 79V39H355V79" stroke="#12232c" stroke-width="4"/><path d="M56 45L40 32M56 56L72 40M353 54L340 40M353 62L370 43" stroke="#12232c" stroke-width="4"/></svg><p>A forgotten manor. Six scattered pages. One keeper waiting for a story to come home.</p><div class="howto"><span><b>WASD / arrows</b> · move</span><span><b>E</b> · read, use, open doors</span><span><b>Space</b> · lantern amulet</span><span><b>Shift</b> · quiet footsteps</span><span><b>P / M</b> · pause / sound</span><span><b>J</b> · your journal</span></div><p class="fine">Explore at your own pace. Friendly ghosts and bats may startle you, but never take your discoveries. Touch controls below the map. Sound starts off.</p>'+button('start','Enter the manor','class="primary"')+'<div class="fine" style="margin-top:12px">A make-believe mystery, not a teaching about spirits.<br>Session-only progress • no save needed</div><div style="margin-top:10px"><a href="../index.html">← Back to the arcade</a></div>';
+      card.className='card title-card';html='<div class="eyebrow">A gentle mystery • Chapter I</div><h1 id="dialog-title">Phantom Manor</h1><div class="subtitle">The Lantern Keeper</div><svg class="scene" viewBox="0 0 400 88" role="img" aria-label="A moonlit pixel manor with welcoming golden windows" shape-rendering="crispEdges"><circle cx="322" cy="24" r="15" fill="#d5d4b4"/><path d="M0 72H400V88H0Z" fill="#182b35"/><path d="M99 83V34H130V18H153V32H242V12H265V35H298V83Z" fill="#101d2d"/><path d="M94 34L114 17L134 34M128 18L141 4L157 18M236 13L253 0L270 13M261 36L280 18L301 36" fill="#0c1524"/><path d="M159 36H234V83H159Z" fill="#273541"/><path d="M179 38V23H214V38" fill="#1c2b39"/><path d="M171 23L197 7L221 23" fill="#0d192b"/><path d="M185 83V61H208V83" fill="#c3a970"/><path d="M106 44H115V57H106ZM122 44H131V57H122ZM143 35H151V48H143ZM164 47H176V57H164ZM217 47H229V57H217ZM246 29H254V42H246ZM270 45H280V58H270ZM287 45H294V58H287Z" fill="#d8bd80"/><path d="M19 70H119V75H19ZM288 67H381V72H288ZM132 78H261V81H132Z" fill="#667a7f" opacity=".5"/><path d="M54 76V34H58V76M34 76V48H38V76M351 79V39H355V79" stroke="#12232c" stroke-width="4"/><path d="M56 45L40 32M56 56L72 40M353 54L340 40M353 62L370 43" stroke="#12232c" stroke-width="4"/></svg><p>A forgotten manor. A moonlit graveyard. Ten connected places and six gentle puzzles. Help Rowan remember, then light the outdoor lantern trail.</p><div class="howto"><span><b>WASD / arrows</b> · move</span><span><b>E</b> · read, use, open doors</span><span><b>Space</b> · lantern amulet</span><span><b>Shift</b> · quiet footsteps</span><span><b>P / M</b> · pause / sound</span><span><b>J</b> · your journal</span></div><p class="fine">Explore at your own pace. Friendly ghosts and bats may startle you, but never take your discoveries. Touch controls below the map. Sound starts off.</p>'+button('start','Enter the manor','class="primary"')+'<div class="fine" style="margin-top:12px">A make-believe mystery, not a teaching about spirits.<br>Session-only progress • no save needed</div><div style="margin-top:10px"><a href="../index.html">← Back to the arcade</a></div>';
     }else if(s.mode==='paused'){
       html='<div class="eyebrow">A quiet moment</div><h2 id="dialog-title">Your lantern can wait.</h2><p>The manor is paused. Your discoveries are safe.</p><div class="howto"><span><b>WASD / arrows</b> · move</span><span><b>E</b> · interact</span><span><b>Space</b> · lantern</span><span><b>Shift / Quiet</b> · sneak</span><span><b>J</b> · journal</span><span><b>M</b> · sound</span></div><footer>'+button('pause','Continue exploring','class="primary"')+'<a href="../index.html">Arcade menu</a></footer><details><summary>Start this chapter over</summary><p class="fine">This clears all pages, puzzles, and keepsakes from this session.</p>'+button('restart','Yes, restart chapter')+'</details>';
     }else if(s.mode==='won'){
-      html='<div class="eyebrow">Chapter I complete</div><h2 id="dialog-title">A light finds its way home.</h2><p>Rowan touches the portrait. The music box plays Ada’s favorite tune, and her ribbon stirs in the warm morning air.</p><p>“They were together. They were safe. I did not lose them.”</p><p>The keeper smiles. His outline softens into a gentle golden glow, then rests. Beyond the windows, the mist lifts from the path to the river cottage.</p><p><strong>You restored the manor’s memories — and helped a lonely keeper find peace.</strong></p><div class="progress-line">6 journal pages • 3 keepsakes • 3 restored puzzles'+(s.passage?' • secret passage discovered':'')+'</div><footer>'+button('restart','Play the chapter again','class="primary"')+'<a href="../index.html">Arcade menu</a></footer>';
+      html='<div class="eyebrow">Chapter I complete</div><h2 id="dialog-title">A light finds its way home.</h2><p>Rowan touches the portrait. The music box plays Ada’s favorite tune, and her ribbon stirs in the warm morning air.</p><p>“They were together. They were safe. I did not lose them.”</p><p>The keeper smiles. His outline softens into a gentle golden glow, then rests. Beyond the windows, the mist lifts from the path to the river cottage.</p><p><strong>You restored the manor’s memories — and helped a lonely keeper find peace.</strong></p><div class="progress-line">6 journal pages • 3 keepsakes • 3 restored puzzles'+(s.passage?' • secret passage discovered':'')+'</div><footer>'+button('explore','Explore the grounds','class="primary"')+button('restart','Play the chapter again')+'<a href="../index.html">Arcade menu</a></footer>';
     }else if(s.dialog){
       const d=s.dialog;html='<div class="eyebrow">'+(d.kind==='puzzle'?'A memory puzzle':d.kind==='book'?'Read at your own pace':'The keeper’s story')+'</div><h2 id="dialog-title">'+escape(d.title)+'</h2><p>'+escape(d.text)+'</p>';
       if(d.kind==='book')html+=Object.keys(pages).map(id=>s.journals.includes(id)?'<article class="page-entry"><h3>'+escape(pages[id].title)+'</h3><p>'+escape(pages[id].text)+'</p></article>':'<div class="page-entry fine">'+escape(pages[id].title.split(' • ')[0])+' • A page still waiting in the manor.</div>').join('');
-      if(d.kind==='puzzle'){html+='<div class="choices">'+d.choices.map(v=>button('choose',escape(v),'data-value="'+escape(v)+'"')).join('')+'</div><details><summary>Reread the clue</summary><p>'+escape(pages[{books:'library-page',wheel:'garden-page',clock:'clock-page'}[d.id]].text)+'</p></details>';}
+      if(d.kind==='book')html+='<h3>Lantern trail field notes · '+s.notes.length+'/3</h3>'+Object.entries(G.getNotes()).map(([id,n])=>s.notes.includes(id)?'<article class="page-entry"><h3>'+escape(n.title)+'</h3><p>'+escape(n.text)+'</p></article>':'<p class="fine">A field note waits outside.</p>').join('');
+      if(d.kind==='puzzle'){html+='<div class="choices">'+d.choices.map(v=>button('choose',escape(v),'data-value="'+escape(v)+'"'+(d.id==='lamps'&&v!=='Check lights'?' aria-pressed="'+s.sequence.includes(v)+'"':''))).join('')+'</div><details><summary>Reread the clue</summary><p>'+escape(d.clue)+'</p></details>';}
       if(d.kind==='spirit')html+='<div class="choices">'+button('choose','They are together at the river cottage.','data-value="together"')+button('choose','They were left alone in the manor.','data-value="alone"')+'</div><details><summary>Read Ada’s last letter</summary><p>'+escape(pages['attic-page'].text)+'</p></details>';
       html+='<footer><span class="fine">The world waits while you read.</span>'+button('close',d.kind==='puzzle'?'Explore some more':'Close · E','class="primary"')+'</footer>';
     }
@@ -325,6 +378,41 @@ header{flex-wrap:wrap}.tools{flex-wrap:wrap;align-items:center}.tools button{min
       if(s.room==='gallery'){for(const x of [180,275]){rect(x,55,24,31,'#a58d64');rect(x+3,58,18,25,'#3c4c5d');circle(x+12,66,5,'#acb6ad');rect(x+6,72,12,8,'#7b8e8c');}}
     }
   }
+  function drawGrounds(s,t){
+    const r=rooms[s.room];
+    if(!r.outdoor)return;
+    // Outdoor rooms have open sky, grass, gravel and low fences, not indoor rugs.
+    rect(0,0,480,320,r.palette[0]);rect(24,44,432,255,r.palette[1]);
+    for(let i=0;i<130;i++){const x=30+(i*67)%419,y=50+(i*37)%242;rect(x,y,2,3,'#749b7b25');}
+    for(let i=0;i<24;i++)circle(18+i*19,9+(i*13)%29,i%3===0?1.2:.6,'#dfdfbd');
+    circle(425,21,13,'#d4d9bf');circle(430,17,11,r.palette[0]);
+    rect(224,46,32,248,'#88918836');rect(30,152,420,32,'#88918836');
+    for(let i=0;i<40;i++){const x=36+i*10;line(x,45,x,56,'#8c9a8c',2);line(x,286,x,299,'#748c80',2);}line(30,50,450,50,'#87988c');line(30,293,450,293,'#87988c');
+    for(const x of [23,457])for(let y=65;y<285;y+=25){rect(x-4,y,8,17,'#3c544a');circle(x,y-2,9,'#395d4d');circle(x-3,y-5,5,'#52735b');}
+    for(const [x,y,w,h] of r.obstacles){
+      if(s.room==='graveyard'){rect(x+3,y+5,w,h,'#111b2c60');rect(x,y+8,w,h-8,'#72848b');circle(x+w/2,y+10,w/2,'#72848b');rect(x+6,y+12,w-12,2,'#b3c5bd');text(['MIRA','THEO','ELSIE'][Math.round((x-100)/116)],x+w/2,y+24,'#d1dbcc',7);for(let f=0;f<3;f++){circle(x+8+f*12,y+h+5,3,['#d29d9f','#e2d6a4','#b2c9d9'][f]);}}
+      else if(s.room==='observatory'){circle(x+w/2,y+h/2,24,'#839399');circle(x+w/2,y+h/2,19,'#31465a');for(let i=0;i<8;i++){const a=i*Math.PI/4;line(x+w/2+Math.cos(a)*13,y+h/2+Math.sin(a)*13,x+w/2+Math.cos(a)*19,y+h/2+Math.sin(a)*19,'#d7cda1');}}
+      else{rect(x,y,w,h,'#637d68');rect(x+3,y+3,w-6,h-6,'#243f39');for(let i=0;i<5;i++){circle(x+9+i*10,y+h/2,6,'#5b8163');circle(x+9+i*10,y+h/2-3,2,'#d7c6a1');}}
+    }
+    if(s.room==='graveyard'){text('A GARDEN OF KIND MEMORIES',240,25,'#ced7bf',8);text('ROSE',121,135,'#d1b9b3',7);text('DAISY',237,135,'#e1d9af',7);text('LILY',353,135,'#becddd',7);}
+    if(s.room==='courtyard'){
+      text('THE MOONLIT LANTERN TRAIL',240,25,'#dfd2a4',9);
+      for(const [x,y,i] of [[177,87,0],[302,87,1],[370,263,2]]){rect(x-2,y,4,21,'#89917b');rect(x-5,y-9,10,13,'#ac9d6c');const lit=s.solved.includes(['wreaths','lamps','telescope'][i]);rect(x-3,y-7,6,8,lit?'#f5dfa0':'#3d5556');if(lit)glow(x,y,35,'#e7cc8730');}
+    }
+    if(s.room==='observatory'){
+      text('ADA’S OPEN-SKY OBSERVATORY',240,25,'#d9d3b2',8);
+      for(let group=0;group<3;group++){const x=155+group*85;rect(x-22,70,48,38,'#526981');rect(x-20,72,44,34,'#1a2c48');if(group===2)text('?',x+2,98,'#e9d69a',22);else for(let i=0;i<(group+1)*2;i++){const sx=x-10+(i%2)*20,sy=82+Math.floor(i/2)*15;circle(sx,sy,2,'#e9dfa5');} }
+    }
+    for(let i=0;i<7;i++){const x=60+(i*59)%360+Math.sin(t*.4+i)*4,y=205+(i*23)%66;circle(x,y,1,s.trailComplete?'#f3d88c':'#b1c6a4');}
+  }
+  function drawMiniMap(s){
+    if(!s.mapFound)return;
+    const ox=29,oy=246,scale=.19,r=rooms[s.room];rect(ox-3,oy-13,98,70,'#081522e8');text('YOU • AREA MAP',ox+45,oy-4,'#e3ce98',6);
+    rect(ox+5,oy+8,81,46,'#34505b');
+    for(const [x,y,w,h] of r.obstacles)rect(ox+x*scale,oy+y*scale,w*scale,h*scale,'#7b9394');
+    for(const o of r.objects)if(o.type==='door'&&(!o.hidden||s.passage))rect(ox+o.x*scale-2,oy+o.y*scale-2,4,4,o.key&&!s.inventory.includes(o.key)?'#bc8d83':'#8dd5dc');
+    circle(ox+s.x*scale,oy+s.y*scale,2.5,'#ffe29c');
+  }
   function draw(s){
     const r=rooms[s.room],p=r.palette,t=s.time;ctx.imageSmoothingEnabled=false;rect(0,0,480,320,p[0]);
     for(let y=40;y<300;y+=16)for(let x=24;x<456;x+=24){rect(x,y,23,15,((x/24+y/16)|0)%2?p[1]:p[0]);line(x+2,y+14,x+19,y+14,p[2]+'30');}
@@ -345,7 +433,7 @@ header{flex-wrap:wrap}.tools{flex-wrap:wrap;align-items:center}.tools button{min
       else{rect(x+6,y-3,8,8,p[3]);rect(x+w-14,y-3,8,8,p[3]);}
     }
     // Decorative details stay outside door lanes and do not alter collisions.
-    drawAtmosphere(s,reduced?0:t);
+    drawAtmosphere(s,reduced?0:t);drawGrounds(s,reduced?0:t);
     for(const o of r.objects){
       const x=o.x,y=o.y;
       if(o.type==='door'){
@@ -354,15 +442,20 @@ header{flex-wrap:wrap}.tools{flex-wrap:wrap;align-items:center}.tools button{min
         if(hidden){line(x-3,y-17,x-3,y+16,'#79a4b0');line(x+3,y-17,x+3,y+16,'#355063');text('✦',x,y+4,'#b9c8c7',9);}
         else{if(locked){rect(x-3,y-3,6,7,'#dbbd7c');line(x-2,y-4,x+2,y-4,'#dbbd7c',2);}else text(horiz?(x<50?'‹':'›'):(y<80?'↑':'↓'),x,y+4,'#cddfdf',12);}
         if(!hidden){const label=o.name.replace('Conservatory','Garden').replace('Gallery passage','Gallery').replace('Hidden passage','Passage');text(label,horiz?(x<50?x+26:x-30):x,horiz?y-25:(y<80?y+23:y-16),'#dfdcc3',8);}
-      }else if(o.type==='page'){
-        const found=s.journals.includes(o.id);glow(x,y,23,found?'#b3d9cc15':'#e6c07d2b');rect(x-8,y-9,16,17,'#695946');rect(x-7,y-10,13,17,found?'#a9b9ac':'#dfd1a3');rect(x-4,y-7,7,1,'#706850');rect(x-4,y-3,7,1,'#706850');rect(x-4,y+1,5,1,'#706850');text(found?'READ':'JOURNAL',x,y+21,found?'#9eada8':'#e4d49c',7);
+      }else if(o.type==='page'||o.type==='note'){
+        const found=s.journals.includes(o.id)||s.notes.includes(o.id);glow(x,y,23,found?'#b3d9cc15':'#e6c07d2b');rect(x-8,y-9,16,17,'#695946');rect(x-7,y-10,13,17,found?'#a9b9ac':'#dfd1a3');rect(x-4,y-7,7,1,'#706850');rect(x-4,y-3,7,1,'#706850');rect(x-4,y+1,5,1,'#706850');text(found?'READ':'JOURNAL',x,y+21,found?'#9eada8':'#e4d49c',7);
       }else if(o.type==='puzzle'){
         const done=s.solved.includes(o.id);glow(x,y,34,done?'#9ed3b522':'#ddba7820');
         if(o.id==='books'){for(let i=0;i<3;i++){rect(x-18+i*13,y-15,11,29,['#8ea47b','#b89972','#8e98b7'][i]);rect(x-16+i*13,y-12,7,3,'#ebd9a3');rect(x-16+i*13,y+6,7,2,'#e0cc9b');}}
         if(o.id==='wheel'){circle(x,y,22,'#8caa98');circle(x,y,17,'#385d60');for(let i=0;i<3;i++){const a=i*Math.PI*2/3-.5;text(['☾','•','☀'][i],x+Math.cos(a)*11,y+Math.sin(a)*11+3,'#ded6a1',11);}circle(x,y,4,'#cabc84');}
         if(o.id==='clock'){rect(x-19,y-35,38,64,'#997f54');rect(x-15,y-30,30,54,'#4b4038');circle(x,y-13,14,'#dfd0a1');circle(x,y-13,2,'#5d533e');line(x,y-13,x+8,y-18,'#514638',2);line(x,y-13,x,y-23,'#514638',2);line(x,y+4,x+(reduced?0:Math.sin(t)*5),y+16,'#d1b878',2);circle(x+(reduced?0:Math.sin(t)*5),y+18,5,'#c3a873');}
-        text(done?'RESTORED':o.id==='books'?'STORYBOOKS':o.id==='wheel'?'SKY WHEEL':'MEMORY BELLS',x,y+(o.id==='clock'?43:32),done?'#b4d3b8':'#e8cd94',7);
-      }else if(o.type==='rest'){rect(x-8,y+8,16,6,'#6b7a83');rect(x-2,y-8,4,19,'#9b8e67');rect(x-7,y-14,14,13,'#e0bd76');rect(x-4,y-12,8,9,'#f0dfa6');glow(x,y-5,40,'#e4c78b26');text('REST',x,y+25,'#d5c99c',7);}
+        if(o.id==='wreaths'){for(let i=0;i<3;i++){circle(x-23+i*23,y,12,'#6f987c');circle(x-23+i*23,y,7,p[1]);for(let j=0;j<4;j++){const a=j*Math.PI/2;circle(x-23+i*23+Math.cos(a)*10,y+Math.sin(a)*10,3,done?'#efcfa0':'#a6b9bb');}}}
+        if(o.id==='lamps'){rect(x-44,y-25,88,43,'#9c8863');rect(x-41,y-22,82,36,'#33434b');for(let i=0;i<4;i++){const lx=x-30+i*20;circle(lx,y-5,6,done&&i<2?'#f7d998':'#7c8989');text(['OWL','FOX','SUN','MOON'][i],lx,y+11,'#e1d6bc',6);}}
+        if(o.id==='telescope'){line(x,y,x-15,y+24,'#b5a273',3);line(x,y,x+15,y+24,'#b5a273',3);line(x-16,y+3,x+22,y-24,'#819eae',13);circle(x+23,y-25,9,'#cad2b6');circle(x+23,y-25,5,'#506d8d');}
+        text(done?'RESTORED':({books:'STORYBOOKS',wheel:'SKY WHEEL',clock:'MEMORY BELLS',wreaths:'KINDNESS WREATHS',lamps:'NIGHT LAMPS',telescope:'STAR DIAL'}[o.id]),x,y+(o.id==='clock'?43:32),done?'#b4d3b8':'#e8cd94',7);
+      }else if(o.type==='map'){rect(x-17,y-13,34,26,'#e1d0a4');line(x-5,y-12,x-5,y+12,'#9b946e');line(x+6,y-12,x+6,y+12,'#9b946e');line(x-12,y+6,x+12,y-6,'#4e7770',2);circle(x+9,y-5,3,'#c49a55');text(s.mapFound?'YOUR MAP':'GROUNDS MAP',x,y+26,'#ead5a2',7);}
+      else if(o.type==='beacon'){rect(x-12,y+15,24,9,'#81938a');rect(x-3,y-20,6,38,'#9b9d79');rect(x-12,y-28,24,20,'#ae9c6d');rect(x-8,y-24,16,12,s.trailComplete?'#ffe2a0':'#334c51');if(s.trailComplete){glow(x,y-20,70,'#f4d08345');text('★',x,y-37,'#f5d996',18);}text(s.trailComplete?'TRAIL KEEPER':'WELCOME BEACON',x,y+36,'#e8d29d',7);}
+      else if(o.type==='rest'){rect(x-8,y+8,16,6,'#6b7a83');rect(x-2,y-8,4,19,'#9b8e67');rect(x-7,y-14,14,13,'#e0bd76');rect(x-4,y-12,8,9,'#f0dfa6');glow(x,y-5,40,'#e4c78b26');text('REST',x,y+25,'#d5c99c',7);}
       else if(o.type==='item'){rect(x-19,y-20,38,38,'#bca273');rect(x-15,y-16,30,30,'#516376');for(let i=0;i<3;i++){rect(x-11+i*8,y-9+(i===1?3:0),6,7,'#e0c6a4');rect(x-11+i*8,y-2+(i===1?3:0),6,10,['#a0939e','#829a92','#a1abc5'][i]);}text(s.inventory.includes(o.item)?'COLLECTED':'PORTRAIT',x,y+29,'#d5c89b',7);}
       else if(o.type==='spirit'){glow(x,y,45,'#b2dcd226');ghost(x,y,t,0,true);text('ROWAN',x,y+28,'#cce2ce',8);}
     }
@@ -373,6 +466,7 @@ header{flex-wrap:wrap}.tools{flex-wrap:wrap;align-items:center}.tools button{min
     sprite(['..hhhh..','.hhhhhh.','.hffffh.','..fbfb..','..ffff..','.ssssss.','.bccccb.','.bccccb.','..cccc..','..b..b..'],x-8,y-18,{h:'#6b5147',f:'#e3bea0',b:'#1e3446',s:'#e0b66b',c:'#6ba4b4'});
     if(s.inventory.includes('amulet')){rect(x+10,y-4,4,6,'#e8d094');glow(x+12,y-1,s.lantern>0?92:31,s.lantern>0?'#e7d69d32':'#e2c18022');if(s.lantern>0){ctx.strokeStyle='#e1d6a566';ctx.lineWidth=1;ctx.beginPath();ctx.arc(x,y,92,0,Math.PI*2);ctx.stroke();}}
     if(!reduced){ctx.globalAlpha=.06;for(let i=0;i<12;i++){const mx=((i*53+t*5)%570)-50,my=55+(i*43)%240;rect(mx,my,45+(i%3)*18,3,'#c7dce0');rect(mx+14,my+4,42,2,'#c7dce0');}ctx.globalAlpha=1;}
+    drawMiniMap(s);
     // Subtle corners, never full-screen flashes.
     rect(0,0,480,12,'#0b132580');rect(0,312,480,8,'#0b132580');
   }
