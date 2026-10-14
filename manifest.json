@@ -1,7 +1,7 @@
 {
-  "name": "Awana Retro Arcade",
-  "short_name": "AwanaArcade",
-  "description": "Interactive Bible Learning Games for Awana Clubbers",
+  "name": "Awanacade",
+  "short_name": "Awanacade",
+  "description": "80s/90s Retro Sovereign Bible Arcade for Awana Clubbers",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0B0F19",
