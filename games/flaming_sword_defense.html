@@ -141,7 +141,7 @@
       border-radius: 6px;
       cursor: pointer;
       box-shadow: 0 0 20px rgba(245, 158, 11, 0.6);
-      animation: pulse 1.6s infinite;
+      /* Stable target for young players and keyboard/touch access. */
       letter-spacing: 1px;
     }
     @keyframes pulse {
@@ -182,6 +182,9 @@
       z-index: 10;
       pointer-events: none;
     }
+    .options{position:absolute;top:52px;left:12px;right:12px;display:flex;gap:6px;align-items:center;z-index:11;font-size:11px}.options button,.movement button{background:#122b30;color:#fef3c7;border:1px solid #b69a58;border-radius:6px;min-height:38px;padding:5px 9px;cursor:pointer}.movement{position:absolute;left:12px;bottom:12px;display:flex;gap:4px;z-index:11}.movement button{min-width:40px;min-height:44px}.calm .btn-action{animation:none}.overlay{overflow:auto}.btn-menu{position:relative;z-index:30}#hud{flex-wrap:wrap;font-size:11px;z-index:30}.options #power-status{margin-left:auto}button:focus-visible,a:focus-visible{outline:3px solid #7dd3fc}
+    @media(max-width:600px){#spin-bar-container{left:auto;right:12px;transform:none;width:160px}#spin-label{left:auto;right:12px;transform:none;font-size:8px;bottom:33px}.overlay{padding:18px 12px}h1{font-size:21px}.verse-box{font-size:11px;margin:8px 0}.instruction{font-size:11px;margin-bottom:10px}.options{top:65px}.hud-item{gap:2px}.hearts{font-size:12px}}
+    @media(prefers-reduced-motion:reduce){.btn-action{animation:none}}
   </style>
 </head>
 <body>
@@ -208,6 +211,8 @@
     <canvas id="gameCanvas" width="850" height="600"></canvas>
 
     <!-- Whirlwind Bar -->
+    <div class="options"><button id="calm" onclick="toggleCalm()">Calm mode</button><button onclick="muted=!muted;initAudio();this.textContent=muted?'Sound: off':'Sound: on'">Sound: off</button><button id="pause" onclick="togglePause()">Pause · P</button><span id="power-status" role="status"></span></div>
+    <div class="movement" aria-label="Movement"><button data-move="ArrowLeft" aria-label="Move left">←</button><button data-move="ArrowUp" aria-label="Move up">↑</button><button data-move="ArrowDown" aria-label="Move down">↓</button><button data-move="ArrowRight" aria-label="Move right">→</button></div>
     <div id="spin-label">SPACE / TAP: HOLY FLAME WHIRLWIND</div>
     <div id="spin-bar-container">
       <div id="spin-bar"></div>
@@ -222,9 +227,9 @@
         <span class="verse-ref">Genesis 3:24 (Amplified Bible)</span>
       </div>
       <div class="instruction">
-        🎮 <strong>CONTROLS:</strong> Move Mouse or Touch to aim the Flaming Sword around the Gate.<br>
+        🎮 <strong>MOVE:</strong> WASD / arrows or the direction buttons. Mouse / touch aims the blade.<br>💚 Collect healing lights, 🛡️ 10-second shields and ⚔️ long blades.<br>
         🔥 <strong>WHIRLWIND:</strong> Press <strong>SPACEBAR</strong> or <strong>TAP SCREEN</strong> for a 360&deg; holy flame sweep!<br>
-        🛡️ Deflect incoming wilderness beasts away from the sacred Tree of Life!
+        🛡️ Five garden watches with new colors and tougher patterns. Deflect pretend shadows!<br><strong>Fictional arcade play inspired by Genesis 3:24; movement, enemies and powerups are invented, not Bible events.</strong>
       </div>
       <button class="btn-action" onclick="startGame()">DEFEND THE GATE</button>
     </div>
@@ -269,12 +274,13 @@
     let audioCtx = null;
 
     function initAudio() {
+      if (!AudioCtx || muted) return;
       if (!audioCtx) audioCtx = new AudioCtx();
       if (audioCtx.state === 'suspended') audioCtx.resume();
     }
 
     function playSound(type) {
-      if (!audioCtx) return;
+      if (!audioCtx || muted || calm) return;
       const now = audioCtx.currentTime;
 
       if (type === 'swing') {
@@ -388,6 +394,21 @@
     let spawnInterval = null;
 
     let invulnerabilityTimer = 0;
+    const guardian = {x:CENTER_X, y:CENTER_Y};
+    const moveKeys = new Set();
+    let shieldTimer = 0, reachTimer = 0;
+    let calm = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    let muted = true, paused = false;
+    const levelNames = ['Dawn Watch', 'River Crossing', 'Twilight Grove', 'Starlit Gate', 'Golden Sunrise'];
+    function toggleCalm(){calm=!calm;document.body.classList.toggle('calm',calm);document.getElementById('calm').textContent='Calm: '+(calm?'on':'off');}
+    function togglePause(){paused=!paused;moveKeys.clear();document.getElementById('pause').textContent=paused?'Resume · P':'Pause · P';}
+    window.addEventListener('keyup',e=>moveKeys.delete(e.code));
+    window.addEventListener('blur',()=>{moveKeys.clear();if(gameState==='PLAYING'&&!paused)togglePause();});
+    document.addEventListener('visibilitychange',()=>{if(document.hidden&&gameState==='PLAYING'&&!paused)togglePause();});
+    document.querySelectorAll('[data-move]').forEach(b=>{
+      b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);moveKeys.add(b.dataset.move);});
+      ['pointerup','pointercancel','lostpointercapture'].forEach(event=>b.addEventListener(event,()=>moveKeys.delete(b.dataset.move)));
+    });
 
     // --- INPUT HANDLING ---
     function updateTargetAngle(clientX, clientY) {
@@ -396,7 +417,7 @@
       const scaleY = canvas.height / rect.height;
       const mouseX = (clientX - rect.left) * scaleX;
       const mouseY = (clientY - rect.top) * scaleY;
-      targetAngle = Math.atan2(mouseY - CENTER_Y, mouseX - CENTER_X);
+      targetAngle = Math.atan2(mouseY - guardian.y, mouseX - guardian.x);
     }
 
     window.addEventListener('mousemove', (e) => {
@@ -410,7 +431,7 @@
     }, { passive: false });
 
     function triggerWhirlwind() {
-      if (gameState !== 'PLAYING') return;
+      if (gameState !== 'PLAYING' || paused) return;
       if (whirlwindCooldown <= 0) {
         isWhirlwind = true;
         whirlwindTimer = 45; // 0.75s active spin
@@ -422,6 +443,8 @@
 
     window.addEventListener('keydown', (e) => {
       initAudio();
+      if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowLeft','ArrowDown','ArrowRight'].includes(e.code)){e.preventDefault();moveKeys.add(e.code);}
+      if(e.code==='KeyP'&&!e.repeat)togglePause();
       if (e.code === 'Space') {
         e.preventDefault();
         triggerWhirlwind();
@@ -443,6 +466,7 @@
 
     // --- PARTICLES & FLOATING TEXTS ---
     function createSparks(x, y, color, count = 12) {
+      if(calm) count=Math.min(count,3);
       for (let i = 0; i < count; i++) {
         const ang = Math.random() * Math.PI * 2;
         const spd = 1.5 + Math.random() * 4;
@@ -523,7 +547,7 @@
       if (Math.random() < 0.25) {
         powerups.push({
           x: x, y: y,
-          type: 'manna',
+          type: ['manna','shield','reach'][Math.floor(Math.random()*3)],
           pulse: 0
         });
       }
@@ -532,7 +556,9 @@
     // --- WAVE LIFECYCLE ---
     function startWave(w) {
       wave = w;
-      document.getElementById('hud-wave').textContent = `${wave} / ${TOTAL_WAVES}`;
+      if(w>1){hearts=Math.min(5,hearts+1);updateHeartsHUD();}
+      guardian.x=CENTER_X;guardian.y=CENTER_Y;
+      document.getElementById('hud-wave').textContent = `${wave} / ${TOTAL_WAVES} · ${levelNames[wave-1]}`;
       enemies = [];
       particles = [];
       powerups = [];
@@ -547,13 +573,17 @@
       if (spawnInterval) clearInterval(spawnInterval);
       const intervalMs = Math.max(1200, 2400 - wave * 250);
       spawnInterval = setInterval(() => {
-        if (gameState === 'PLAYING') spawnEnemy();
+        if (gameState === 'PLAYING' && !paused) spawnEnemy();
       }, intervalMs);
     }
 
     function startGame() {
       initAudio();
-      document.getElementById('overlay-start').classList.add('hidden');
+      document.querySelectorAll('.overlay').forEach(o=>o.classList.add('hidden'));
+      paused=false;moveKeys.clear();shieldTimer=reachTimer=invulnerabilityTimer=whirlwindCooldown=whirlwindTimer=0;isWhirlwind=false;
+      guardian.x=CENTER_X;guardian.y=CENTER_Y;swordLength=95;
+      document.getElementById('pause').textContent='Pause · P';
+      document.getElementById('spin-bar').style.width='100%';
       score = 0;
       hearts = 5;
       updateHeartsHUD();
@@ -584,8 +614,17 @@
 
     // --- GAME LOOP ---
     function update() {
-      if (gameState !== 'PLAYING') return;
+      if (gameState !== 'PLAYING' || paused) return;
 
+      const dx=Number(moveKeys.has('KeyD')||moveKeys.has('ArrowRight'))-Number(moveKeys.has('KeyA')||moveKeys.has('ArrowLeft'));
+      const dy=Number(moveKeys.has('KeyS')||moveKeys.has('ArrowDown'))-Number(moveKeys.has('KeyW')||moveKeys.has('ArrowUp'));
+      const norm=Math.hypot(dx,dy)||1;
+      guardian.x=Math.max(40,Math.min(810,guardian.x+dx/norm*3.3));
+      guardian.y=Math.max(100,Math.min(510,guardian.y+dy/norm*3.3));
+      if(shieldTimer>0)shieldTimer--;
+      if(reachTimer>0)reachTimer--;
+      swordLength=reachTimer>0?155:95;
+      document.getElementById('power-status').textContent=(shieldTimer?'Shield '+Math.ceil(shieldTimer/60)+'s  ':'')+(reachTimer?'Long blade '+Math.ceil(reachTimer/60)+'s':'');
       // Whirlwind Cooldown
       if (whirlwindCooldown > 0) {
         whirlwindCooldown--;
@@ -609,12 +648,12 @@
       }
 
       // Sword Line Segment: from (x1, y1) to (x2, y2)
-      const swordBaseR = GATE_RADIUS - 10;
-      const swordTipR = GATE_RADIUS + (isWhirlwind ? swordLength * 1.25 : swordLength);
-      const bladeX1 = CENTER_X + Math.cos(swordAngle) * swordBaseR;
-      const bladeY1 = CENTER_Y + Math.sin(swordAngle) * swordBaseR;
-      const bladeX2 = CENTER_X + Math.cos(swordAngle) * swordTipR;
-      const bladeY2 = CENTER_Y + Math.sin(swordAngle) * swordTipR;
+      const swordBaseR = 12;
+      const swordTipR = isWhirlwind ? swordLength * 1.25 : swordLength;
+      const bladeX1 = guardian.x + Math.cos(swordAngle) * swordBaseR;
+      const bladeY1 = guardian.y + Math.sin(swordAngle) * swordBaseR;
+      const bladeX2 = guardian.x + Math.cos(swordAngle) * swordTipR;
+      const bladeY2 = guardian.y + Math.sin(swordAngle) * swordTipR;
 
       // Invulnerability Countdown
       if (invulnerabilityTimer > 0) invulnerabilityTimer--;
@@ -623,10 +662,14 @@
       for (let i = powerups.length - 1; i >= 0; i--) {
         const p = powerups[i];
         p.pulse += 0.08;
-        const dist = Math.hypot(p.x - CENTER_X, p.y - CENTER_Y);
+        // Pickups drift toward the guardian, so every drop remains reachable.
+        p.x+=(guardian.x-p.x)*.012; p.y+=(guardian.y-p.y)*.012;
+        const dist = Math.hypot(p.x - guardian.x, p.y - guardian.y);
         // Player / Gate collection
-        if (dist < GATE_RADIUS + 25) {
-          if (hearts < 5) {
+        if (dist < 28) {
+          if(p.type==='shield'){shieldTimer=600;addFloatingText('GATE SHIELD • 10s',p.x,p.y);}
+          else if(p.type==='reach'){reachTimer=600;addFloatingText('LONG BLADE • 10s',p.x,p.y);}
+          else if (hearts < 5) {
             hearts++;
             updateHeartsHUD();
             playSound('heal');
@@ -648,8 +691,8 @@
           // Being knocked back
           e.x += e.deflectVX;
           e.y += e.deflectVY;
-          e.deflectVX *= 0.94;
-          e.deflectVY *= 0.94;
+          // Keep retreat velocity: friction previously stranded defeated mobs forever.
+          e.retreatFrames = (e.retreatFrames || 0) + 1;
           // Disappear when out of arena
           if (Math.hypot(e.x - CENTER_X, e.y - CENTER_Y) > 520) {
             enemies.splice(i, 1);
@@ -700,7 +743,7 @@
           // Check Collision with Central Gate / Tree of Life
           const distToGate = Math.hypot(e.x - CENTER_X, e.y - CENTER_Y);
           if (distToGate < GATE_RADIUS + e.radius) {
-            if (invulnerabilityTimer <= 0) {
+            if (invulnerabilityTimer <= 0 && shieldTimer <= 0) {
               hearts--;
               updateHeartsHUD();
               playSound('hurt');
@@ -724,7 +767,7 @@
 
       // Check Wave Completion (Rule 2: Minimum 3 seconds elapsed & all spawned & all defeated)
       const elapsed = Date.now() - waveStartTime;
-      if (elapsed > 3000 && waveSpawnedEnemies >= waveTotalEnemies && enemies.length === 0) {
+      if (elapsed > 3000 && waveTotalEnemies > 0 && waveSpawnedEnemies >= waveTotalEnemies && enemies.length === 0) {
         if (wave >= TOTAL_WAVES) {
           gameVictory();
         } else {
@@ -785,6 +828,12 @@
     // --- DRAWING PIPELINE ---
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const theme=['#0c241d','#102936','#1e1832','#0b1930','#302715'][wave-1];
+      ctx.fillStyle=theme;ctx.fillRect(0,0,850,600);
+      // Quiet garden terraces and a flowing river; no flashing screen effects.
+      ctx.strokeStyle='#396a6744';ctx.lineWidth=24;ctx.beginPath();ctx.moveTo(0,450);ctx.bezierCurveTo(280,370,560,550,850,420);ctx.stroke();
+      for(let i=0;i<18;i++){const x=(i*137)%850,y=90+(i*83)%440;ctx.fillStyle='#b6d18b';ctx.globalAlpha=calm?.16:.14+.1*Math.sin(Date.now()/1800+i);ctx.beginPath();ctx.arc(x,y,2,0,Math.PI*2);ctx.fill();}ctx.globalAlpha=1;
+      if(shieldTimer){ctx.strokeStyle='#7dd3fc';ctx.lineWidth=3;ctx.beginPath();ctx.arc(CENTER_X,CENTER_Y,72,0,Math.PI*2);ctx.stroke();}
 
       // 1. Draw Sacred Outer Ring / Border Pattern
       ctx.save();
@@ -817,7 +866,7 @@
 
       // Gate Wall
       ctx.fillStyle = '#064e3b';
-      ctx.strokeStyle = (invulnerabilityTimer > 0 && Math.floor(invulnerabilityTimer / 6) % 2 === 0) ? '#ef4444' : '#10b981';
+      ctx.strokeStyle = (invulnerabilityTimer > 0 && (calm || Math.floor(invulnerabilityTimer / 6) % 2 === 0)) ? '#ef4444' : '#10b981';
       ctx.lineWidth = 4;
       ctx.beginPath();
       ctx.arc(CENTER_X, CENTER_Y, GATE_RADIUS, 0, Math.PI * 2);
@@ -833,14 +882,14 @@
 
       // 3. Draw The Cherubim Sentinel at Center
       ctx.save();
-      ctx.translate(CENTER_X, CENTER_Y);
+      ctx.translate(guardian.x, guardian.y);
       ctx.rotate(swordAngle);
 
       // Cherubim Angelic Wing Glow
       ctx.fillStyle = 'rgba(254, 240, 138, 0.6)';
       ctx.beginPath();
-      ctx.ellipse(-8, -14, 18, 6, -0.4, 0, Math.PI * 2);
-      ctx.ellipse(-8, 14, 18, 6, 0.4, 0, Math.PI * 2);
+      ctx.ellipse(-8, -14, 18, calm?6:6+2*Math.sin(Date.now()/180), -0.4, 0, Math.PI * 2);
+      ctx.ellipse(-8, 14, 18, calm?6:6+2*Math.sin(Date.now()/180), 0.4, 0, Math.PI * 2);
       ctx.fill();
 
       // Cherubim Body
@@ -883,7 +932,7 @@
         ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
         ctx.lineWidth = 14;
         ctx.beginPath();
-        ctx.arc(CENTER_X, CENTER_Y, curBladeLen, 0, Math.PI * 2);
+        ctx.arc(guardian.x, guardian.y, curBladeLen, 0, Math.PI * 2);
         ctx.stroke();
         ctx.restore();
       }
@@ -895,7 +944,7 @@
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         const bounce = Math.sin(p.pulse) * 4;
-        ctx.fillText('🍞', p.x, p.y + bounce);
+        ctx.fillText(p.type==='shield'?'🛡️':p.type==='reach'?'⚔️':'💚', p.x, p.y + (calm?0:bounce));
         ctx.restore();
       });
 
@@ -946,8 +995,10 @@
       requestAnimationFrame(mainLoop);
     }
 
-    function mainLoop() {
-      update();
+    let lastFrame=0, accumulator=0;
+    function mainLoop(now) {
+      accumulator+=Math.min(50,now-(lastFrame||now));lastFrame=now;
+      while(accumulator>=1000/60){update();accumulator-=1000/60;}
       draw();
     }
 

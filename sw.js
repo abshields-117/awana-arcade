@@ -1,5 +1,5 @@
 // Awana Retro Arcade — Offline Service Worker
-const CACHE_NAME = 'awanacade-v6';
+const CACHE_NAME = 'awanacade-v7';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -17,14 +17,15 @@ const ASSETS_TO_CACHE = [
   './games/eden_two_trees_td.html',
   './games/henrys_eden_craft.html',
   './games/flaming_sword_defense.html',
-  './games/phantom_manor.html'
+  './games/phantom_manor.html',
+  './games/eden_screensaver.html'
 ];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       console.log('[SW] Pre-caching Awana Arcade games...');
-      return cache.addAll(ASSETS_TO_CACHE).catch(err => console.warn('[SW] Cache addAll warning:', err));
+      return cache.addAll(ASSETS_TO_CACHE); // Failed installs must not replace a working offline cache.
     }).then(() => self.skipWaiting())
   );
 });
@@ -34,7 +35,7 @@ self.addEventListener('activate', (e) => {
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((k) => {
-          if (k !== CACHE_NAME) {
+          if (k.startsWith('awanacade-') && k !== CACHE_NAME) {
             console.log('[SW] Purging stale cache:', k);
             return caches.delete(k);
           }
@@ -45,6 +46,7 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
+  if(e.request.method !== 'GET') return;
   const url = e.request.url;
   const isHtmlOrGame = e.request.mode === 'navigate' || url.endsWith('.html') || url.includes('/games/');
 
@@ -59,7 +61,7 @@ self.addEventListener('fetch', (e) => {
           }
           return networkResponse;
         })
-        .catch(() => caches.match(e.request))
+        .catch(() => caches.match(e.request, {ignoreSearch: true}))
     );
     return;
   }

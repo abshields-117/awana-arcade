@@ -20,7 +20,7 @@ header{flex-wrap:wrap}.tools{flex-wrap:wrap;align-items:center}.tools button{min
 @media(max-width:440px){header{position:relative}.tools{width:100%}.tools button{flex:1;padding:6px}.view,.large-view .view,:fullscreen .view{width:100%}.controls{flex-wrap:wrap;justify-content:center}.audio-settings>div{right:0}.roomline strong{font-size:14px}.keyhint{overflow-wrap:anywhere}}
 </style></head><body>
 <div class="app">
-<header><a class="menu" href="../index.html">← ARCADE MENU</a><div class="brand">Phantom Manor</div><div class="tools"><button id="sound" data-action="sound" aria-pressed="false">Sound: off</button><button id="pause" data-action="pause">Pause · P</button><button id="large" data-action="large" aria-pressed="false">Large view</button><button id="fullscreen" data-action="fullscreen">Fullscreen</button><details class="audio-settings"><summary>Audio</summary><div><label for="music-volume">Music</label><input id="music-volume" type="range" min="0" max="100" value="55"><label for="effects-volume">Effects</label><input id="effects-volume" type="range" min="0" max="100" value="65"><small>0 = off · Sound / M mutes both</small></div></details></div></header><p id="view-status" role="status"></p>
+<header><a class="menu" href="../index.html">← ARCADE MENU</a><div class="brand">Phantom Manor</div><div class="tools"><button id="sound" data-action="sound" aria-pressed="false">Sound: off</button><button id="pause" data-action="pause">Pause · P</button><button id="calm" data-action="calm" aria-pressed="false">Calm scenery</button><button id="large" data-action="large" aria-pressed="false">Large view</button><button id="fullscreen" data-action="fullscreen">Fullscreen</button><details class="audio-settings"><summary>Audio</summary><div><label for="music-volume">Music</label><input id="music-volume" type="range" min="0" max="100" value="55"><label for="effects-volume">Effects</label><input id="effects-volume" type="range" min="0" max="100" value="65"><small>0 = off · Sound / M mutes both</small></div></details></div></header><p id="view-status" role="status"></p>
 <main class="layout"><section class="world" aria-label="The manor adventure"><div class="roomline"><strong id="room-name">Foyer</strong><span id="vitals" aria-label="Five hearts">♥ ♥ ♥ ♥ ♥</span></div><div class="view"><canvas id="game" width="480" height="320" tabindex="0" aria-label="Top-down manor. Move with arrow keys or WASD. Press E near objects. Use the Journal button for collected clues.">Your browser needs Canvas to explore Phantom Manor.</canvas><div id="prompt"></div></div><p id="message" class="message" aria-live="polite"></p><div class="controls" id="touch-controls"><div class="dpad" aria-label="Movement controls"><button class="up" data-hold="up" aria-label="Move up">↑</button><button class="left" data-hold="left" aria-label="Move left">←</button><button class="down" data-hold="down" aria-label="Move down">↓</button><button class="right" data-hold="right" aria-label="Move right">→</button></div><div class="actions"><button data-action="quiet" id="quiet" aria-pressed="false">Quiet</button><button data-action="interact">Interact · E</button><button data-action="lantern" id="lantern">Lantern · Space</button></div></div><div class="keyhint">WASD / arrows: move · E: interact · Space: lantern · Shift: quiet · P: pause · M: sound · J: journal</div></section>
 <aside class="sidebar"><div class="mission"><div class="eyebrow">The next small mystery</div><p id="objective"></p></div><div class="inventory-block divider"><div class="eyebrow">Your satchel</div><div id="inventory" class="inventory"></div></div><button class="journal-button" data-action="journal" id="journal">Journal · 0/6</button><details class="map-block divider"><summary>Manor map</summary><div class="map" id="map"></div></details><p class="legend divider">Gold pages hold clues.<br>Blue cloth hides a secret.<br>Still shadows with lantern light.<br>Rest in the Foyer to refill hearts.</p></aside></main>
 <p class="footer">Chapter I · The Lantern Keeper · A gentle fictional mystery · Session-only progress; reloading starts over.</p>
@@ -211,7 +211,7 @@ header{flex-wrap:wrap}.tools{flex-wrap:wrap;align-items:center}.tools button{min
   const G=window.PhantomManor,rooms=G.getRooms(),pages=G.getPages(),items=G.getItems();
   const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d');
   const keys=new Set(),touch=new Map();let quietToggle=false,last=0,modalKey='',hudKey='';
-  const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const button=(action,text,extra='')=>'<button data-action="'+action+'" '+extra+'>'+text+'</button>';
   function clearInput(){keys.clear();touch.clear();quietToggle=false;G.setQuiet(false);}
@@ -230,6 +230,7 @@ header{flex-wrap:wrap}.tools{flex-wrap:wrap;align-items:center}.tools button{min
   document.addEventListener('fullscreenchange',()=>{$('fullscreen').textContent=document.fullscreenElement?'Exit fullscreen':'Fullscreen';});
   document.addEventListener('input',e=>{if(e.target.id==='music-volume'||e.target.id==='effects-volume')audio.setVolume(e.target.id.split('-')[0],Number(e.target.value)/100);});
   function perform(action,value){
+    if(action==='calm'){reduced=!reduced;$('calm').setAttribute('aria-pressed',String(reduced));$('calm').textContent=reduced?'Calm scenery: on':'Calm scenery';draw(G.getState());return;}
     if(action==='sound'){audioToggle();return;}
     if(action==='large'){viewMode();return;}
     if(action==='fullscreen'){fullscreen();return;}
@@ -298,8 +299,32 @@ header{flex-wrap:wrap}.tools{flex-wrap:wrap;align-items:center}.tools button{min
   function sprite(pattern,x,y,palette,scale=2){pattern.forEach((row,b)=>Array.from(row).forEach((ch,a)=>{if(palette[ch])rect(x+a*scale,y+b*scale,scale,scale,palette[ch]);}));}
   function glow(x,y,r,color){const g=ctx.createRadialGradient(x,y,2,x,y,r);g.addColorStop(0,color);g.addColorStop(1,'transparent');ctx.fillStyle=g;ctx.fillRect(x-r,y-r,r*2,r*2);}
   function ghost(x,y,t,stun,keeper=false){
-    const bob=reduced?0:Math.sin(t*2+x)*2;circle(x,y+9,10,'#10182160');sprite(['..aaaa..','.aaaaaa.','aaaaaaaa','aabaabaa','aaacaaca','aaaaaaaa','.aaaaaa.','aa.aa.aa'],x-8,y-15+bob,{a:keeper?'#b9d6c9':stun?'#e2d398':'#abbace',b:'#23384a',c:'#5a7180'});if(stun)text('z z',x,y-23,'#f4d897');if(keeper){rect(x+10,y-6,4,8,'#e8ca81');glow(x+12,y,28,'#d9b97540');}}
+    ctx.save();ctx.globalAlpha=reduced||keeper||stun?1:.48+.42*(.5+.5*Math.sin(t*.7+x*.02));
+    const bob=reduced?0:Math.sin(t*2+x)*2;circle(x,y+9,10,'#10182160');sprite(['..aaaa..','.aaaaaa.','aaaaaaaa','aabaabaa','aaacaaca','aaaaaaaa','.aaaaaa.','aa.aa.aa'],x-8,y-15+bob,{a:keeper?'#b9d6c9':stun?'#e2d398':'#abbace',b:'#23384a',c:'#5a7180'});if(stun)text('z z',x,y-23,'#f4d897');if(keeper){rect(x+10,y-6,4,8,'#e8ca81');glow(x+12,y,28,'#d9b97540');}ctx.restore();}
   function bat(x,y,t,stun){const flap=reduced?0:Math.sin(t*7)>0?2:-1;sprite(['aa......aa','aaaa..aaaa','.aaaaaaaa.','..abbbba..','...baab...','...b..b...'],x-10,y-10+flap,{a:stun?'#b8bf9c':'#8d81ad',b:'#d4cbe2'});rect(x-3,y-3+flap,2,2,'#243040');rect(x+3,y-3+flap,2,2,'#243040');if(stun)text('z z',x,y-17,'#ecd594');}
+  function drawAtmosphere(s,t){
+    // Corner cobwebs: radial threads and scalloped rings.
+    for(const [x,y,sign] of [[26,43,1],[454,43,-1]]){
+      for(let i=0;i<5;i++){const a=i*Math.PI/8;line(x,y,x+sign*Math.cos(a)*37,y+Math.sin(a)*37,'#adbfbd65');}
+      for(let radius=12;radius<=36;radius+=12)for(let i=0;i<4;i++){const a=i*Math.PI/8,b=(i+1)*Math.PI/8;line(x+sign*Math.cos(a)*radius,y+Math.sin(a)*radius,x+sign*Math.cos(b)*radius,y+Math.sin(b)*radius,'#b4c8c355');}
+    }
+    // Stone owl statues sit on existing furniture, not invisible new obstacles.
+    if(['foyer','gallery','garden'].includes(s.room))for(const [x,y,w] of rooms[s.room].obstacles.slice(0,2)){
+      const sx=x+w/2;rect(sx-10,y+5,20,5,'#90a5a2');rect(sx-7,y-10,14,15,'#728b8a');circle(sx,y-14,9,'#91a7a3');circle(sx-4,y-15,3,'#243f48');circle(sx+4,y-15,3,'#243f48');rect(sx-1,y-12,3,4,'#d2c29b');
+    }
+    if(s.room==='garden'){
+      // Moonlit glasshouse roof, climbing ivy, pumpkin beds and fireflies.
+      for(let x=40;x<455;x+=40){line(x,45,240,6,'#7aaca13a');line(x,46,x,66,'#7aaca13a');}
+      for(const x of [47,425])for(let y=75;y<280;y+=18){line(x,y,x+4,y+18,'#507c61',2);circle(x-3,y+4,4,'#5a8064');circle(x+7,y+11,4,'#3d6d5b');}
+      for(const [x,y] of [[88,267],[108,273],[386,266]]){circle(x,y,8,'#b47d4d');line(x,y-9,x+2,y-13,'#73916d',2);line(x-2,y-6,x-2,y+6,'#d69a58');}
+      for(let i=0;i<9;i++){const x=75+(i*47)%330+Math.sin(t*.35+i)*8,y=112+(i*29)%170+Math.cos(t*.45+i)*6;circle(x,y,1,'#d4d8a7');}
+      // Cracked stepping stones leave the central puzzle route legible.
+      for(let i=0;i<5;i++){const x=178+i*25,y=267+(i%2)*9;rect(x,y,18,7,'#6c8a7e');line(x+7,y,x+10,y+5,'#294b49');}
+    }else{
+      for(const x of [175,307]){rect(x,52,7,11,'#7e6961');rect(x+2,48,3,8,'#e4c895');glow(x+3,48,20,'#e2c78a14');}
+      if(s.room==='gallery'){for(const x of [180,275]){rect(x,55,24,31,'#a58d64');rect(x+3,58,18,25,'#3c4c5d');circle(x+12,66,5,'#acb6ad');rect(x+6,72,12,8,'#7b8e8c');}}
+    }
+  }
   function draw(s){
     const r=rooms[s.room],p=r.palette,t=s.time;ctx.imageSmoothingEnabled=false;rect(0,0,480,320,p[0]);
     for(let y=40;y<300;y+=16)for(let x=24;x<456;x+=24){rect(x,y,23,15,((x/24+y/16)|0)%2?p[1]:p[0]);line(x+2,y+14,x+19,y+14,p[2]+'30');}
@@ -319,6 +344,8 @@ header{flex-wrap:wrap}.tools{flex-wrap:wrap;align-items:center}.tools button{min
       else if(s.room==='attic'){line(x+4,y+4,x+w-4,y+h-8,p[2],2);line(x+w-4,y+4,x+4,y+h-8,p[2],2);rect(x+w/2-3,y+h/2-3,6,6,p[3]);}
       else{rect(x+6,y-3,8,8,p[3]);rect(x+w-14,y-3,8,8,p[3]);}
     }
+    // Decorative details stay outside door lanes and do not alter collisions.
+    drawAtmosphere(s,reduced?0:t);
     for(const o of r.objects){
       const x=o.x,y=o.y;
       if(o.type==='door'){
