@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101722"><title>Phantom Manor • The Lantern Keeper</title>
+<style>
+:root{color-scheme:dark;--ink:#e8e7d6;--muted:#a5b6bc;--gold:#e8c589;--panel:#172330;--line:#354856}*{box-sizing:border-box}body{margin:0;background:#0c131e;color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;background-image:radial-gradient(ellipse at 50% 0,#283442,transparent 75%)}button,a{-webkit-tap-highlight-color:transparent}button{font:inherit;color:var(--ink);background:#243442;border:1px solid #59717d;border-radius:8px;padding:9px 14px;cursor:pointer;min-height:44px}button:hover{background:#344959;border-color:var(--gold)}button:focus-visible,a:focus-visible{outline:3px solid #f2d397;outline-offset:3px}button.primary{background:#dfbe82;color:#202938;border-color:#f7dfb2;font-weight:800}button:disabled{opacity:.5;cursor:default}a{color:var(--gold);text-decoration:none}.app{max-width:1200px;margin:auto;padding:12px 18px}header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}.menu{font:700 12px/1.2 system-ui;padding:12px 0;position:relative;z-index:2}.brand{font-family:Georgia,serif;font-size:20px;letter-spacing:.04em}.tools{display:flex;gap:6px}.tools button{font-size:12px;padding:7px 10px}.layout{display:grid;grid-template-columns:minmax(0,1fr)246px;gap:16px;align-items:start}.world{min-width:0}.roomline{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:7px;min-height:29px}.roomline strong{font:700 17px Georgia,serif}.roomline span{color:var(--gold);font-size:13px}.view{position:relative;border:1px solid #526779;box-shadow:0 16px 50px #0006;border-radius:10px;overflow:hidden;aspect-ratio:3/2;max-height:calc(100svh - 300px);width:100%;background:#111822}canvas{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}#prompt{position:absolute;bottom:9px;left:50%;transform:translateX(-50%);background:#0a101be8;border:1px solid #d8bd7e;padding:5px 12px;border-radius:6px;color:#f6e5bd;font-weight:650;white-space:nowrap;max-width:95%;font-size:13px;pointer-events:none}#prompt:empty{display:none}.message{font-size:13px;color:#b6c9cd;min-height:40px;margin:9px 0 3px}.sidebar{background:linear-gradient(160deg,#1c2b38,#14212d);border:1px solid var(--line);border-radius:10px;padding:18px}.eyebrow{font-size:10px;letter-spacing:.18em;font-weight:800;color:var(--gold);text-transform:uppercase}#objective{font-size:15px;line-height:1.55;margin:9px 0 18px}.divider{border-top:1px solid var(--line);padding-top:14px;margin-top:16px}.inventory{display:flex;gap:5px;flex-wrap:wrap;font-size:11px;margin-top:8px;min-height:35px}.chip{border:1px solid #52606a;background:#263642;padding:3px 7px;border-radius:5px}.keepsake{border-color:#a29165;color:#f0d9a9}.empty{color:var(--muted);font-size:12px}.sidebar button{width:100%;margin-top:12px}.map{font:12px/1.8 system-ui;color:#9daeb7;margin:8px 0 0}.map .here{color:#f4d397}.legend{font-size:11px;color:#a1b8be;line-height:1.65}.controls{display:flex;justify-content:space-between;align-items:center;gap:12px;touch-action:none;user-select:none}.dpad{display:grid;grid-template-columns:42px 42px 42px;grid-template-rows:34px 34px;gap:4px}.dpad button{padding:0;min-height:0;font-size:19px;border-radius:6px}.dpad .up{grid-column:2}.dpad .left{grid-column:1;grid-row:2}.dpad .down{grid-column:2;grid-row:2}.dpad .right{grid-column:3;grid-row:2}.actions{display:flex;gap:6px;align-items:center}.actions button{font-size:12px;padding:7px 11px}.actions button[aria-pressed=true]{border-color:var(--gold);background:#475044}.keyhint{font-size:11px;color:#a1b5bf;margin-top:10px;text-align:center}.footer{font-size:11px;color:#829aa4;text-align:center;margin:10px 0 0}.overlay{position:fixed;inset:0;z-index:10;background:#07111ad9;display:flex;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(4px)}.overlay[hidden]{display:none}.card{width:min(600px,100%);max-height:calc(100svh - 36px);overflow:auto;background:linear-gradient(145deg,#21313e,#13212d);border:1px solid #8d8c72;border-radius:15px;padding:27px;box-shadow:0 25px 100px #0009}.card h1{font:clamp(36px,6vw,58px)/1 Georgia,serif;letter-spacing:-.02em;margin:14px 0 4px;color:#f5dfb2}.card h2{font:27px/1.18 Georgia,serif;margin:8px 0 16px;color:#f1dbaa}.card p{color:#c7d6d9;margin:13px 0;line-height:1.65}.card .subtitle{color:#9fc6c5;font:italic 18px Georgia,serif;margin:6px 0 16px}.card .fine{font-size:12px;color:#9fb0b9}.choices{display:flex;flex-wrap:wrap;gap:9px;margin:19px 0}.choices button{flex:1;min-width:90px}.card footer{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:18px}.card details{border-top:1px solid #40545f;margin:13px 0;padding-top:12px}.card summary{cursor:pointer;color:#f1d9a4}.page-entry{border-bottom:1px solid #40545f;padding:7px 0 15px}.page-entry h3{font:20px Georgia,serif;color:#e9d4a7;margin-bottom:8px}.title-card{text-align:center}.title-card .scene{display:block;width:100%;height:104px;image-rendering:pixelated;background:linear-gradient(#1b293e,#30434c);border:1px solid #475a66;border-radius:8px;margin:17px 0}.howto{display:grid;grid-template-columns:1fr 1fr;gap:6px;text-align:left;background:#0f1b2680;border-radius:8px;padding:12px;font-size:12px;color:#c5d4d6}.howto b{color:#f2d397}.title-card .primary{width:100%;margin-top:18px}.progress-line{color:#8facae;font-size:12px;margin-top:7px}
+@media(max-width:850px){.app{padding:9px 12px}.layout{grid-template-columns:1fr;gap:10px}.sidebar{display:grid;grid-template-columns:1fr auto;gap:0 12px;padding:10px 13px;grid-row:1}.sidebar .mission{grid-column:1}.sidebar .eyebrow{font-size:9px}#objective{font-size:12px;line-height:1.35;margin:3px 0}.sidebar .inventory-block{grid-column:1;grid-row:2}.sidebar .inventory-block .eyebrow{display:none}.inventory{min-height:0;margin-top:6px;font-size:10px}.sidebar .divider{border:0;padding:0;margin:0}.sidebar .journal-button{grid-column:2;grid-row:1 / 3;width:auto;margin:0;align-self:center;font-size:12px}.sidebar .map-block,.sidebar .legend{display:none}.view{max-height:calc(100svh - 390px)}.message{min-height:34px;font-size:12px;line-height:1.35;margin-top:7px}.brand{font-size:16px}.tools button{min-height:38px}.keyhint{margin-top:7px}header{margin-bottom:9px}.roomline{min-height:24px}.footer{margin-top:6px}}
+@media(max-width:440px){.brand{display:none}.app{padding:8px}.actions{gap:4px}.actions button{padding:7px;font-size:11px}.dpad{grid-template-columns:37px 37px 37px}.keyhint{font-size:10px}.card{padding:20px}.howto{font-size:11px}.card p{font-size:14px}.sidebar{padding:9px}.view{max-height:none}.roomline span{font-size:11px}.title-card .scene{height:78px}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}.overlay{backdrop-filter:none}}
+header{position:sticky;top:0;z-index:5;background:#111c27ed;border-radius:8px}.roomline strong{overflow-wrap:anywhere}.roomline span{flex-shrink:0}
+/* View modes change only presentation: the world stays 480 × 320. */
+header{flex-wrap:wrap}.tools{flex-wrap:wrap;align-items:center}.tools button{min-height:44px}.brand{flex:1;text-align:center}
+.audio-settings{position:relative;font-size:12px}.audio-settings summary,.map-block summary{cursor:pointer;min-height:44px;padding:12px 8px}.audio-settings>div{position:absolute;right:0;top:44px;width:230px;padding:14px;background:#172330;border:1px solid #59717d;border-radius:8px;z-index:6}.audio-settings label{display:block}.audio-settings input{display:block;width:100%;min-height:36px}.audio-settings small{display:block;color:var(--muted)}
+#view-status:empty{display:none}#view-status{font-size:12px;color:var(--gold)}
+.view{width:min(100%,calc((100svh - 280px)*1.5));max-height:none;margin-inline:auto}.roomline{flex-wrap:wrap}.roomline strong{flex:1;min-width:170px}
+.large-view .app,:fullscreen .app{max-width:1600px}.large-view .layout,:fullscreen .layout{grid-template-columns:minmax(0,1fr)}
+.large-view .view,:fullscreen .view{width:min(100%,calc((100svh - 250px)*1.5))}
+.large-view .sidebar,:fullscreen .sidebar{grid-row:auto;display:flex;align-items:center;flex-wrap:wrap;gap:8px 16px;padding:4px 12px}
+.large-view .sidebar .mission,.large-view .sidebar .inventory-block,.large-view .sidebar .legend,:fullscreen .sidebar .mission,:fullscreen .sidebar .inventory-block,:fullscreen .sidebar .legend{display:none}
+.large-view .sidebar .journal-button,:fullscreen .sidebar .journal-button{width:auto;margin:0}.large-view .sidebar .map-block,:fullscreen .sidebar .map-block{display:block;border:0;padding:0;margin:0}
+:fullscreen{overflow:auto;background:#0c131e}.large-view .keyhint,:fullscreen .keyhint{margin-top:4px}
+@media(max-width:850px){.sidebar{grid-row:auto}.sidebar .map-block{display:block;grid-column:1 / -1}.view{width:min(100%,calc((100svh - 320px)*1.5))}.brand{display:none}.tools{gap:4px}.sidebar .map-block summary{padding:8px 0}.large-view .view,:fullscreen .view{width:min(100%,calc((100svh - 270px)*1.5))}}
+@media(max-width:440px){header{position:relative}.tools{width:100%}.tools button{flex:1;padding:6px}.view,.large-view .view,:fullscreen .view{width:100%}.controls{flex-wrap:wrap;justify-content:center}.audio-settings>div{right:0}.roomline strong{font-size:14px}.keyhint{overflow-wrap:anywhere}}
+</style></head><body>
+<div class="app">
+<header><a class="menu" href="../index.html">← ARCADE MENU</a><div class="brand">Phantom Manor</div><div class="tools"><button id="sound" data-action="sound" aria-pressed="false">Sound: off</button><button id="pause" data-action="pause">Pause · P</button><button id="large" data-action="large" aria-pressed="false">Large view</button><button id="fullscreen" data-action="fullscreen">Fullscreen</button><details class="audio-settings"><summary>Audio</summary><div><label for="music-volume">Music</label><input id="music-volume" type="range" min="0" max="100" value="55"><label for="effects-volume">Effects</label><input id="effects-volume" type="range" min="0" max="100" value="65"><small>0 = off · Sound / M mutes both</small></div></details></div></header><p id="view-status" role="status"></p>
+<main class="layout"><section class="world" aria-label="The manor adventure"><div class="roomline"><strong id="room-name">Foyer</strong><span id="vitals" aria-label="Five hearts">♥ ♥ ♥ ♥ ♥</span></div><div class="view"><canvas id="game" width="480" height="320" tabindex="0" aria-label="Top-down manor. Move with arrow keys or WASD. Press E near objects. Use the Journal button for collected clues.">Your browser needs Canvas to explore Phantom Manor.</canvas><div id="prompt"></div></div><p id="message" class="message" aria-live="polite"></p><div class="controls" id="touch-controls"><div class="dpad" aria-label="Movement controls"><button class="up" data-hold="up" aria-label="Move up">↑</button><button class="left" data-hold="left" aria-label="Move left">←</button><button class="down" data-hold="down" aria-label="Move down">↓</button><button class="right" data-hold="right" aria-label="Move right">→</button></div><div class="actions"><button data-action="quiet" id="quiet" aria-pressed="false">Quiet</button><button data-action="interact">Interact · E</button><button data-action="lantern" id="lantern">Lantern · Space</button></div></div><div class="keyhint">WASD / arrows: move · E: interact · Space: lantern · Shift: quiet · P: pause · M: sound · J: journal</div></section>
+<aside class="sidebar"><div class="mission"><div class="eyebrow">The next small mystery</div><p id="objective"></p></div><div class="inventory-block divider"><div class="eyebrow">Your satchel</div><div id="inventory" class="inventory"></div></div><button class="journal-button" data-action="journal" id="journal">Journal · 0/6</button><details class="map-block divider"><summary>Manor map</summary><div class="map" id="map"></div></details><p class="legend divider">Gold pages hold clues.<br>Blue cloth hides a secret.<br>Still shadows with lantern light.<br>Rest in the Foyer to refill hearts.</p></aside></main>
+<p class="footer">Chapter I · The Lantern Keeper · A gentle fictional mystery · Session-only progress; reloading starts over.</p>
+</div><div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="dialog-title" hidden><div class="card" id="card"></div></div>
+<script id="manor-engine">
+(function () {
+  'use strict';
+  const copy = o => JSON.parse(JSON.stringify(o));
+  const door=(id,name,x,y,to,spawn,key=null,hidden=false)=>({id,name,x,y,type:'door',to,spawn,key,hidden});
+  const obj=(id,name,x,y,type,extra={})=>({id,name,x,y,type,...extra});
+  const pages={
+    'foyer-page':{title:'1 • The empty house',text:'I am Rowan, the lantern keeper. One misty evening, the Vale family left this old manor. I stayed to light their way. Now my memories are scattered. Please find our six journal pages and three keepsakes. The Library, through the west door, may hold our first clue.'},
+    'library-page':{title:'2 • A growing story',text:'Little Ada loved three books. “First a SEED sleeps in the earth. Then a TREE stretches tall. Finally we watch the STARS above its branches.” Set the book crests in that order. My brass garden key and lantern amulet are tucked inside.'},
+    'garden-page':{title:'3 • The moon garden',text:'Our watering wheel followed the sky: RAIN wakes the roots, SUN grows the leaves, and MOON lets the garden rest. Turn the three symbols in that order. Ada left her music box here when we packed for the river cottage.'},
+    'gallery-page':{title:'4 • Behind the blue cloth',text:'The family portrait shows Ada, her father, and her grandmother. Nobody was forgotten. Rowan guided them toward the river. His lantern amulet can reveal the passage behind this blue tapestry. The silver key opens its little gate. Bring the portrait with you.'},
+    'clock-page':{title:'5 • The keeper’s promise',text:'Rowan rang the bells for breakfast at SIX, lunch at TWELVE, and bedtime at NINE. Play those bells in that order. Ada tied a ribbon to the clock: “Keep this until we meet at our new home.” Rowan thought they had never arrived.'},
+    'attic-page':{title:'6 • The letter that never arrived',text:'Dear Rowan: We are safe, all TOGETHER at the RIVER COTTAGE! Your lantern guided us through the mist. We left the manor, not each other. Bring the portrait, music box, and ribbon to help you remember. Thank you for bringing our family home. — Ada'}
+  };
+  const items={brassKey:'Brass key',amulet:'Lantern amulet',silverKey:'Silver key',musicBox:'Music box',portrait:'Family portrait',atticKey:'Attic key',ribbon:'Ada’s ribbon'};
+  const puzzles={
+    books:{title:'The storybook lock',page:'library-page',choices:['Seed','Tree','Stars'],answer:['Seed','Tree','Stars'],rewards:['brassKey','amulet'],hint:'Which came first in Ada’s growing story?',success:'A little drawer opens! Brass key + lantern amulet. Space now casts a gentle light that stills shadows. The garden door in the Foyer is ready.'},
+    wheel:{title:'The sky wheel',page:'garden-page',choices:['Moon','Rain','Sun'],answer:['Rain','Sun','Moon'],rewards:['silverKey','musicBox'],hint:'Wake the roots. Grow the leaves. Let the garden rest.',success:'The flowers unfold! Silver key + music box. Visit the Gallery to the east, or unlock the Clocktower to the north.'},
+    clock:{title:'The three memory bells',page:'clock-page',choices:['9','6','12'],answer:['6','12','9'],rewards:['atticKey','ribbon'],hint:'Breakfast, lunch, bedtime. Which hours did Rowan ring?',success:'A quiet melody answers. Attic key + Ada’s ribbon. The north stairs lead to Rowan. Find every journal page and the family portrait before sharing the story.'}
+  };
+  const rooms={
+    foyer:{name:'Foyer',subtitle:'A light left burning',palette:['#202936','#303e4e','#526274','#d5b87d'],obstacles:[[92,72,62,24],[326,72,62,24],[200,142,80,34]],objects:[door('to-library','Library',32,168,'library',[420,168]),door('to-conservatory','Conservatory',448,168,'garden',[60,168],'brassKey'),obj('foyer-page','Keeper’s journal',152,118,'page'),obj('rest','Rest at the lantern',344,232,'rest')]},
+    library:{name:'Library',subtitle:'Stories take root',palette:['#302333','#463346','#705163','#dcb675'],obstacles:[[72,58,90,28],[320,58,88,28],[86,132,38,40],[318,202,78,30]],objects:[door('to-foyer','Foyer',448,168,'foyer',[60,168]),obj('library-page','Ada’s reading note',130,222,'page'),obj('books','Storybook lock',240,88,'puzzle')]},
+    garden:{name:'Conservatory',subtitle:'A garden under glass',palette:['#182f33','#28474a','#426662','#b3d5a0'],obstacles:[[84,76,66,30],[320,76,64,30],[102,210,52,28],[332,208,46,32]],objects:[door('to-foyer','Foyer',32,168,'foyer',[420,168]),door('to-gallery','Gallery',448,168,'gallery',[60,168]),door('to-clocktower','Clocktower',240,48,'clocktower',[240,262],'silverKey'),obj('garden-page','Garden journal',178,226,'page'),obj('wheel','Sky wheel',244,140,'puzzle')]},
+    gallery:{name:'Gallery',subtitle:'Faces in the moonlight',palette:['#292641','#3c3856','#625d80','#b2b7e4'],obstacles:[[105,65,50,26],[321,65,50,26],[206,194,64,32]],objects:[door('to-garden','Conservatory',32,168,'garden',[420,168]),door('passage','Hidden passage',448,168,'clocktower',[60,168],'silverKey',true),obj('gallery-page','A folded note',140,238,'page'),obj('portrait','Family portrait',240,91,'item',{item:'portrait'})]},
+    clocktower:{name:'Clocktower',subtitle:'The hours remember',palette:['#322c27','#494036','#70614b','#e2c78d'],obstacles:[[88,92,52,42],[344,92,48,42],[342,218,46,28]],objects:[door('to-garden','Conservatory',240,288,'garden',[240,76]),door('passage-back','Gallery passage',32,168,'gallery',[420,168],'silverKey',true),door('to-attic','Attic stairs',240,48,'attic',[240,262],'atticKey'),obj('clock-page','Bell schedule',154,228,'page'),obj('clock','Memory bells',245,125,'puzzle')]},
+    attic:{name:'Attic',subtitle:'A promise kept',palette:['#242b40','#343d56','#5b6885','#d8d5b1'],obstacles:[[78,78,58,32],[344,82,48,30],[94,220,42,26],[336,216,54,30]],objects:[door('to-clocktower','Clocktower',240,288,'clocktower',[240,76]),obj('attic-page','Ada’s last letter',160,140,'page'),obj('keeper','Rowan, the keeper',278,126,'spirit')]}
+  };
+  let s,events=[];
+  const emit=name=>{if(events.length<64)events.push(name);};
+  function reset() { events=[];s = {mode:'title',room:'foyer',x:240,y:258,hearts:5,inventory:[],journals:[],solved:[],quiet:false,mercy:0,lantern:0,cooldown:0,time:0,dialog:null,message:'Find the keeper’s journal, then explore the west door.',checkpoint:{room:'foyer',x:240,y:258},passage:false,visited:['foyer'],sequence:[],enemies:makeEnemies()}; }
+  function makeEnemies(){
+    const patrol=(type,x,y,tx,ty)=>({type,x,y,home:[x,y],away:[tx,ty],target:1,stun:0,alert:false});
+    return {foyer:[],library:[patrol('bat',276,228,380,150)],garden:[patrol('ghost',290,205,188,152)],gallery:[patrol('bat',340,240,374,122)],clocktower:[patrol('ghost',190,170,302,200),patrol('bat',360,176,280,238)],attic:[]};
+  }
+  function togglePause(){if(s.mode==='playing'){s.mode='paused';s.quiet=false;}else if(s.mode==='paused')s.mode='playing';}
+  function setQuiet(value){if(active())s.quiet=!!value;}
+  function detectionRadius(){return s.quiet?22:76;}
+  function hurt(){
+    if(!active()||s.mercy>0)return;
+    s.hearts--;s.mercy=1.5;emit('hit');s.message='Just a little startle! A gold outline keeps you safe for a moment.';
+    if(s.hearts<=0){emit('checkpoint');Object.assign(s,s.checkpoint);s.hearts=5;s.mercy=3;s.enemies=makeEnemies();s.message='A friendly light guides you back. All keys, pages, and keepsakes kept!';}
+  }
+  function lantern(){
+    if(!active())return false;
+    if(!s.inventory.includes('amulet')){s.message='The lantern amulet is hidden in the Library storybook lock.';return false;}
+    if(s.cooldown>0){s.message='Your lantern is gathering its glow. It will be ready soon.';return false;}
+    s.lantern=1.1;s.cooldown=2.6;emit('lantern');
+    for(const e of s.enemies[s.room])if(Math.hypot(e.x-s.x,e.y-s.y)<92){e.stun=3.5;e.alert=false;}
+    if(rooms[s.room].objects.some(o=>o.hidden&&Math.hypot(o.x-s.x,o.y-s.y)<84)){
+      if(!s.passage)emit('passage');s.passage=true;s.message='A secret passage appears behind the blue tapestry! Use the silver key to enter.';
+    }else s.message='Gentle lantern light stills nearby shadows. Keep exploring!';
+    return true;
+  }
+  function tick(dt){
+    if(!active()||!Number.isFinite(dt)||dt<=0)return;dt=Math.min(.1,dt);s.time+=dt;
+    for(const k of ['mercy','lantern','cooldown'])s[k]=Math.max(0,s[k]-dt);
+    for(const e of s.enemies[s.room]){
+      e.stun=Math.max(0,e.stun-dt);if(e.stun>0)continue;
+      const distance=Math.hypot(s.x-e.x,s.y-e.y);e.alert=distance<detectionRadius();
+      let [tx,ty]=e.alert?[s.x,s.y]:(e.target?e.away:e.home);
+      let dx=tx-e.x,dy=ty-e.y,n=Math.hypot(dx,dy);if(n<3){if(e.alert)hurt();else e.target=1-e.target;continue;}
+      const speed=e.alert?23:14,step=Math.min(n,speed*dt);
+      if(canWalk(e.x+dx/n*step,e.y))e.x+=dx/n*step;
+      if(canWalk(e.x,e.y+dy/n*step))e.y+=dy/n*step;
+      if(Math.hypot(s.x-e.x,s.y-e.y)<10)hurt();
+    }
+  }
+  function openJournal(){if(active()){emit('page');s.dialog={kind:'book',title:'The keeper’s journal',text:'Six pages • three keepsakes • one promise'};}}
+  function objective(){
+    if(!s.journals.includes('foyer-page'))return 'Read the keeper’s journal in the Foyer.';
+    if(!s.solved.includes('books'))return 'Explore the west Library. Read its clue and unlock the storybooks.';
+    if(!s.solved.includes('wheel'))return 'Use the brass key in the Foyer’s east door. Restore the sky wheel.';
+    if(!s.inventory.includes('portrait'))return 'Visit the Gallery east of the Conservatory. Collect the family portrait.';
+    if(!s.solved.includes('clock'))return 'Use the silver key to reach the Clocktower. Restore the three bells.';
+    if(s.journals.length<6)return 'Find all six journal pages ('+s.journals.length+'/6). Ada’s last letter is in the Attic.';
+    return 'Bring the three keepsakes to Rowan in the Attic. Share the family’s story.';
+  }
+  function start() { if(s.mode==='title') s.mode='playing'; }
+  function active() { return s.mode==='playing' && !s.dialog; }
+  function canWalk(x,y) { return x>=32 && x<=448 && y>=48 && y<=288 && !rooms[s.room].obstacles.some(([a,b,w,h])=>x>a-7&&x<a+w+7&&y>b-7&&y<b+h+7); }
+  function move(dx,dy,dt) {
+    if(!active()||![dx,dy,dt].every(Number.isFinite)||dt<=0) return;
+    const n=Math.hypot(dx,dy);if(!n)return;
+    const speed=s.quiet?43:82, distance=speed*Math.min(.1,dt),steps=Math.ceil(distance/3);
+    for(let i=0;i<steps;i++){const x=s.x+dx/n*distance/steps,y=s.y+dy/n*distance/steps;if(canWalk(x,s.y))s.x=x;if(canWalk(s.x,y))s.y=y;}
+  }
+  function grant(item){if(!s.inventory.includes(item)){s.inventory.push(item);emit('pickup');s.hearts=Math.min(5,s.hearts+1);}}
+  function closeDialog(){if(s.mode==='paused')return;s.dialog=null;s.sequence=[];}
+  function nearest(){return rooms[s.room].objects.filter(o=>Math.hypot(o.x-s.x,o.y-s.y)<=34).sort((a,b)=>Math.hypot(a.x-s.x,a.y-s.y)-Math.hypot(b.x-s.x,b.y-s.y))[0]||null;}
+  function interact(id){
+    if(!active())return false;
+    const o=id?rooms[s.room].objects.find(o=>o.id===id):nearest();
+    if(!o||Math.hypot(o.x-s.x,o.y-s.y)>34)return false;
+    if(o.type==='door'){
+      if(o.hidden&&!s.passage){s.message='A blue tapestry shimmers here. Try your lantern nearby.';return false;}
+      if(o.key&&!s.inventory.includes(o.key)){emit('locked');s.message='Locked: find the '+items[o.key]+'. Check the journal clues.';return false;}
+      emit('door');s.room=o.to;[s.x,s.y]=o.spawn;s.checkpoint={room:s.room,x:s.x,y:s.y};s.mercy=1.5;
+      if(!s.visited.includes(s.room))s.visited.push(s.room);
+      s.message=rooms[s.room].subtitle;return true;
+    }
+    if(o.type==='page'){
+      if(!s.journals.includes(o.id)){s.journals.push(o.id);s.hearts=Math.min(5,s.hearts+1);}
+      emit('page');s.dialog={kind:'page',title:pages[o.id].title,text:pages[o.id].text};
+    }else if(o.type==='puzzle'){
+      const p=puzzles[o.id];s.sequence=[];
+      if(s.solved.includes(o.id))s.dialog={kind:'page',title:p.title,text:'Already restored. '+p.success};
+      else if(!s.journals.includes(p.page))s.dialog={kind:'page',title:p.title,text:'There must be a clue nearby. Find and read this room’s journal page first.'};
+      else s.dialog={kind:'puzzle',id:o.id,title:p.title,text:p.hint,choices:p.choices};
+    }else if(o.type==='item'){
+      grant(o.item);s.dialog={kind:'page',title:'A familiar face',text:'Family portrait collected. Ada, Father, and Grandmother smile together. Rowan will remember them. Keepsakes stay with you, even if a shadow startles you.'};
+    }else if(o.type==='rest'){
+      emit('checkpoint');s.hearts=5;s.checkpoint={room:s.room,x:s.x,y:s.y};s.message='Five hearts restored. The keeper’s lantern is a safe place to rest.';
+    }else if(o.type==='spirit'){
+      const missing=['portrait','musicBox','ribbon'].filter(i=>!s.inventory.includes(i));
+      if(missing.length||s.journals.length<6)s.dialog={kind:'page',title:'Help Rowan remember',text:'“Did they find one another?” Bring all six journal pages ('+s.journals.length+'/6 found) and three keepsakes. Still needed: '+(missing.map(i=>items[i]).join(', ')||'only the missing journal pages')+'. Every door stays open behind you.'};
+      else s.dialog={kind:'spirit',title:'Tell the keeper their story',text:'The portrait, music box, and ribbon glow softly. Rowan asks, “What happened to the family I guided through the mist?”',choices:['together','alone']};
+    }
+    return true;
+  }
+  function choose(value){
+    if(s.mode!=='playing'||!s.dialog)return;
+    const d=s.dialog;
+    if(d.kind==='puzzle'){
+      const p=puzzles[d.id];if(!p.choices.includes(value))return;
+      if(p.answer[s.sequence.length]!==value){emit('wrong');s.sequence=[];d.text='Not quite. No harm done! '+p.hint;return;}
+      s.sequence.push(value);d.text=p.hint+' • '+s.sequence.join(' → ');
+      if(s.sequence.length===p.answer.length){s.solved.push(d.id);p.rewards.forEach(grant);emit('correct');s.dialog={kind:'page',title:'Memory restored',text:p.success};s.sequence=[];}
+    }else if(d.kind==='spirit'){
+      if(value==='together'){emit('ending');s.mode='won';s.dialog=null;s.message='The family was safe. The keeper can rest.';}
+      else if(value==='alone'){emit('wrong');d.text='Rowan tilts his head. “Look at Ada’s last letter again. Where did everyone go?” Try again; your kindness matters more than a first guess.';}
+    }
+  }
+  reset();
+  window.PhantomManor={drainEvents:()=>events.splice(0),getState:()=>copy(s),getRooms:()=>copy(rooms),getPages:()=>copy(pages),getItems:()=>copy(items),reset,start,move,canWalk,interact,choose,closeDialog,togglePause,setQuiet,detectionRadius,hurt,lantern,tick,openJournal,objective,nearest:()=>copy(nearest())};
+})();
+</script>
+<script id="manor-audio">
+(function(){
+  'use strict';
+  // Original 16-step music-box phrase; A minor → F → C → E minor.
+  // One look-ahead clock, driven by the existing animation chain (no timers).
+  window.createManorAudio=function(makeContext){
+    let ac=null,on=false,paused=false,next=0,step=0,music=.55,effects=.65;
+    const voices=new Set();
+    const midi=n=>440*Math.pow(2,(n-69)/12);
+    function stop(channel){for(const v of voices){if(channel&&v.channel!==channel)continue;try{v.o.stop();}catch(_){}v.o.disconnect();v.g.disconnect();voices.delete(v);}if(!channel||channel==='music')next=0;}
+    function suspend(){stop();if(ac&&ac.suspend)Promise.resolve(ac.suspend()).catch(()=>{});}
+    function tone(n,t,d,volume,type='sine',channel='music'){
+      if(!volume||voices.size>=48)return;
+      const o=ac.createOscillator(),g=ac.createGain(),v={o,g,channel};voices.add(v);
+      o.type=type;o.frequency.value=midi(n);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(volume,t+.025);g.gain.exponentialRampToValueAtTime(.00001,t+d);
+      o.connect(g);g.connect(ac.destination);o.onended=()=>{o.disconnect();g.disconnect();voices.delete(v);};o.start(t);o.stop(t+d+.03);
+    }
+    async function enable(value){
+      on=!!value;
+      if(!on){suspend();return false;}
+      try{if(!ac)ac=makeContext();if(!ac)throw Error('unavailable');if(!paused)await ac.resume();if(!on||paused)suspend();return on;}
+      catch(_){on=false;stop();return false;}
+    }
+    function setPaused(value){value=!!value;if(value===paused)return;paused=value;if(paused)suspend();}
+    function tick(room){
+      if(!on||paused||!ac||ac.state!=='running'||!music)return;
+      const now=ac.currentTime;if(next<now)next=now+.025;
+      const roots=[45,41,48,40],phrase=[0,7,12,7,3,10,7,3,0,7,14,12,7,3,10,7];
+      const variation={foyer:0,library:0,garden:12,gallery:0,clocktower:-12,attic:12}[room]||0;
+      while(next<now+.16){const beat=step%16,root=roots[Math.floor(step/16)%4];
+        tone(root+24+phrase[beat]+variation,next,.7,.032*music,'sine');
+        tone(root+36+phrase[beat]+variation,next,.23,.008*music,'sine');
+        if(beat%4===0){tone(root,next,1.5,.018*music);tone(root+12,next,1.7,.011*music);tone(root+19,next,1.7,.009*music);}
+        step++;next+=.42;
+      }
+    }
+    const sounds={door:[48,55,60],locked:[50,49],page:[81,76],pickup:[72,79,84],correct:[72,76,79],wrong:[64,62],lantern:[69,76,81],hit:[57,52],checkpoint:[60,67,72],passage:[69,72,76,83],ending:[69,72,76,81,84,88]};
+    function effect(name){if(!on||paused||!ac||ac.state!=='running'||!effects)return;const notes=sounds[name];if(!notes)return;notes.forEach((n,i)=>tone(n,ac.currentTime+.015+i*.1,name==='ending'?1.1:.38,.035*effects,'sine','effects'));}
+    function setVolume(channel,value){value=Math.max(0,Math.min(1,Number(value)||0));if(channel==='music')music=value;else if(channel==='effects')effects=value;stop(channel);}
+    return {enable,setPaused,tick,effect,setVolume,status:()=>({on,paused,voices:voices.size,music,effects,state:ac?ac.state:'unavailable'})};
+  };
+})();
+</script>
+<script id="manor-ui">
+(function(){
+  'use strict';
+  const G=window.PhantomManor,rooms=G.getRooms(),pages=G.getPages(),items=G.getItems();
+  const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d');
+  const keys=new Set(),touch=new Map();let quietToggle=false,last=0,modalKey='',hudKey='';
+  const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const button=(action,text,extra='')=>'<button data-action="'+action+'" '+extra+'>'+text+'</button>';
+  function clearInput(){keys.clear();touch.clear();quietToggle=false;G.setQuiet(false);}
+  const audio=window.PhantomManorAudio=window.createManorAudio(()=>{const AC=window.AudioContext||window.webkitAudioContext;return AC?new AC():null;});
+  async function audioToggle(){
+    const wanted=!audio.status().on;const enabled=await audio.enable(wanted);
+    $('sound').textContent=wanted&&!enabled?'Sound unavailable':'Sound: '+(enabled?'on':'off');$('sound').setAttribute('aria-pressed',String(enabled));
+  }
+  function syncAudio(gesture=false){
+    const s=G.getState();audio.setPaused(document.hidden||s.mode==='paused'||s.mode==='title');
+    if(gesture&&audio.status().on&&!audio.status().paused)audio.enable(true);
+    G.drainEvents().forEach(audio.effect);
+  }
+  function viewMode(){const large=document.documentElement.classList.toggle('large-view');$('large').setAttribute('aria-pressed',String(large));$('large').textContent=large?'Standard view':'Large view';}
+  async function fullscreen(){try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();$('view-status').textContent='';}catch(_){$('view-status').textContent='Fullscreen unavailable here. Try Large view instead.';}}
+  document.addEventListener('fullscreenchange',()=>{$('fullscreen').textContent=document.fullscreenElement?'Exit fullscreen':'Fullscreen';});
+  document.addEventListener('input',e=>{if(e.target.id==='music-volume'||e.target.id==='effects-volume')audio.setVolume(e.target.id.split('-')[0],Number(e.target.value)/100);});
+  function perform(action,value){
+    if(action==='sound'){audioToggle();return;}
+    if(action==='large'){viewMode();return;}
+    if(action==='fullscreen'){fullscreen();return;}
+    if(action==='start'){clearInput();G.start();canvas.focus();}
+    else if(action==='restart'){clearInput();G.reset();modalKey='';}
+    else if(action==='pause'){clearInput();G.togglePause();}
+    else if(action==='close'){clearInput();G.closeDialog();canvas.focus();}
+    else if(action==='journal'){clearInput();G.openJournal();}
+    else if(action==='interact'){G.interact();if(G.getState().dialog)clearInput();}
+    else if(action==='lantern'){G.lantern();}
+    else if(action==='quiet'){if(G.getState().mode==='playing'&&!G.getState().dialog){quietToggle=!quietToggle;G.setQuiet(quietToggle);}}
+    else if(action==='choose'){G.choose(value);}
+    syncAudio(true);render();
+  }
+  document.addEventListener('click',e=>{const b=e.target.closest('[data-action]');if(b){perform(b.dataset.action,b.dataset.value);}});
+  const dirs={ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right'};
+  document.addEventListener('keydown',e=>{
+    if(e.code==='Tab'&&!$('overlay').hidden){
+      const focusable=Array.from($('card').querySelectorAll('button,a,summary'));if(focusable.length){const first=focusable[0],end=focusable[focusable.length-1];if(e.shiftKey&&document.activeElement===first){end.focus();e.preventDefault();}else if(!e.shiftKey&&document.activeElement===end){first.focus();e.preventDefault();}}return;
+    }
+    if(e.code==='KeyM'){if(!e.repeat)perform('sound');return;}
+    if(e.target&&e.target.tagName==='INPUT')return;
+    if(e.code==='KeyP'){e.preventDefault();if(!e.repeat)perform('pause');return;}
+    const s=G.getState();
+    if(s.mode==='title'){if(e.code==='Enter'&&!e.repeat&&(!document.activeElement||document.activeElement.tagName!=='BUTTON'))perform('start');return;}
+    if(s.mode==='won'||s.mode==='paused')return;
+    if(s.dialog){if((e.code==='Escape'||e.code==='KeyE')&&!e.repeat){e.preventDefault();perform('close');}return;}
+    if(e.code==='Space'&&document.activeElement&&document.activeElement.tagName==='BUTTON')return;
+    if(dirs[e.code]){e.preventDefault();keys.add(dirs[e.code]);}
+    else if(e.code==='ShiftLeft'||e.code==='ShiftRight'){e.preventDefault();keys.add('quiet');}
+    else {const action={KeyE:'interact',Space:'lantern',KeyJ:'journal',Escape:'pause'}[e.code];if(action){e.preventDefault();if(!e.repeat)perform(action);}}
+  });
+  document.addEventListener('keyup',e=>{if(dirs[e.code])keys.delete(dirs[e.code]);if(e.code==='ShiftLeft'||e.code==='ShiftRight')keys.delete('quiet');});
+  $('touch-controls').addEventListener('pointerdown',e=>{const b=e.target.closest('[data-hold]');if(!b)return;e.preventDefault();if(G.getState().mode!=='playing'||G.getState().dialog)return;touch.set(e.pointerId,b.dataset.hold);b.setPointerCapture(e.pointerId);});
+  function release(e){touch.delete(e.pointerId);}
+  document.addEventListener('pointerup',release);document.addEventListener('pointercancel',release);document.addEventListener('lostpointercapture',release);
+  function loseFocus(){clearInput();if(G.getState().mode==='playing')G.togglePause();audio.setPaused(true);render();}
+  window.addEventListener('blur',loseFocus);document.addEventListener('visibilitychange',()=>{if(document.hidden)loseFocus();});
+  function render(){
+    const s=G.getState(),n=G.nearest();
+    const hud=JSON.stringify([s.room,s.hearts,s.inventory,s.journals,s.solved,s.quiet,s.message,s.visited,s.passage,Math.ceil(s.cooldown),s.mode]);
+    if(hud!==hudKey){hudKey=hud;$('room-name').textContent=rooms[s.room].name+' / '+rooms[s.room].subtitle;$('vitals').textContent='♥ '.repeat(s.hearts)+'♡ '.repeat(5-s.hearts);$('vitals').setAttribute('aria-label',s.hearts+' of 5 hearts');$('objective').textContent=G.objective();$('message').textContent=s.message;$('inventory').innerHTML=s.inventory.length?s.inventory.map(i=>'<span class="chip '+(['portrait','musicBox','ribbon'].includes(i)?'keepsake':'')+'">'+items[i]+'</span>').join(''):'<span class="empty">An empty satchel, a curious heart.</span>';$('journal').textContent='Journal · '+s.journals.length+'/6';$('quiet').setAttribute('aria-pressed',String(s.quiet));$('quiet').textContent=s.quiet?'Quiet: on':'Quiet';$('pause').textContent=s.mode==='paused'?'Resume · P':'Pause · P';$('lantern').textContent=s.cooldown>0?'Glow: '+Math.ceil(s.cooldown)+'s':'Lantern · Space';$('map').innerHTML=Object.entries(rooms).map(([id,r])=>'<div class="'+(id===s.room?'here':'')+'">'+(id===s.room?'▸ ':s.visited.includes(id)?'✓ ':'◇ ')+r.name+'</div>').join('')+'<div>'+(s.passage?'↔ Gallery passage found':'⋯ One hidden passage')+'</div>';}
+    $('prompt').textContent=s.mode==='playing'&&!s.dialog&&n?'E · '+(n.hidden&&!s.passage?'Blue tapestry · try lantern':n.name):'';
+    const key=JSON.stringify([s.mode,s.dialog,s.mode==='won'?s.journals:null,s.dialog&&s.dialog.kind==='book'?s.journals:null]);
+    if(key===modalKey)return;const wasHidden=$('overlay').hidden;modalKey=key;
+    const card=$('card');card.className='card';let html='';
+    if(s.mode==='title'){
+      card.className='card title-card';html='<div class="eyebrow">A gentle mystery • Chapter I</div><h1 id="dialog-title">Phantom Manor</h1><div class="subtitle">The Lantern Keeper</div><svg class="scene" viewBox="0 0 400 88" role="img" aria-label="A moonlit pixel manor with welcoming golden windows" shape-rendering="crispEdges"><circle cx="322" cy="24" r="15" fill="#d5d4b4"/><path d="M0 72H400V88H0Z" fill="#182b35"/><path d="M99 83V34H130V18H153V32H242V12H265V35H298V83Z" fill="#101d2d"/><path d="M94 34L114 17L134 34M128 18L141 4L157 18M236 13L253 0L270 13M261 36L280 18L301 36" fill="#0c1524"/><path d="M159 36H234V83H159Z" fill="#273541"/><path d="M179 38V23H214V38" fill="#1c2b39"/><path d="M171 23L197 7L221 23" fill="#0d192b"/><path d="M185 83V61H208V83" fill="#c3a970"/><path d="M106 44H115V57H106ZM122 44H131V57H122ZM143 35H151V48H143ZM164 47H176V57H164ZM217 47H229V57H217ZM246 29H254V42H246ZM270 45H280V58H270ZM287 45H294V58H287Z" fill="#d8bd80"/><path d="M19 70H119V75H19ZM288 67H381V72H288ZM132 78H261V81H132Z" fill="#667a7f" opacity=".5"/><path d="M54 76V34H58V76M34 76V48H38V76M351 79V39H355V79" stroke="#12232c" stroke-width="4"/><path d="M56 45L40 32M56 56L72 40M353 54L340 40M353 62L370 43" stroke="#12232c" stroke-width="4"/></svg><p>A forgotten manor. Six scattered pages. One keeper waiting for a story to come home.</p><div class="howto"><span><b>WASD / arrows</b> · move</span><span><b>E</b> · read, use, open doors</span><span><b>Space</b> · lantern amulet</span><span><b>Shift</b> · quiet footsteps</span><span><b>P / M</b> · pause / sound</span><span><b>J</b> · your journal</span></div><p class="fine">Explore at your own pace. Friendly ghosts and bats may startle you, but never take your discoveries. Touch controls below the map. Sound starts off.</p>'+button('start','Enter the manor','class="primary"')+'<div class="fine" style="margin-top:12px">A make-believe mystery, not a teaching about spirits.<br>Session-only progress • no save needed</div><div style="margin-top:10px"><a href="../index.html">← Back to the arcade</a></div>';
+    }else if(s.mode==='paused'){
+      html='<div class="eyebrow">A quiet moment</div><h2 id="dialog-title">Your lantern can wait.</h2><p>The manor is paused. Your discoveries are safe.</p><div class="howto"><span><b>WASD / arrows</b> · move</span><span><b>E</b> · interact</span><span><b>Space</b> · lantern</span><span><b>Shift / Quiet</b> · sneak</span><span><b>J</b> · journal</span><span><b>M</b> · sound</span></div><footer>'+button('pause','Continue exploring','class="primary"')+'<a href="../index.html">Arcade menu</a></footer><details><summary>Start this chapter over</summary><p class="fine">This clears all pages, puzzles, and keepsakes from this session.</p>'+button('restart','Yes, restart chapter')+'</details>';
+    }else if(s.mode==='won'){
+      html='<div class="eyebrow">Chapter I complete</div><h2 id="dialog-title">A light finds its way home.</h2><p>Rowan touches the portrait. The music box plays Ada’s favorite tune, and her ribbon stirs in the warm morning air.</p><p>“They were together. They were safe. I did not lose them.”</p><p>The keeper smiles. His outline softens into a gentle golden glow, then rests. Beyond the windows, the mist lifts from the path to the river cottage.</p><p><strong>You restored the manor’s memories — and helped a lonely keeper find peace.</strong></p><div class="progress-line">6 journal pages • 3 keepsakes • 3 restored puzzles'+(s.passage?' • secret passage discovered':'')+'</div><footer>'+button('restart','Play the chapter again','class="primary"')+'<a href="../index.html">Arcade menu</a></footer>';
+    }else if(s.dialog){
+      const d=s.dialog;html='<div class="eyebrow">'+(d.kind==='puzzle'?'A memory puzzle':d.kind==='book'?'Read at your own pace':'The keeper’s story')+'</div><h2 id="dialog-title">'+escape(d.title)+'</h2><p>'+escape(d.text)+'</p>';
+      if(d.kind==='book')html+=Object.keys(pages).map(id=>s.journals.includes(id)?'<article class="page-entry"><h3>'+escape(pages[id].title)+'</h3><p>'+escape(pages[id].text)+'</p></article>':'<div class="page-entry fine">'+escape(pages[id].title.split(' • ')[0])+' • A page still waiting in the manor.</div>').join('');
+      if(d.kind==='puzzle'){html+='<div class="choices">'+d.choices.map(v=>button('choose',escape(v),'data-value="'+escape(v)+'"')).join('')+'</div><details><summary>Reread the clue</summary><p>'+escape(pages[{books:'library-page',wheel:'garden-page',clock:'clock-page'}[d.id]].text)+'</p></details>';}
+      if(d.kind==='spirit')html+='<div class="choices">'+button('choose','They are together at the river cottage.','data-value="together"')+button('choose','They were left alone in the manor.','data-value="alone"')+'</div><details><summary>Read Ada’s last letter</summary><p>'+escape(pages['attic-page'].text)+'</p></details>';
+      html+='<footer><span class="fine">The world waits while you read.</span>'+button('close',d.kind==='puzzle'?'Explore some more':'Close · E','class="primary"')+'</footer>';
+    }
+    $('overlay').hidden=!html;if(html){const old=document.activeElement&&document.activeElement.dataset;const action=old&&old.action,value=old&&old.value;card.innerHTML=html;const next=action&&card.querySelector('[data-action="'+action+'"]'+(value?'[data-value="'+value+'"]':''));const first=next||card.querySelector('button');if(first)first.focus();}else if(!wasHidden)canvas.focus();
+  }
+  function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),w,h);}
+  function line(x1,y1,x2,y2,c,w=1){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();}
+  function circle(x,y,r,c){ctx.fillStyle=c;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();}
+  function text(t,x,y,c='#d9d3b8',size=8){ctx.font=size+'px monospace';ctx.textAlign='center';ctx.fillStyle=c;ctx.fillText(t,x,y);}
+  function sprite(pattern,x,y,palette,scale=2){pattern.forEach((row,b)=>Array.from(row).forEach((ch,a)=>{if(palette[ch])rect(x+a*scale,y+b*scale,scale,scale,palette[ch]);}));}
+  function glow(x,y,r,color){const g=ctx.createRadialGradient(x,y,2,x,y,r);g.addColorStop(0,color);g.addColorStop(1,'transparent');ctx.fillStyle=g;ctx.fillRect(x-r,y-r,r*2,r*2);}
+  function ghost(x,y,t,stun,keeper=false){
+    const bob=reduced?0:Math.sin(t*2+x)*2;circle(x,y+9,10,'#10182160');sprite(['..aaaa..','.aaaaaa.','aaaaaaaa','aabaabaa','aaacaaca','aaaaaaaa','.aaaaaa.','aa.aa.aa'],x-8,y-15+bob,{a:keeper?'#b9d6c9':stun?'#e2d398':'#abbace',b:'#23384a',c:'#5a7180'});if(stun)text('z z',x,y-23,'#f4d897');if(keeper){rect(x+10,y-6,4,8,'#e8ca81');glow(x+12,y,28,'#d9b97540');}}
+  function bat(x,y,t,stun){const flap=reduced?0:Math.sin(t*7)>0?2:-1;sprite(['aa......aa','aaaa..aaaa','.aaaaaaaa.','..abbbba..','...baab...','...b..b...'],x-10,y-10+flap,{a:stun?'#b8bf9c':'#8d81ad',b:'#d4cbe2'});rect(x-3,y-3+flap,2,2,'#243040');rect(x+3,y-3+flap,2,2,'#243040');if(stun)text('z z',x,y-17,'#ecd594');}
+  function draw(s){
+    const r=rooms[s.room],p=r.palette,t=s.time;ctx.imageSmoothingEnabled=false;rect(0,0,480,320,p[0]);
+    for(let y=40;y<300;y+=16)for(let x=24;x<456;x+=24){rect(x,y,23,15,((x/24+y/16)|0)%2?p[1]:p[0]);line(x+2,y+14,x+19,y+14,p[2]+'30');}
+    rect(13,18,454,22,p[2]);rect(17,40,7,264,p[2]);rect(456,40,7,264,p[2]);rect(13,300,454,9,p[2]);rect(13,309,454,7,'#0c1420');
+    for(let x=19;x<461;x+=26){rect(x,19,22,6,p[1]);rect(x+8,28,17,6,p[1]);}
+    rect(26,41,428,2,p[3]+'55');text(r.name.toUpperCase(),240,32,'#ece1c1',9);
+    // Hand-laid rugs, windows, woodwork, and room-specific furnishings.
+    rect(181,183,119,94,p[2]+'60');rect(185,187,111,86,p[3]+'30');rect(189,191,103,78,p[1]);
+    for(let y=196;y<265;y+=12){rect(194,y,3,3,p[3]+'70');rect(285,y,3,3,p[3]+'70');}
+    for(const x of [63,397]){rect(x,20,20,17,'#14243d');rect(x+2,21,16,14,'#405774');line(x+10,21,x+10,35,'#99b7bb');line(x+2,29,x+18,29,'#99b7bb');glow(x+10,43,38,'#9ab8d812');}
+    for(const [x,y,w,h] of r.obstacles){
+      rect(x+3,y+5,w,h,'#07101a70');rect(x,y,w,h,p[2]);rect(x+2,y+2,w-4,h-6,p[1]);rect(x,y+h-5,w,5,p[3]+'70');
+      if(s.room==='library')for(let bx=x+4;bx<x+w-4;bx+=7){rect(bx,y+3,5,h-12,['#ac8278','#718894','#b5a272'][Math.floor(bx/7)%3]);rect(bx+1,y+6,3,2,'#e3cd9a');}
+      else if(s.room==='garden'){rect(x+5,y+10,w-10,h-14,'#254439');for(let bx=x+12;bx<x+w-5;bx+=14){rect(bx,y-5,3,23,'#72906b');rect(bx-5,y,7,5,'#75956e');rect(bx+2,y-6,7,6,'#9cab7d');rect(bx,y-9,4,4,'#d1c898');}}
+      else if(s.room==='clocktower'){circle(x+w/2,y+h/2,12,p[3]);circle(x+w/2,y+h/2,7,p[1]);for(let i=0;i<4;i++){const a=i*Math.PI/2;rect(x+w/2+Math.cos(a)*12-2,y+h/2+Math.sin(a)*12-2,4,4,p[3]);}}
+      else if(s.room==='gallery'){rect(x+5,y+4,w-10,h-12,'#788195');rect(x+12,y+9,10,10,'#b6b8af');}
+      else if(s.room==='attic'){line(x+4,y+4,x+w-4,y+h-8,p[2],2);line(x+w-4,y+4,x+4,y+h-8,p[2],2);rect(x+w/2-3,y+h/2-3,6,6,p[3]);}
+      else{rect(x+6,y-3,8,8,p[3]);rect(x+w-14,y-3,8,8,p[3]);}
+    }
+    for(const o of r.objects){
+      const x=o.x,y=o.y;
+      if(o.type==='door'){
+        const horiz=x<50||x>430,hidden=o.hidden&&!s.passage,locked=o.key&&!s.inventory.includes(o.key);
+        rect(x-(horiz?9:19),y-(horiz?21:8),horiz?18:38,horiz?42:16,p[3]);rect(x-(horiz?7:17),y-(horiz?19:6),horiz?14:34,horiz?38:12,hidden?'#47728a':'#162434');
+        if(hidden){line(x-3,y-17,x-3,y+16,'#79a4b0');line(x+3,y-17,x+3,y+16,'#355063');text('✦',x,y+4,'#b9c8c7',9);}
+        else{if(locked){rect(x-3,y-3,6,7,'#dbbd7c');line(x-2,y-4,x+2,y-4,'#dbbd7c',2);}else text(horiz?(x<50?'‹':'›'):(y<80?'↑':'↓'),x,y+4,'#cddfdf',12);}
+        if(!hidden){const label=o.name.replace('Conservatory','Garden').replace('Gallery passage','Gallery').replace('Hidden passage','Passage');text(label,horiz?(x<50?x+26:x-30):x,horiz?y-25:(y<80?y+23:y-16),'#dfdcc3',8);}
+      }else if(o.type==='page'){
+        const found=s.journals.includes(o.id);glow(x,y,23,found?'#b3d9cc15':'#e6c07d2b');rect(x-8,y-9,16,17,'#695946');rect(x-7,y-10,13,17,found?'#a9b9ac':'#dfd1a3');rect(x-4,y-7,7,1,'#706850');rect(x-4,y-3,7,1,'#706850');rect(x-4,y+1,5,1,'#706850');text(found?'READ':'JOURNAL',x,y+21,found?'#9eada8':'#e4d49c',7);
+      }else if(o.type==='puzzle'){
+        const done=s.solved.includes(o.id);glow(x,y,34,done?'#9ed3b522':'#ddba7820');
+        if(o.id==='books'){for(let i=0;i<3;i++){rect(x-18+i*13,y-15,11,29,['#8ea47b','#b89972','#8e98b7'][i]);rect(x-16+i*13,y-12,7,3,'#ebd9a3');rect(x-16+i*13,y+6,7,2,'#e0cc9b');}}
+        if(o.id==='wheel'){circle(x,y,22,'#8caa98');circle(x,y,17,'#385d60');for(let i=0;i<3;i++){const a=i*Math.PI*2/3-.5;text(['☾','•','☀'][i],x+Math.cos(a)*11,y+Math.sin(a)*11+3,'#ded6a1',11);}circle(x,y,4,'#cabc84');}
+        if(o.id==='clock'){rect(x-19,y-35,38,64,'#997f54');rect(x-15,y-30,30,54,'#4b4038');circle(x,y-13,14,'#dfd0a1');circle(x,y-13,2,'#5d533e');line(x,y-13,x+8,y-18,'#514638',2);line(x,y-13,x,y-23,'#514638',2);line(x,y+4,x+(reduced?0:Math.sin(t)*5),y+16,'#d1b878',2);circle(x+(reduced?0:Math.sin(t)*5),y+18,5,'#c3a873');}
+        text(done?'RESTORED':o.id==='books'?'STORYBOOKS':o.id==='wheel'?'SKY WHEEL':'MEMORY BELLS',x,y+(o.id==='clock'?43:32),done?'#b4d3b8':'#e8cd94',7);
+      }else if(o.type==='rest'){rect(x-8,y+8,16,6,'#6b7a83');rect(x-2,y-8,4,19,'#9b8e67');rect(x-7,y-14,14,13,'#e0bd76');rect(x-4,y-12,8,9,'#f0dfa6');glow(x,y-5,40,'#e4c78b26');text('REST',x,y+25,'#d5c99c',7);}
+      else if(o.type==='item'){rect(x-19,y-20,38,38,'#bca273');rect(x-15,y-16,30,30,'#516376');for(let i=0;i<3;i++){rect(x-11+i*8,y-9+(i===1?3:0),6,7,'#e0c6a4');rect(x-11+i*8,y-2+(i===1?3:0),6,10,['#a0939e','#829a92','#a1abc5'][i]);}text(s.inventory.includes(o.item)?'COLLECTED':'PORTRAIT',x,y+29,'#d5c89b',7);}
+      else if(o.type==='spirit'){glow(x,y,45,'#b2dcd226');ghost(x,y,t,0,true);text('ROWAN',x,y+28,'#cce2ce',8);}
+    }
+    for(const e of s.enemies[s.room]){if(e.alert&&!e.stun){circle(e.x,e.y+1,16,'#d5b77a14');text('?',e.x,e.y-22,'#d5bc8e',10);}if(e.type==='bat')bat(e.x,e.y,t,e.stun);else ghost(e.x,e.y,t,e.stun);}
+    // The explorer: amber scarf, blue coat, a warm lantern, tiny boots.
+    const x=s.x,y=s.y;circle(x,y+7,9,'#070e1a70');if(s.mercy>0){ctx.strokeStyle='#f2d89a';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(x,y-3,14,0,Math.PI*2);ctx.stroke();}
+    if(s.quiet)circle(x,y+7,14,'#a9c8b122');
+    sprite(['..hhhh..','.hhhhhh.','.hffffh.','..fbfb..','..ffff..','.ssssss.','.bccccb.','.bccccb.','..cccc..','..b..b..'],x-8,y-18,{h:'#6b5147',f:'#e3bea0',b:'#1e3446',s:'#e0b66b',c:'#6ba4b4'});
+    if(s.inventory.includes('amulet')){rect(x+10,y-4,4,6,'#e8d094');glow(x+12,y-1,s.lantern>0?92:31,s.lantern>0?'#e7d69d32':'#e2c18022');if(s.lantern>0){ctx.strokeStyle='#e1d6a566';ctx.lineWidth=1;ctx.beginPath();ctx.arc(x,y,92,0,Math.PI*2);ctx.stroke();}}
+    if(!reduced){ctx.globalAlpha=.06;for(let i=0;i<12;i++){const mx=((i*53+t*5)%570)-50,my=55+(i*43)%240;rect(mx,my,45+(i%3)*18,3,'#c7dce0');rect(mx+14,my+4,42,2,'#c7dce0');}ctx.globalAlpha=1;}
+    // Subtle corners, never full-screen flashes.
+    rect(0,0,480,12,'#0b132580');rect(0,312,480,8,'#0b132580');
+  }
+  function frame(now){
+    const dt=last?Math.min(.05,(now-last)/1000):0;last=now;const s=G.getState();
+    if(s.mode==='playing'&&!s.dialog){const held=new Set([...keys,...touch.values()]);G.setQuiet(quietToggle||keys.has('quiet'));G.move(Number(held.has('right'))-Number(held.has('left')),Number(held.has('down'))-Number(held.has('up')),dt);G.tick(dt);}
+    syncAudio();if(G.getState().mode==='playing')audio.tick(G.getState().room);
+    render();draw(G.getState());requestAnimationFrame(frame);
+  }
+  render();draw(G.getState());requestAnimationFrame(frame);
+})();
+</script>
+</body></html>
