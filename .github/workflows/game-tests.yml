@@ -14,3 +14,19 @@ jobs:
         with:
           node-version: '22'
       - run: node --test tests/*.test.cjs
+      - name: Install Chromium test tools (not game dependencies)
+        run: |
+          npm install --prefix "$RUNNER_TEMP/hallows-tools" playwright@1.64.1
+          "$RUNNER_TEMP/hallows-tools/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Exercise Path of Hallows in real Chromium
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 &
+          SERVER=$!
+          trap 'kill "$SERVER"' EXIT
+          curl --retry 10 --retry-connrefused --retry-delay 1 --fail http://127.0.0.1:8765/ > /dev/null
+          NODE_PATH="$RUNNER_TEMP/hallows-tools/node_modules" ARTIFACT_DIR="$RUNNER_TEMP/hallows-evidence" node tests/hallows-browser-smoke.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hallows-browser-screenshots
+          path: ${{ runner.temp }}/hallows-evidence
