@@ -21,7 +21,7 @@ header{flex-wrap:wrap}.tools{flex-wrap:wrap;align-items:center}.tools button{min
 .map{display:block!important}.map svg{width:100%;height:auto;display:block}.map .map-caption{font-size:11px;color:var(--gold);margin:5px 0}.choices button[aria-pressed=true]{background:#e0c68d;color:#182a35;border:2px solid #fff0c4}.trail-badge{color:#e8cb87;font-weight:700}.map-block{min-width:200px;max-width:440px}.map-block summary{color:var(--gold)}
 </style></head><body>
 <div class="app">
-<header><a class="menu" href="../index.html">← ARCADE MENU</a><div class="brand">Phantom Manor</div><div class="tools"><button id="sound" data-action="sound" aria-pressed="false">Sound: off</button><button id="pause" data-action="pause">Pause · P</button><button id="calm" data-action="calm" aria-pressed="false">Calm scenery</button><button id="large" data-action="large" aria-pressed="false">Large view</button><button id="fullscreen" data-action="fullscreen">Fullscreen</button><details class="audio-settings"><summary>Audio</summary><div><label for="music-volume">Music</label><input id="music-volume" type="range" min="0" max="100" value="55"><label for="effects-volume">Effects</label><input id="effects-volume" type="range" min="0" max="100" value="65"><small>0 = off · Sound / M mutes both</small></div></details></div></header><p id="view-status" role="status"></p>
+<header><a class="menu" href="../index.html">← ARCADE MENU</a><div class="brand">Phantom Manor</div><div class="tools"><button id="sound" data-action="sound" aria-pressed="false">Sound: off</button><button id="pause" data-action="pause">Pause · P</button><button id="large" data-action="large" aria-pressed="false">Large view</button><button id="fullscreen" data-action="fullscreen">Fullscreen</button><details class="audio-settings"><summary>Audio</summary><div><label for="music-volume">Music</label><input id="music-volume" type="range" min="0" max="100" value="55"><label for="effects-volume">Effects</label><input id="effects-volume" type="range" min="0" max="100" value="65"><small>0 = off · Sound / M mutes both</small></div></details></div></header><p id="view-status" role="status"></p>
 <main class="layout"><section class="world" aria-label="The manor adventure"><div class="roomline"><strong id="room-name">Foyer</strong><span id="vitals" aria-label="Five hearts">♥ ♥ ♥ ♥ ♥</span></div><div class="view"><canvas id="game" width="480" height="320" tabindex="0" aria-label="Top-down manor. Move with arrow keys or WASD. Press E near objects. Use the Journal button for collected clues.">Your browser needs Canvas to explore Phantom Manor.</canvas><div id="prompt"></div></div><p id="message" class="message" aria-live="polite"></p><div class="controls" id="touch-controls"><div class="dpad" aria-label="Movement controls"><button class="up" data-hold="up" aria-label="Move up">↑</button><button class="left" data-hold="left" aria-label="Move left">←</button><button class="down" data-hold="down" aria-label="Move down">↓</button><button class="right" data-hold="right" aria-label="Move right">→</button></div><div class="actions"><button data-action="quiet" id="quiet" aria-pressed="false">Quiet</button><button data-action="interact">Interact · E</button><button data-action="lantern" id="lantern">Lantern · Space</button></div></div><div class="keyhint">WASD / arrows: move · E: interact · Space: lantern · Shift: quiet · P: pause · M: sound · J: journal</div></section>
 <aside class="sidebar"><div class="mission"><div class="eyebrow">The next small mystery</div><p id="objective"></p></div><div class="inventory-block divider"><div class="eyebrow">Your satchel</div><div id="inventory" class="inventory"></div></div><button class="journal-button" data-action="journal" id="journal">Journal · 0/6</button><details class="map-block divider" open><summary>Explorer map · fold / unfold</summary><div class="map" id="map"></div></details><p class="legend divider">Gold pages hold clues.<br>Blue cloth hides a secret.<br>Still shadows with lantern light.<br>Rest in the Foyer to refill hearts.</p></aside></main>
 <p class="footer">The Lantern Keeper + Moonlit Grounds + Whispering Roots · A gentle fictional mystery · Session-only progress; reloading starts over.</p>
@@ -300,7 +300,8 @@ header{flex-wrap:wrap}.tools{flex-wrap:wrap;align-items:center}.tools button{min
   const G=window.PhantomManor,rooms=G.getRooms(),pages=G.getPages(),items=G.getItems();
   const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d');
   const keys=new Set(),touch=new Map();let quietToggle=false,last=0,modalKey='',hudKey='';
-  let reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Motion follows the OS only; obsolete saved scenery preferences are never read.
+  const reduced=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const button=(action,text,extra='')=>'<button data-action="'+action+'" '+extra+'>'+text+'</button>';
   function clearInput(){keys.clear();touch.clear();quietToggle=false;G.setQuiet(false);}
@@ -319,7 +320,6 @@ header{flex-wrap:wrap}.tools{flex-wrap:wrap;align-items:center}.tools button{min
   document.addEventListener('fullscreenchange',()=>{$('fullscreen').textContent=document.fullscreenElement?'Exit fullscreen':'Fullscreen';});
   document.addEventListener('input',e=>{if(e.target.id==='music-volume'||e.target.id==='effects-volume')audio.setVolume(e.target.id.split('-')[0],Number(e.target.value)/100);});
   function perform(action,value){
-    if(action==='calm'){reduced=!reduced;$('calm').setAttribute('aria-pressed',String(reduced));$('calm').textContent=reduced?'Calm scenery: on':'Calm scenery';draw(G.getState());return;}
     if(action==='sound'){audioToggle();return;}
     if(action==='large'){viewMode();return;}
     if(action==='fullscreen'){fullscreen();return;}
@@ -584,7 +584,6 @@ header{flex-wrap:wrap}.tools{flex-wrap:wrap;align-items:center}.tools button{min
     syncAudio();if(G.getState().mode==='playing')audio.tick(G.getState().room);
     render();draw(G.getState());requestAnimationFrame(frame);
   }
-  $('calm').setAttribute('aria-pressed',String(!!reduced));$('calm').textContent=reduced?'Calm scenery: on':'Calm scenery';
   render();draw(G.getState());requestAnimationFrame(frame);
 })();
 </script>
