@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap');
+    /* System monospace fonts keep the hub dependency-free offline. */
 
     :root {
       --bg: #0b0f19;
@@ -150,7 +150,7 @@
       overflow: hidden;
     }
     .featured-hero::before {
-      content: 'NEW RELEASE';
+      content: 'NEW LEVELS';
       position: absolute;
       top: 15px;
       right: -35px;
@@ -237,7 +237,7 @@
     /* Game Cards Grid */
     .arcade-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
       gap: 25px;
     }
 
@@ -340,6 +340,9 @@
       box-shadow: 0 0 20px var(--cyan);
     }
 
+    .section-header { flex-wrap: wrap; gap: 16px; }
+    .section-title { line-height: 1.5; }
+    @media (max-width: 500px) { header {position:relative;} .featured-hero {padding:24px 16px;} .btn-launch-hero {padding:14px;font-size:12px;} }
     /* Footer */
     footer {
       text-align: center;
@@ -375,24 +378,16 @@
 
   <div class="container">
 
-    <!-- WEEK 4 HERO SPOTLIGHT -->
+    <!-- PHANTOM MANOR SPOTLIGHT -->
     <div class="featured-hero">
       <div class="featured-content">
-        <div class="featured-tag">★ WEEK 4 NEW ARRIVAL ★</div>
-        <h2 class="featured-title">🌳 EDEN SENTINEL</h2>
-        <div class="featured-meta">
-          <span>📖 Genesis 2:15 &bull; Genesis 3:15</span>
-          <span>🎮 Genre: Top-Down Garden Defense</span>
-          <span>🛡️ Objective: Protect Tree of Life</span>
-        </div>
-        <p class="featured-desc">
-          Take up the defense of the sacred Garden of Eden! Move with WASD/Arrows, aim Seeds of Truth with mouse/touch, and unleash the River of Life Nova [Spacebar] to resist the serpent and creeping shadows of doubt.
-        </p>
-        <a href="games/eden_sentinel_tds.html?v=3" class="btn-launch-hero" onclick="playLaunchSound()">
-          ▶ PLAY EDEN SENTINEL
-        </a>
+        <div class="featured-tag">★ NEW LEVELS ★</div>
+        <h2 class="featured-title">🕯️ PHANTOM MANOR</h2>
+        <div class="featured-meta"><span>Fictional mystery • Courage &amp; discovery</span><span>Keyboard &amp; touch</span></div>
+        <p class="featured-desc">New woods, cemetery, garden and basement adventures await! Follow Whispering Roots through fifteen connected places, solve ten clue puzzles, and discover the basement moonwell. Friendly spooky fiction; no jump scares.</p>
+        <a href="games/phantom_manor.html?v=12" class="btn-launch-hero" onclick="playLaunchSound()">▶ EXPLORE THE MANOR</a>
       </div>
-      <div style="font-size: 80px; text-shadow: 0 0 30px #10b981;">🌳</div>
+      <div aria-hidden="true" style="font-size:80px">🏚️</div>
     </div>
 
     <!-- ARCADE CABINET GAME SELECT -->
@@ -401,11 +396,18 @@
         <span>🎮</span> ALL ARCADE CABINET GAMES
       </div>
       <div style="font-size: 13px; color: var(--cyan); font-weight: 700;">
-        16 PLAYABLE TITLES
+        <span id="playable-count"></span>
       </div>
     </div>
 
-    <div class="arcade-grid">
+    <div class="arcade-grid" id="arcade-games">
+      <div class="game-card">
+        <h3 class="game-name">EDEN SENTINEL</h3>
+        <div class="game-scripture">Genesis 2:15 • Genesis 3:15</div>
+        <p class="game-desc">Protect the Tree of Life. Aim Seeds of Truth and unleash the River of Life Nova in this top-down garden defense.</p>
+        <div class="controls-hint">WASD / Arrows • Mouse / Touch • Space for Nova</div>
+        <a href="games/eden_sentinel_tds.html?v=3" class="btn-play" onclick="playLaunchSound()">PLAY EDEN SENTINEL</a>
+      </div>
 
       <div class="game-card" style="border-color:#d4b17c">
         <div><div class="card-top"><span class="genre-badge badge-explore">SIDE-SCROLLING ADVENTURE</span><span class="game-icon">🌙</span></div>
@@ -672,11 +674,26 @@
 
   </div>
 
+  <section class="container" id="physical-games" aria-labelledby="physical-title" style="border:2px solid #ffd700;border-radius:16px;background:#151c30">
+    <h2 id="physical-title" class="section-title">🏃 PHYSICAL GAMES</h2>
+    <p style="margin:20px 0;line-height:1.6">Move together. Learn on the big screen. Adult-led rule variants with looping demos — separate from arcade games.</p>
+    <div class="arcade-grid">
+      <article class="game-card"><h3 class="game-name">RING OF POWER</h3><p class="game-desc">Capture the Flag • hoops, rescue walks and fair play.</p><a class="btn-play" href="physical-games.html?v=12#ctf">SHOW RULES</a></article>
+      <article class="game-card"><h3 class="game-name">MAN HUNT</h3><p class="game-desc">Buddy pairs • bounded, lit area • everyone returns.</p><a class="btn-play" href="physical-games.html?v=12#hunt">SHOW RULES</a></article>
+      <article class="game-card"><h3 class="game-name">FLASHLIGHT TAG</h3><p class="game-desc">Dim, not dark • walking only • safe-zone resets.</p><a class="btn-play" href="physical-games.html?v=12#flash">SHOW RULES</a></article>
+      <article class="game-card"><h3 class="game-name">MIRROR MOVES</h3><p class="game-desc">Cooperative partner moves • seated or standing.</p><a class="btn-play" href="physical-games.html?v=12#mirror">SHOW RULES</a></article>
+      <article class="game-card"><h3 class="game-name">TEAM TREASURE WALK</h3><p class="game-desc">One shared goal • wide routes • no racing.</p><a class="btn-play" href="physical-games.html?v=12#treasure">SHOW RULES</a></article>
+    </div>
+  </section>
   <footer>
     Harlan Awana Club &bull; 3rd–5th Grade Youth Ministry &bull; PWA Offline Ready &bull; Zero External Dependencies
   </footer>
 
   <script>
+    const cabinetLinks = [...document.querySelectorAll('#arcade-games .btn-play')];
+    const uniqueTitles = new Set(cabinetLinks.map(a => a.getAttribute('href').split('?')[0]));
+    const visuals = [...uniqueTitles].filter(path => path.includes('screensaver')).length;
+    document.getElementById('playable-count').textContent = `${uniqueTitles.size - visuals} PLAYABLE GAMES • ${visuals} VISUAL DISPLAYS`;
     // --- Procedural Sound Effects via Web Audio API ---
     let audioCtx = null;
     function getAudioCtx() {

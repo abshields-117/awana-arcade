@@ -1,9 +1,11 @@
 // Awana Retro Arcade — Offline Service Worker
-const CACHE_NAME = 'awanacade-v11';
+const CACHE_NAME = 'awanacade-v12';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './manifest.json',
+  './physical-games.html',
+  './docs/PHYSICAL_GAMES.md',
   './games/creation_architect.html',
   './games/cosmic_arcade_shooter.html',
   './games/garden_architect.html',

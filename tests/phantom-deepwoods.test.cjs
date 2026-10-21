@@ -42,6 +42,6 @@ test('map links never run through an unrelated area marker',()=>{
 });
 test('release keeps one updated Manor card, all 16 cabinets and a new offline cache',()=>{
  const fs=require('node:fs'),path=require('node:path'),root=path.join(__dirname,'..'),hub=fs.readFileSync(path.join(root,'index.html'),'utf8'),sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');
- assert.equal((hub.match(/href="games\/phantom_manor.html\?v=11"/g)||[]).length,1);assert.match(hub,/Whispering Roots/);assert.match(sw,/awanacade-v11/);assert.equal(new Set([...hub.matchAll(/href="games\/([^"?]+)/g)].map(m=>m[1])).size,16);assert.match(hub,/path_of_hallows.html\?v=9/);
+ assert.equal((hub.match(/href="games\/phantom_manor.html\?v=11"/g)||[]).length,1);assert.match(hub,/Whispering Roots/);assert.ok(Number(sw.match(/awanacade-v(\d+)/)[1])>=11);assert.equal(new Set([...hub.matchAll(/href="games\/([^"?]+)/g)].map(m=>m[1])).size,16);assert.match(hub,/path_of_hallows.html\?v=9/);
 });
 module.exports={newTrail};

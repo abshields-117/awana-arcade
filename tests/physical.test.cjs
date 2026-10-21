@@ -1,0 +1,2 @@
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
+test('hub spotlights Manor and separates physical rules from playable cabinets',()=>{const h=fs.readFileSync('index.html','utf8');const hero=h.match(/<div class="featured-hero">([\s\S]*?)<!-- ARCADE/)[1];assert.match(hero,/NEW LEVELS/);assert.match(hero,/phantom_manor.html/);assert.match(h,/id="physical-games"/);assert.match(h,/id="playable-count"/);assert.match(h,/eden_sentinel_tds.html/);});
