@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SUPER TETRA 16 - SNES Edition</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --snes-purple: #5c4b99;
+      --snes-lavender: #9f91cc;
+      --snes-gray: #b8b8c0;
+      --snes-dark: #141026;
+      --panel-bg: #1e1836;
+      --panel-border-light: #7c6bb8;
+      --panel-border-dark: #2c224d;
+      --gold: #f8d830;
+      --cyan: #38e0f8;
+      --red: #f83850;
+      --green: #40e850;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 50% 20%, #2d1e5f 0%, #120c29 65%, #070510 100%);
+      color: #f8f8f8;
+      font-family: 'Press Start 2P', monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Animated 16-bit starfield / horizon grid background */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(159, 145, 204, 0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(159, 145, 204, 0.07) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* CRT Scanlines Overlay */
+    .crt-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 20;
+      background:
+        linear-gradient(
+          rgba(18, 16, 16, 0) 50%,
+          rgba(0, 0, 0, 0.28) 50%
+        ),
+        radial-gradient(
+          circle at center,
+          transparent 65%,
+          rgba(0, 0, 0, 0.55) 100%
+        );
+      background-size: 100% 4px, 100% 100%;
+    }
+
+    .crt-off .crt-overlay {
+      display: none;
+    }
+
+    .cabinet {
+      position: relative;
+      z-index: 2;
+      background: linear-gradient(180deg, #3b3064 0%, #241c40 100%);
+      border: 4px solid #8a7ec7;
+      box-shadow:
+        inset 0 0 0 4px #1d1536,
+        0 18px 50px rgba(0, 0, 0, 0.8),
+        0 0 30px rgba(124, 107, 184, 0.3);
+      padding: 18px 22px 16px;
+      border-radius: 12px;
+      max-width: 95vw;
+    }
+
+    .header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding: 8px 14px;
+      background: #140f29;
+      border: 3px solid #5c4b99;
+      box-shadow: inset 0 2px 0 #0a0717;
+    }
+
+    .title-logo {
+      font-size: 17px;
+      letter-spacing: 2px;
+      background: linear-gradient(180deg, #fff799 0%, #f8b800 50%, #d85800 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(2px 2px 0px #381000);
+    }
+
+    .snes-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 9px;
+      color: #c8c2e4;
+    }
+
+    .snes-dots {
+      display: inline-grid;
+      grid-template-columns: repeat(2, 8px);
+      gap: 3px;
+    }
+
+    .snes-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      box-shadow: inset -1px -1px 0 rgba(0,0,0,0.5);
+    }
+    .dot-x { background: #3068d8; }
+    .dot-y { background: #28b850; }
+    .dot-a { background: #e83038; }
+    .dot-b { background: #f8d020; }
+
+    .game-layout {
+      display: grid;
+      grid-template-columns: 165px 308px 185px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .snes-panel {
+      background: var(--panel-bg);
+      border-top: 4px solid var(--panel-border-light);
+      border-left: 4px solid var(--panel-border-light);
+      border-right: 4px solid var(--panel-border-dark);
+      border-bottom: 4px solid var(--panel-border-dark);
+      padding: 12px;
+      box-shadow: inset 0 0 0 2px #0f0a1c, 0 4px 0 rgba(0,0,0,0.45);
+      margin-bottom: 14px;
+    }
+
+    .snes-panel:last-child {
+      margin-bottom: 0;
+    }
+
+    .panel-label {
+      font-size: 10px;
+      color: var(--cyan);
+      text-shadow: 2px 2px 0 #090614;
+      margin-bottom: 10px;
+      text-align: center;
+      letter-spacing: 1px;
+    }
+
+    .stat-value {
+      font-size: 14px;
+      color: var(--gold);
+      text-shadow: 2px 2px 0 #381800;
+      text-align: right;
+      background: #0b0817;
+      padding: 8px 10px;
+      border: 2px inset #382c61;
+      letter-spacing: 1px;
+    }
+
+    .mini-canvas-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #0b0817;
+      border: 2px inset #382c61;
+      padding: 6px;
+    }
+
+    .board-container {
+      position: relative;
+      background: #090714;
+      border-top: 4px solid #2b214a;
+      border-left: 4px solid #2b214a;
+      border-right: 4px solid #8a7ec7;
+      border-bottom: 4px solid #8a7ec7;
+      box-shadow: 0 0 0 3px #120d24;
+      width: 308px;
+      height: 608px;
+    }
+
+    canvas {
+      display: block;
+      image-rendering: pixelated;
+    }
+
+    /* Overlay screens (Start / Pause / Game Over) */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(12, 8, 28, 0.88);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+      z-index: 5;
+    }
+
+    .overlay.hidden {
+      display: none;
+    }
+
+    .overlay h2 {
+      font-size: 18px;
+      color: var(--gold);
+      text-shadow: 3px 3px 0 #802000;
+      margin: 0 0 16px;
+      line-height: 1.5;
+    }
+
+    .overlay p {
+      font-size: 9px;
+      color: #d6d0f0;
+      line-height: 1.9;
+      margin: 0 0 22px;
+    }
+
+    .blink-btn {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 11px;
+      color: #ffffff;
+      background: linear-gradient(180deg, #6852b8 0%, #433185 100%);
+      border-top: 3px solid #a290eb;
+      border-left: 3px solid #a290eb;
+      border-right: 3px solid #251a52;
+      border-bottom: 3px solid #251a52;
+      padding: 12px 16px;
+      cursor: pointer;
+      text-shadow: 2px 2px 0 #150d30;
+      animation: pulse 1.2s infinite steps(2);
+    }
+
+    .blink-btn:hover {
+      filter: brightness(1.15);
+    }
+
+    .blink-btn:active {
+      transform: translateY(2px);
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 2px #f8d830; }
+      50% { box-shadow: 0 0 0 2px transparent; }
+    }
+
+    .controls-list {
+      font-size: 8px;
+      line-height: 2;
+      color: #cfc8eb;
+    }
+
+    .controls-list div {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px dashed #352a5c;
+      padding: 2px 0;
+    }
+
+    .key-tag {
+      color: var(--gold);
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .mini-btn {
+      flex: 1;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 8px;
+      padding: 8px 6px;
+      background: #2f2454;
+      color: #e4dff7;
+      border-top: 2px solid #7564ad;
+      border-left: 2px solid #7564ad;
+      border-right: 2px solid #181130;
+      border-bottom: 2px solid #181130;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .mini-btn.active {
+      color: var(--green);
+      border-color: #40e850 #15521c #15521c #40e850;
+    }
+
+    .combo-banner {
+      position: absolute;
+      left: 50%;
+      top: 38%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      font-size: 14px;
+      color: #fff;
+      text-shadow:
+        2px 2px 0 #d82800,
+        -2px -2px 0 #3868f8;
+      opacity: 0;
+      transition: opacity 0.15s, transform 0.35s ease-out;
+      white-space: nowrap;
+      z-index: 4;
+    }
+
+    .combo-banner.show {
+      opacity: 1;
+      transform: translate(-50%, -85%);
+    }
+
+    @media (max-width: 720px) {
+      .game-layout {
+        grid-template-columns: 1fr;
+        justify-items: center;
+      }
+      .left-col, .right-col {
+        display: flex;
+        gap: 10px;
+        width: 308px;
+      }
+      .snes-panel {
+        flex: 1;
+        margin-bottom: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="crt-overlay"></div>
+
+  <div class="cabinet">
+    <div class="header-bar">
+      <div class="title-logo">SUPER TETRA 16</div>
+      <div class="snes-badge">
+        <div class="snes-dots">
+          <span class="snes-dot dot-x"></span>
+          <span class="snes-dot dot-a"></span>
+          <span class="snes-dot dot-y"></span>
+          <span class="snes-dot dot-b"></span>
+        </div>
+        <span>16-BIT ENTERTAINMENT SYSTEM</span>
+      </div>
+    </div>
+
+    <div class="game-layout">
+      <!-- Left Column: Hold + Level/Lines -->
+      <div class="left-col">
+        <div class="snes-panel">
+          <div class="panel-label">HOLD [C/SHIFT]</div>
+          <div class="mini-canvas-wrap">
+            <canvas id="holdCanvas" width="112" height="84"></canvas>
+          </div>
+        </div>
+
+        <div class="snes-panel">
+          <div class="panel-label">LEVEL</div>
+          <div class="stat-value" id="levelDisplay">01</div>
+        </div>
+
+        <div class="snes-panel">
+          <div class="panel-label">LINES</div>
+          <div class="stat-value" id="linesDisplay">000</div>
+        </div>
+
+        <div class="snes-panel">
+          <div class="panel-label">TOP SCORE</div>
+          <div class="stat-value" id="highScoreDisplay">000000</div>
+        </div>
+      </div>
+
+      <!-- Center Playfield -->
+      <div class="board-container">
+        <canvas id="boardCanvas" width="300" height="600"></canvas>
+        <div id="comboBanner" class="combo-banner">TETRA!!</div>
+
+        <div id="overlay" class="overlay">
+          <h2 id="overlayTitle">PRESS START</h2>
+          <p id="overlaySubtitle">16-BIT CHIPTUNE AUDIO &amp; PIXEL ACTION<br>CLEAR LINES TO LEVEL UP!</p>
+          <button id="startBtn" class="blink-btn">START GAME</button>
+        </div>
+      </div>
+
+      <!-- Right Column: Score, Next, Controls, Audio/CRT toggles -->
+      <div class="right-col">
+        <div class="snes-panel">
+          <div class="panel-label">SCORE</div>
+          <div class="stat-value" id="scoreDisplay">000000</div>
+        </div>
+
+        <div class="snes-panel">
+          <div class="panel-label">NEXT</div>
+          <div class="mini-canvas-wrap">
+            <canvas id="nextCanvas" width="112" height="175"></canvas>
+          </div>
+        </div>
+
+        <div class="snes-panel">
+          <div class="panel-label">CONTROLS</div>
+          <div class="controls-list">
+            <div><span>MOVE</span><span class="key-tag">&larr; &rarr;</span></div>
+            <div><span>ROTATE</span><span class="key-tag">&uarr; / Z / X</span></div>
+            <div><span>SOFT DROP</span><span class="key-tag">&darr;</span></div>
+            <div><span>HARD DROP</span><span class="key-tag">SPACE</span></div>
+            <div><span>HOLD</span><span class="key-tag">C / SHIFT</span></div>
+            <div><span>PAUSE</span><span class="key-tag">P / ESC</span></div>
+          </div>
+          <div class="toolbar">
+            <button id="bgmBtn" class="mini-btn active" title="Toggle 16-bit Music">BGM:ON</button>
+            <button id="crtBtn" class="mini-btn active" title="Toggle CRT Scanlines">CRT:ON</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 16-BIT WEB AUDIO SYNTHESIZER (BGM & SFX)
+    // =========================================================================
+    class RetroAudio {
+      constructor() {
+        this.ctx = null;
+        this.bgmEnabled = true;
+        this.isPlayingBgm = false;
+        this.bgmTimer = null;
+        this.stepIndex = 0;
+
+        // Upbeat 16-bit Korobeiniki-inspired chiptune lead + bassline
+        this.melody = [
+          ['E5', 2], ['B4', 1], ['C5', 1], ['D5', 2], ['C5', 1], ['B4', 1],
+          ['A4', 2], ['A4', 1], ['C5', 1], ['E5', 2], ['D5', 1], ['C5', 1],
+          ['B4', 3], ['C5', 1], ['D5', 2], ['E5', 2],
+          ['C5', 2], ['A4', 2], ['A4', 4],
+          ['D5', 3], ['F5', 1], ['A5', 2], ['G5', 1], ['F5', 1],
+          ['E5', 3], ['C5', 1], ['E5', 2], ['D5', 1], ['C5', 1],
+          ['B4', 2], ['B4', 1], ['C5', 1], ['D5', 2], ['E5', 2],
+          ['C5', 2], ['A4', 2], ['A4', 4]
+        ];
+
+        this.noteFreqs = {
+          'A2': 110.00, 'B2': 123.47, 'C3': 130.81, 'D3': 146.83, 'E3': 164.81, 'F3': 174.61, 'G3': 196.00, 'G#3': 207.65,
+          'A3': 220.00, 'B3': 246.94, 'C4': 261.63, 'D4': 293.66, 'E4': 329.63, 'F4': 349.23, 'G4': 392.00, 'G#4': 415.30,
+          'A4': 440.00, 'B4': 493.88, 'C5': 523.25, 'D5': 587.33, 'E5': 659.25, 'F5': 698.46, 'G5': 783.99, 'A5': 880.00
+        };
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioCtx();
+        }
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      playTone(freq, duration, type = 'square', gainVal = 0.08, slideTo = null) {
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, now);
+        if (slideTo) {
+          osc.frequency.exponentialRampToValueAtTime(slideTo, now + duration);
+        }
+        gain.gain.setValueAtTime(gainVal, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + duration);
+      }
+
+      sfxMove() {
+        this.playTone(320, 0.045, 'triangle', 0.07);
+      }
+
+      sfxRotate() {
+        this.playTone(440, 0.08, 'square', 0.06, 660);
+      }
+
+      sfxLock() {
+        this.playTone(170, 0.09, 'triangle', 0.11, 95);
+      }
+
+      sfxHardDrop() {
+        this.playTone(260, 0.11, 'sawtooth', 0.09, 75);
+      }
+
+      sfxHold() {
+        this.playTone(392, 0.07, 'sine', 0.08, 523.25);
+      }
+
+      sfxClear(lines) {
+        const notes = lines === 4
+          ? [523.25, 659.25, 783.99, 1046.5]
+          : [440, 554.37, 659.25];
+        notes.forEach((n, idx) => {
+          setTimeout(() => {
+            this.playTone(n, 0.14, 'square', 0.09);
+          }, idx * 65);
+        });
+      }
+
+      sfxGameOver() {
+        const notes = [440, 415.3, 392, 349.23];
+        notes.forEach((n, idx) => {
+          setTimeout(() => {
+            this.playTone(n, 0.25, 'sawtooth', 0.08);
+          }, idx * 180);
+        });
+      }
+
+      startBgm() {
+        this.init();
+        if (this.isPlayingBgm) return;
+        this.isPlayingBgm = true;
+        this.stepIndex = 0;
+        this.scheduleNextNote();
+      }
+
+      stopBgm() {
+        this.isPlayingBgm = false;
+        if (this.bgmTimer) {
+          clearTimeout(this.bgmTimer);
+          this.bgmTimer = null;
+        }
+      }
+
+      scheduleNextNote() {
+        if (!this.isPlayingBgm) return;
+        const [note, beats] = this.melody[this.stepIndex];
+        const unitMs = 135;
+        const durationSec = (beats * unitMs) / 1000;
+
+        if (this.bgmEnabled && this.ctx) {
+          const freq = this.noteFreqs[note] || 440;
+          // Lead channel
+          this.playTone(freq, durationSec * 0.85, 'square', 0.038);
+          // Sub-octave triangle bass bounce
+          this.playTone(freq / 2, durationSec * 0.55, 'triangle', 0.045);
+        }
+
+        this.stepIndex = (this.stepIndex + 1) % this.melody.length;
+        this.bgmTimer = setTimeout(() => this.scheduleNextNote(), beats * unitMs);
+      }
+    }
+
+    // =========================================================================
+    // TETROMINO DEFINITIONS & SNES PALETTE
+    // =========================================================================
+    const COLS = 10;
+    const ROWS = 20;
+    const BLOCK = 30;
+
+    const PIECES = {
+      I: {
+        color: '#28e0f8',
+        light: '#acf8ff',
+        dark: '#007898',
+        matrix: [
+          [0, 0, 0, 0],
+          [1, 1, 1, 1],
+          [0, 0, 0, 0],
+          [0, 0, 0, 0]
+        ]
+      },
+      J: {
+        color: '#3868f8',
+        light: '#9cb8ff',
+        dark: '#102890',
+        matrix: [
+          [1, 0, 0],
+          [1, 1, 1],
+          [0, 0, 0]
+        ]
+      },
+      L: {
+        color: '#f89020',
+        light: '#ffd090',
+        dark: '#984000',
+        matrix: [
+          [0, 0, 1],
+          [1, 1, 1],
+          [0, 0, 0]
+        ]
+      },
+      O: {
+        color: '#f8d828',
+        light: '#ffffa8',
+        dark: '#987800',
+        matrix: [
+          [1, 1],
+          [1, 1]
+        ]
+      },
+      S: {
+        color: '#40e850',
+        light: '#a8ffb0',
+        dark: '#088020',
+        matrix: [
+          [0, 1, 1],
+          [1, 1, 0],
+          [0, 0, 0]
+        ]
+      },
+      T: {
+        color: '#b848f8',
+        light: '#e8b0ff',
+        dark: '#581090',
+        matrix: [
+          [0, 1, 0],
+          [1, 1, 1],
+          [0, 0, 0]
+        ]
+      },
+      Z: {
+        color: '#f83850',
+        light: '#ffa0b0',
+        dark: '#900820',
+        matrix: [
+          [1, 1, 0],
+          [0, 1, 1],
+          [0, 0, 0]
+        ]
+      }
+    };
+
+    const PIECE_KEYS = Object.keys(PIECES);
+
+    // =========================================================================
+    // GAME ENGINE
+    // =========================================================================
+    const boardCanvas = document.getElementById('boardCanvas');
+    const ctx = boardCanvas.getContext('2d');
+    const nextCanvas = document.getElementById('nextCanvas');
+    const nextCtx = nextCanvas.getContext('2d');
+    const holdCanvas = document.getElementById('holdCanvas');
+    const holdCtx = holdCanvas.getContext('2d');
+
+    const scoreEl = document.getElementById('scoreDisplay');
+    const highScoreEl = document.getElementById('highScoreDisplay');
+    const levelEl = document.getElementById('levelDisplay');
+    const linesEl = document.getElementById('linesDisplay');
+    const overlay = document.getElementById('overlay');
+    const overlayTitle = document.getElementById('overlayTitle');
+    const overlaySubtitle = document.getElementById('overlaySubtitle');
+    const startBtn = document.getElementById('startBtn');
+    const comboBanner = document.getElementById('comboBanner');
+
+    const audio = new RetroAudio();
+
+    let board = createMatrix(COLS, ROWS);
+    let bag = [];
+    let nextQueue = [];
+    let activePiece = null;
+    let holdType = null;
+    let canHold = true;
+
+    let score = 0;
+    let highScore = Number(localStorage.getItem('super_tetra_16_hi') || 0);
+    let lines = 0;
+    let level = 1;
+
+    let dropCounter = 0;
+    let lastTime = 0;
+    let gameState = 'TITLE'; // TITLE, PLAYING, PAUSED, GAMEOVER
+    let particles = [];
+    let flashRows = [];
+    let flashTimer = 0;
+
+    highScoreEl.textContent = String(highScore).padStart(6, '0');
+
+    function createMatrix(w, h) {
+      return Array.from({ length: h }, () => Array(w).fill(null));
+    }
+
+    function cloneMatrix(m) {
+      return m.map(row => [...row]);
+    }
+
+    function refillBag() {
+      const shuffled = [...PIECE_KEYS];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      bag.push(...shuffled);
+    }
+
+    function pullFromBag() {
+      if (bag.length < 7) refillBag();
+      return bag.shift();
+    }
+
+    function spawnPiece(type = null) {
+      const pieceType = type || nextQueue.shift();
+      while (nextQueue.length < 3) {
+        nextQueue.push(pullFromBag());
+      }
+      const def = PIECES[pieceType];
+      activePiece = {
+        type: pieceType,
+        matrix: cloneMatrix(def.matrix),
+        x: Math.floor((COLS - def.matrix[0].length) / 2),
+        y: 0
+      };
+
+      if (collides(board, activePiece)) {
+        triggerGameOver();
+      }
+      drawMiniCanvases();
+    }
+
+    function collides(grid, piece, offsetX = 0, offsetY = 0, testMatrix = piece.matrix) {
+      for (let r = 0; r < testMatrix.length; r++) {
+        for (let c = 0; c < testMatrix[r].length; c++) {
+          if (!testMatrix[r][c]) continue;
+          const nx = piece.x + c + offsetX;
+          const ny = piece.y + r + offsetY;
+          if (nx < 0 || nx >= COLS || ny >= ROWS) return true;
+          if (ny >= 0 && grid[ny][nx]) return true;
+        }
+      }
+      return false;
+    }
+
+    function rotateMatrix(matrix, dir) {
+      const N = matrix.length;
+      const result = matrix.map((_, i) => matrix.map(col => col[i]));
+      if (dir > 0) {
+        return result.map(row => row.reverse());
+      }
+      return result.reverse();
+    }
+
+    function rotatePiece(dir) {
+      if (!activePiece) return;
+      const rotated = rotateMatrix(activePiece.matrix, dir);
+      const kicks = [0, -1, 1, -2, 2];
+      for (const kick of kicks) {
+        if (!collides(board, activePiece, kick, 0, rotated)) {
+          activePiece.matrix = rotated;
+          activePiece.x += kick;
+          audio.sfxRotate();
+          return;
+        }
+      }
+    }
+
+    function movePiece(dx) {
+      if (!activePiece) return;
+      if (!collides(board, activePiece, dx, 0)) {
+        activePiece.x += dx;
+        audio.sfxMove();
+      }
+    }
+
+    function getGhostY() {
+      let gy = activePiece.y;
+      while (!collides(board, activePiece, 0, gy - activePiece.y + 1)) {
+        gy++;
+      }
+      return gy;
+    }
+
+    function softDrop() {
+      if (!activePiece) return;
+      if (!collides(board, activePiece, 0, 1)) {
+        activePiece.y++;
+        score += 1;
+        updateStatsUI();
+      } else {
+        lockPiece();
+      }
+      dropCounter = 0;
+    }
+
+    function hardDrop() {
+      if (!activePiece) return;
+      const startY = activePiece.y;
+      activePiece.y = getGhostY();
+      score += (activePiece.y - startY) * 2;
+      audio.sfxHardDrop();
+      lockPiece();
+      dropCounter = 0;
+    }
+
+    function holdPiece() {
+      if (!activePiece || !canHold) return;
+      audio.sfxHold();
+      const currentType = activePiece.type;
+      if (!holdType) {
+        holdType = currentType;
+        spawnPiece();
+      } else {
+        const swapType = holdType;
+        holdType = currentType;
+        spawnPiece(swapType);
+      }
+      canHold = false;
+      drawMiniCanvases();
+    }
+
+    function lockPiece() {
+      const { matrix, x, y, type } = activePiece;
+      for (let r = 0; r < matrix.length; r++) {
+        for (let c = 0; c < matrix[r].length; c++) {
+          if (matrix[r][c]) {
+            const by = y + r;
+            const bx = x + c;
+            if (by >= 0 && by < ROWS && bx >= 0 && bx < COLS) {
+              board[by][bx] = type;
+            }
+          }
+        }
+      }
+      audio.sfxLock();
+      checkLines();
+      canHold = true;
+      spawnPiece();
+    }
+
+    function checkLines() {
+      const cleared = [];
+      for (let r = ROWS - 1; r >= 0; r--) {
+        if (board[r].every(cell => cell !== null)) {
+          cleared.push(r);
+        }
+      }
+
+      if (cleared.length === 0) return;
+
+      // Spawn 16-bit pixel sparks
+      cleared.forEach(rowIdx => {
+        for (let c = 0; c < COLS; c++) {
+          const cellType = board[rowIdx][c];
+          const color = PIECES[cellType]?.color || '#fff';
+          for (let i = 0; i < 3; i++) {
+            particles.push({
+              x: c * BLOCK + BLOCK / 2,
+              y: rowIdx * BLOCK + BLOCK / 2,
+              vx: (Math.random() - 0.5) * 6,
+              vy: (Math.random() - 0.8) * 6,
+              size: 5,
+              color,
+              life: 1.0
+            });
+          }
+        }
+      });
+
+      flashRows = cleared;
+      flashTimer = 140;
+
+      // Remove cleared rows
+      cleared.sort((a, b) => a - b).forEach(r => {
+        board.splice(r, 1);
+        board.unshift(Array(COLS).fill(null));
+      });
+
+      const lineScores = [0, 100, 300, 500, 800];
+      score += lineScores[cleared.length] * level;
+      lines += cleared.length;
+      level = Math.floor(lines / 10) + 1;
+
+      const labels = ['', 'SINGLE!', 'DOUBLE!', 'TRIPLE!', 'SUPER TETRA!!'];
+      showBanner(labels[cleared.length]);
+      audio.sfxClear(cleared.length);
+      updateStatsUI();
+    }
+
+    function showBanner(text) {
+      comboBanner.textContent = text;
+      comboBanner.classList.add('show');
+      setTimeout(() => comboBanner.classList.remove('show'), 800);
+    }
+
+    function updateStatsUI() {
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem('super_tetra_16_hi', String(highScore));
+      }
+      scoreEl.textContent = String(score).padStart(6, '0');
+      highScoreEl.textContent = String(highScore).padStart(6, '0');
+      levelEl.textContent = String(level).padStart(2, '0');
+      linesEl.textContent = String(lines).padStart(3, '0');
+    }
+
+    // =========================================================================
+    // 16-BIT PIXEL BLOCK RENDERER
+    // =========================================================================
+    function drawSnesTile(context, px, py, size, type, alpha = 1) {
+      const pal = PIECES[type];
+      if (!pal) return;
+      context.save();
+      context.globalAlpha = alpha;
+
+      // Base fill
+      context.fillStyle = pal.color;
+      context.fillRect(px, py, size, size);
+
+      const b = Math.max(3, Math.floor(size * 0.13));
+
+      // Top & left specular bevel
+      context.fillStyle = pal.light;
+      context.fillRect(px, py, size, b);
+      context.fillRect(px, py, b, size);
+
+      // Bottom & right shadow bevel
+      context.fillStyle = pal.dark;
+      context.fillRect(px, py + size - b, size, b);
+      context.fillRect(px + size - b, py, b, size);
+
+      // Classic SNES inner jewel glint
+      context.fillStyle = '#ffffff';
+      context.fillRect(px + b + 2, py + b + 2, b, b);
+
+      // Dark 1px pixel border
+      context.strokeStyle = '#090714';
+      context.lineWidth = 1;
+      context.strokeRect(px + 0.5, py + 0.5, size - 1, size - 1);
+
+      context.restore();
+    }
+
+    function drawBoard() {
+      ctx.fillStyle = '#090714';
+      ctx.fillRect(0, 0, boardCanvas.width, boardCanvas.height);
+
+      // Subtle 16-bit background grid
+      ctx.strokeStyle = 'rgba(124, 107, 184, 0.12)';
+      ctx.lineWidth = 1;
+      for (let c = 1; c < COLS; c++) {
+        ctx.beginPath();
+        ctx.moveTo(c * BLOCK, 0);
+        ctx.lineTo(c * BLOCK, ROWS * BLOCK);
+        ctx.stroke();
+      }
+      for (let r = 1; r < ROWS; r++) {
+        ctx.beginPath();
+        ctx.moveTo(0, r * BLOCK);
+        ctx.lineTo(COLS * BLOCK, r * BLOCK);
+        ctx.stroke();
+      }
+
+      // Locked blocks
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          if (board[r][c]) {
+            drawSnesTile(ctx, c * BLOCK, r * BLOCK, BLOCK, board[r][c]);
+          }
+        }
+      }
+
+      // Ghost + Active piece
+      if (activePiece && gameState === 'PLAYING') {
+        const ghostY = getGhostY();
+        const { matrix, x, y, type } = activePiece;
+
+        // Ghost outline
+        for (let r = 0; r < matrix.length; r++) {
+          for (let c = 0; c < matrix[r].length; c++) {
+            if (matrix[r][c]) {
+              drawSnesTile(ctx, (x + c) * BLOCK, (ghostY + r) * BLOCK, BLOCK, type, 0.22);
+            }
+          }
+        }
+
+        // Active piece
+        for (let r = 0; r < matrix.length; r++) {
+          for (let c = 0; c < matrix[r].length; c++) {
+            if (matrix[r][c]) {
+              drawSnesTile(ctx, (x + c) * BLOCK, (y + r) * BLOCK, BLOCK, type, 1);
+            }
+          }
+        }
+      }
+
+      // Flash effect on line clear
+      if (flashTimer > 0) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+        flashRows.forEach(r => {
+          ctx.fillRect(0, r * BLOCK, COLS * BLOCK, BLOCK);
+        });
+      }
+
+      // Particles
+      for (const p of particles) {
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+      }
+    }
+
+    function drawMiniPiece(context, type, offsetY, tileSize = 20) {
+      if (!type) return;
+      const matrix = PIECES[type].matrix;
+      const w = matrix[0].length * tileSize;
+      const startX = Math.floor((context.canvas.width - w) / 2);
+      for (let r = 0; r < matrix.length; r++) {
+        for (let c = 0; c < matrix[r].length; c++) {
+          if (matrix[r][c]) {
+            drawSnesTile(context, startX + c * tileSize, offsetY + r * tileSize, tileSize, type);
+          }
+        }
+      }
+    }
+
+    function drawMiniCanvases() {
+      // Hold
+      holdCtx.fillStyle = '#0b0817';
+      holdCtx.fillRect(0, 0, holdCanvas.width, holdCanvas.height);
+      if (holdType) {
+        drawMiniPiece(holdCtx, holdType, 16, 20);
+      }
+
+      // Next 3
+      nextCtx.fillStyle = '#0b0817';
+      nextCtx.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
+      nextQueue.slice(0, 3).forEach((type, idx) => {
+        drawMiniPiece(nextCtx, type, 10 + idx * 55, 18);
+      });
+    }
+
+    // =========================================================================
+    // MAIN LOOP & STATE MANAGEMENT
+    // =========================================================================
+    function getDropInterval() {
+      return Math.max(90, 850 - (level - 1) * 65);
+    }
+
+    function update(time = 0) {
+      const dt = time - lastTime;
+      lastTime = time;
+
+      if (gameState === 'PLAYING') {
+        dropCounter += dt;
+        if (dropCounter >= getDropInterval()) {
+          if (!collides(board, activePiece, 0, 1)) {
+            activePiece.y++;
+          } else {
+            lockPiece();
+          }
+          dropCounter = 0;
+        }
+      }
+
+      if (flashTimer > 0) {
+        flashTimer = Math.max(0, flashTimer - dt);
+      }
+
+      // Update particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.22;
+        p.life -= 0.035;
+        if (p.life <= 0) particles.splice(i, 1);
+      }
+
+      drawBoard();
+      requestAnimationFrame(update);
+    }
+
+    function startNewGame() {
+      audio.init();
+      board = createMatrix(COLS, ROWS);
+      bag = [];
+      nextQueue = [];
+      holdType = null;
+      canHold = true;
+      score = 0;
+      lines = 0;
+      level = 1;
+      dropCounter = 0;
+      updateStatsUI();
+
+      refillBag();
+      nextQueue.push(pullFromBag(), pullFromBag(), pullFromBag());
+      spawnPiece();
+
+      gameState = 'PLAYING';
+      overlay.classList.add('hidden');
+      audio.startBgm();
+    }
+
+    function togglePause() {
+      if (gameState === 'PLAYING') {
+        gameState = 'PAUSED';
+        overlayTitle.textContent = 'PAUSED';
+        overlaySubtitle.innerHTML = 'TAKE A BREATHER, PLAYER 1!';
+        startBtn.textContent = 'RESUME';
+        overlay.classList.remove('hidden');
+        audio.stopBgm();
+      } else if (gameState === 'PAUSED') {
+        gameState = 'PLAYING';
+        overlay.classList.add('hidden');
+        audio.startBgm();
+      }
+    }
+
+    function triggerGameOver() {
+      gameState = 'GAMEOVER';
+      audio.stopBgm();
+      audio.sfxGameOver();
+      overlayTitle.textContent = 'GAME OVER';
+      overlaySubtitle.innerHTML = `FINAL SCORE: ${score}<br>LINES CLEARED: ${lines}`;
+      startBtn.textContent = 'PLAY AGAIN';
+      overlay.classList.remove('hidden');
+    }
+
+    // =========================================================================
+    // INPUT BINDINGS
+    // =========================================================================
+    window.addEventListener('keydown', e => {
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) {
+        e.preventDefault();
+      }
+
+      if (e.code === 'KeyP' || e.code === 'Escape') {
+        if (gameState === 'PLAYING' || gameState === 'PAUSED') {
+          togglePause();
+        }
+        return;
+      }
+
+      if (gameState !== 'PLAYING') {
+        if (e.code === 'Enter' || e.code === 'Space') {
+          if (gameState === 'PAUSED') togglePause();
+          else startNewGame();
+        }
+        return;
+      }
+
+      switch (e.code) {
+        case 'ArrowLeft':
+        case 'KeyA':
+          movePiece(-1);
+          break;
+        case 'ArrowRight':
+        case 'KeyD':
+          movePiece(1);
+          break;
+        case 'ArrowDown':
+        case 'KeyS':
+          softDrop();
+          break;
+        case 'ArrowUp':
+        case 'KeyX':
+        case 'KeyW':
+          rotatePiece(1);
+          break;
+        case 'KeyZ':
+          rotatePiece(-1);
+          break;
+        case 'Space':
+          hardDrop();
+          break;
+        case 'KeyC':
+        case 'ShiftLeft':
+        case 'ShiftRight':
+          holdPiece();
+          break;
+      }
+    });
+
+    startBtn.addEventListener('click', () => {
+      if (gameState === 'PAUSED') {
+        togglePause();
+      } else {
+        startNewGame();
+      }
+    });
+
+    const bgmBtn = document.getElementById('bgmBtn');
+    bgmBtn.addEventListener('click', () => {
+      audio.bgmEnabled = !audio.bgmEnabled;
+      bgmBtn.textContent = audio.bgmEnabled ? 'BGM:ON' : 'BGM:OFF';
+      bgmBtn.classList.toggle('active', audio.bgmEnabled);
+    });
+
+    const crtBtn = document.getElementById('crtBtn');
+    crtBtn.addEventListener('click', () => {
+      document.body.classList.toggle('crt-off');
+      const isOn = !document.body.classList.contains('crt-off');
+      crtBtn.textContent = isOn ? 'CRT:ON' : 'CRT:OFF';
+      crtBtn.classList.toggle('active', isOn);
+    });
+
+    // Initial render
+    drawMiniCanvases();
+    requestAnimationFrame(update);
+  </script>
+  <a href="../index.html" id="arcadeBackBtn" style="position:fixed; top:12px; left:12px; z-index:999999; background:rgba(20,16,38,0.9); color:#38e0f8; border:2px solid #5c4b99; border-radius:8px; padding:6px 14px; font-family:'Press Start 2P', monospace; font-size:10px; font-weight:bold; text-decoration:none; box-shadow:0 4px 15px rgba(0,0,0,0.6); backdrop-filter:blur(4px); display:flex; align-items:center; gap:6px; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='#5c4b99'; this.style.color='#f8d830';" onmouseout="this.style.background='rgba(20,16,38,0.9)'; this.style.color='#38e0f8';">
+    ⬅ ARCADE MENU
+  </a>
+</body>
+</html>

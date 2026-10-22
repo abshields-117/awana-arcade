@@ -1,5 +1,5 @@
 // Awana Retro Arcade — Offline Service Worker
-const CACHE_NAME = 'awanacade-v12';
+const CACHE_NAME = 'awanacade-v13';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -21,7 +21,8 @@ const ASSETS_TO_CACHE = [
   './games/flaming_sword_defense.html',
   './games/phantom_manor.html',
   './games/path_of_hallows.html',
-  './games/eden_screensaver.html'
+  './games/eden_screensaver.html',
+  './games/super_tetra_16.html'
 ];
 
 self.addEventListener('install', (e) => {
