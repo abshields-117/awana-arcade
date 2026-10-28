@@ -31,7 +31,7 @@ The original story still requires all six manor pages, portrait, music box and r
 
 ## Presentation and controls
 
-Procedural, asset-free art adds layered tree canopies, lichen and ironwork, glasshouse roofs/vines, cellar plumbing/vaults, a star-reflecting moonwell, leaves, fireflies, candle breathing, soft shadows and faint slowly fading paper-ghost decorations. Foreground prompts and gold clue pages stay legible. All decorative motion uses the existing simulation clock: pause, blur and reading dialogs freeze it. Full motion is the default. OS reduced-motion freezes/hides decorative effects, not player controls; there is no visible scenery selector and no saved scenery preference is read. Sound starts off; existing Music/Effects levels, mute and pause remain available. No new timers, animation chains, remote assets or tracking.
+Procedural, asset-free art adds layered tree canopies, lichen and ironwork, glasshouse roofs/vines, cellar plumbing/vaults, a star-reflecting moonwell, leaves, fireflies, candle breathing, soft shadows and faint slowly fading paper-ghost decorations. Foreground prompts and gold clue pages stay legible. All decorative motion uses the existing simulation clock: pause, blur and reading dialogs freeze it. Full motion is the default. OS reduced-motion freezes/hides decorative effects, not player controls; there is no visible scenery selector and no saved scenery preference is read. Music defaults on after **Enter the manor** (a browser gesture); **M / Sound** mutes both channels for the rest of this session until explicitly unmuted. Indoor rooms use the original minor music-box phrase; outdoor/glass gardens use a distinct slower pentatonic Moonlit Trail score. One bounded scheduler switches groups without stacking music voices. Pause, hidden tabs, reading and endings suspend audio; closing/resuming through controls restores it unless muted. Existing independent Music/Effects levels remain available. No new timers, animation chains, remote assets or tracking.
 
 Progress is **session-only**. Reload/restart clears map discovery, visits, puzzles, notes and badges. Wrong puzzle answers never take hearts or rewards; all selections can be corrected. Clues, puzzle controls and atlas exit descriptions are DOM text, but canvas exploration is not a screen-reader-only game.
 
@@ -51,6 +51,15 @@ NODE_PATH=/path/to/playwright/node_modules ARTIFACT_DIR=/path/to/evidence node t
 ```
 
 Set `ARCADE_URL=https://awana-arcade.vercel.app` to repeat against the deployed site. Evidence defaults to the environment scratch directory; `result.json` records checks and keyboard-leg count, and screenshots include cemetery, woods, hollow, greenhouse/tank, basement/valves, cistern, finale, enlarged atlas and mobile.
+
+## Atmosphere refresh
+
+- **Pip** (Foyer lantern moth), **Moss** (Courtyard groundskeeper), and **Luma** (Woods sheet ghost) offer short, changing hints through **E / Interact**. Optional only: no reward gates or added collision boxes. Reading freezes movement, threats and scenery.
+- Original roaming ghosts are now white flowing sheets with shaded folds, expressive faces, scalloped animated hems and gradual fades. They signal `?` for **1.2 seconds**, pursue for at most **3 seconds** at **24 px/s** (explorer: 82; quiet: 43), remain within **64 pixels** of home, and drift home when you leave, reach a clue/door safe bubble, or cast the lantern. Sheet contact never takes hearts; original bats retain their gentle, mercy-protected startles. No new outdoor enemies.
+- Outdoor/glass garden fireflies glow, drift and fade; indoor candles have small flickering flames; wall spiders crawl cosmetically without damage. OS reduced motion and all pause/dialogue clocks are retained.
+- Canvas labels have dark backplates and a 9px logical minimum; DOM objectives/prompts are larger. The inset has a clearer heading; the sidebar adds readable directional exits and the wider atlas uses larger names. All required clues remain DOM text.
+- Refresh verification: **53 Node tests** passed, including test-first audio/NPC/chase coverage and a pending-resume/manual-mute race regression. All five existing browser scripts passed. Expanded keyboard smoke covers all three NPCs, changing hints, default/transition/mute/dialogue audio state, candle/spider/outdoor pixel changes, pause/reduced-motion pixel equality, mobile atlas bounds and fresh-query offline play. No human audio listening or physical Chromebook testing is claimed.
+- Before editing, main was fast-forwarded to `90282e4` to preserve SUPER TETRA 16. Backup: active profile `cache/scratch/manor-pre-atmosphere-current.tar`. Both Manor hub links use `?v=14`; this refresh initially bumps the shared cache to v14 (later unrelated additions may advance it).
 
 ## Limitations
 
