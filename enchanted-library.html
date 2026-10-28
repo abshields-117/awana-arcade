@@ -75,6 +75,7 @@ const shade=ctx.createRadialGradient(1000,500,250,800,500,1100);shade.addColorSt
 }
 function resize(){const d=Math.min(devicePixelRatio||1,2);w=innerWidth;h=innerHeight;canvas.width=Math.round(w*d);canvas.height=Math.round(h*d);draw()}
 addEventListener('resize',resize);resize();
-function frame(now){const dt=last?Math.min((now-last)/1000,.05):0;last=now;if(!paused&&!reduced.matches&&!document.hidden){time+=dt;draw()}requestAnimationFrame(frame)}requestAnimationFrame(frame);
+let previousReduced=reduced.matches;
+function frame(now){if(previousReduced!==reduced.matches){previousReduced=reduced.matches;motionLabel()}const dt=last?Math.min((now-last)/1000,.05):0;last=now;if(!paused&&!reduced.matches&&!document.hidden){time+=dt;draw()}requestAnimationFrame(frame)}requestAnimationFrame(frame);
 </script>
 </body></html>
