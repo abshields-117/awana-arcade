@@ -32,11 +32,17 @@ jobs:
           trap 'kill "$SERVER"' EXIT
           curl --retry 10 --retry-connrefused --retry-delay 1 --fail http://127.0.0.1:8765/ > /dev/null
           NODE_PATH="$RUNNER_TEMP/hallows-tools/node_modules" ARTIFACT_DIR="$RUNNER_TEMP/physical-evidence" node tests/physical-browser-smoke.cjs
+          NODE_PATH="$RUNNER_TEMP/hallows-tools/node_modules" EVIDENCE_DIR="$RUNNER_TEMP/library-evidence" node tests/enchanted-library-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: physical-browser-screenshots
           path: ${{ runner.temp }}/physical-evidence
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: enchanted-library-screenshots
+          path: ${{ runner.temp }}/library-evidence
       - name: Exercise Phantom Manor Whispering Roots in real Chromium
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 &

@@ -20,7 +20,7 @@ Story reproduced from user-supplied text, with the three-dot ellipsis tidied to 
 
 The HTML contains all CSS, JavaScript and artwork and works from a local file with networking disabled. It does not use storage, external fonts, images, libraries or network calls. A managed Chromebook may require the hub's installed PWA instead of file launch.
 
-This feature branch intentionally does **not** edit `index.html` or `sw.js`. Parent integration must add a link in **Physical Games**, outside the playable arcade count; add the canonical HTML path to the offline precache and bump the SW version. Verify a never-before-visited version-query launch offline after integration. Until then, hosted/PWA offline caching is not claimed. A copied HTML file alone cannot supply the separate Awanacade menu destination.
+Integrated into **Physical Games**, outside the playable arcade count, with one `enchanted-library.html?v=15` launch card. The canonical HTML is precached in **awanacade-v15**. A copied HTML file alone cannot supply the separate Awanacade menu destination. The browser suite also verifies a never-before-visited version-query launch offline after installing from the hosted hub.
 
 ## Verification
 
