@@ -40,8 +40,8 @@ test('map links never run through an unrelated area marker',()=>{
  const g=load(),m=g.getMap(),pos=Object.fromEntries(m.nodes.map(n=>[n.id,n.position]));
  for(const [id,r] of Object.entries(g.getRooms()))for(const d of r.objects.filter(o=>o.type==='door')){const a=pos[id],b=pos[d.to],dx=b[0]-a[0],dy=b[1]-a[1];for(const [n,p] of Object.entries(pos)){if(n===id||n===d.to)continue;const t=((p[0]-a[0])*dx+(p[1]-a[1])*dy)/(dx*dx+dy*dy);if(t>0&&t<1)assert.ok(Math.hypot(p[0]-a[0]-t*dx,p[1]-a[1]-t*dy)>14,`${id} → ${d.to} must not imply a stop at ${n}`);}}
 });
-test('release keeps one updated Manor card, all 17 cabinets and a new offline cache',()=>{
+test('release keeps one updated Manor card, all 18 cabinets and a new offline cache',()=>{
  const fs=require('node:fs'),path=require('node:path'),root=path.join(__dirname,'..'),hub=fs.readFileSync(path.join(root,'index.html'),'utf8'),sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');
- assert.equal((hub.match(/href="games\/phantom_manor.html\?v=14"/g)||[]).length,2);assert.match(hub,/Whispering Roots/);assert.ok(Number(sw.match(/awanacade-v(\d+)/)[1])>=11);assert.equal(new Set([...hub.matchAll(/href="games\/([^"?]+)/g)].map(m=>m[1])).size,17);assert.match(hub,/path_of_hallows.html\?v=9/);
+ assert.equal((hub.match(/href="games\/phantom_manor.html\?v=14"/g)||[]).length,2);assert.match(hub,/Whispering Roots/);assert.ok(Number(sw.match(/awanacade-v(\d+)/)[1])>=11);assert.equal(new Set([...hub.matchAll(/href="games\/([^"?]+)/g)].map(m=>m[1])).size,18);assert.match(hub,/path_of_hallows.html\?v=9/);
 });
 module.exports={newTrail};

@@ -1,0 +1,2693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Royalty Runway — Awana Arcade</title>
+  <style>
+    :root {
+      --bg: #140d21;
+      --panel-bg: rgba(26, 17, 43, 0.92);
+      --card-bg: #23163a;
+      --card-hover: #342154;
+      --gold: #ffd166;
+      --gold-dark: #b8860b;
+      --pink: #ff4d8d;
+      --pink-glow: rgba(255, 77, 141, 0.4);
+      --purple: #9d4edd;
+      --teal: #06d6a0;
+      --blue: #118ab2;
+      --coral: #ff6b6b;
+      --text: #f8f9fa;
+      --text-muted: #c8b6e2;
+      --border: #4a287a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(circle at 50% 10%, rgba(157, 78, 221, 0.25) 0%, transparent 60%),
+        radial-gradient(circle at 85% 85%, rgba(255, 77, 141, 0.18) 0%, transparent 50%),
+        radial-gradient(circle at 15% 90%, rgba(6, 214, 160, 0.15) 0%, transparent 50%),
+        linear-gradient(to bottom, #0f0919, #1a0f2b);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Header Nav */
+    header {
+      background: rgba(20, 13, 33, 0.95);
+      border-bottom: 2px solid var(--border);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .nav-btn {
+      background: #2b1b46;
+      color: var(--text);
+      border: 1px solid #6b3ba8;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .nav-btn:hover {
+      background: #43286f;
+      border-color: var(--gold);
+      box-shadow: 0 0 10px rgba(255, 209, 102, 0.3);
+      color: #fff;
+    }
+
+    .game-title-badge {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .title-main {
+      font-family: Georgia, serif;
+      font-weight: 900;
+      font-size: clamp(16px, 3vw, 22px);
+      letter-spacing: 1.5px;
+      background: linear-gradient(90deg, #ffd166, #ff758c, #c77dff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 20px rgba(255, 117, 140, 0.3);
+    }
+
+    .title-sub {
+      font-size: 11px;
+      color: var(--gold);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .header-tools {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tool-btn {
+      background: #24163b;
+      color: var(--text);
+      border: 1px solid #58338e;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s;
+    }
+
+    .tool-btn:hover {
+      background: #392261;
+      border-color: var(--pink);
+    }
+
+    /* Main Container */
+    main {
+      flex: 1;
+      max-width: 1360px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* App Views */
+    #dressing-view {
+      display: grid;
+      grid-template-columns: 340px 1fr 340px;
+      gap: 14px;
+      align-items: stretch;
+      min-height: 640px;
+    }
+
+    @media (max-width: 1100px) {
+      #dressing-view {
+        grid-template-columns: 280px 1fr 280px;
+        gap: 10px;
+      }
+    }
+
+    @media (max-width: 900px) {
+      #dressing-view {
+        grid-template-columns: 1fr;
+        display: flex;
+        flex-direction: column;
+      }
+    }
+
+    /* Card Panels */
+    .salon-card {
+      background: var(--panel-bg);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .salon-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--gold), var(--pink), var(--purple));
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(157, 78, 221, 0.25);
+      padding-bottom: 8px;
+    }
+
+    .panel-title {
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--gold);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Tabs */
+    .tab-row {
+      display: flex;
+      gap: 6px;
+      background: rgba(18, 11, 30, 0.7);
+      padding: 4px;
+      border-radius: 10px;
+      border: 1px solid #3d2067;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      flex: 1;
+      min-width: 60px;
+      padding: 6px 8px;
+      border-radius: 7px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, #7b2cbf, #9d4edd);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(157, 78, 221, 0.4);
+    }
+
+    /* Grid of Option Tiles */
+    .item-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+      gap: 8px;
+      max-height: 290px;
+      overflow-y: auto;
+      padding: 4px 2px;
+    }
+
+    .item-grid::-webkit-scrollbar {
+      width: 6px;
+    }
+    .item-grid::-webkit-scrollbar-thumb {
+      background: #502b82;
+      border-radius: 3px;
+    }
+
+    .tile-btn {
+      background: var(--card-bg);
+      border: 1.5px solid #4a287a;
+      border-radius: 10px;
+      padding: 8px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      color: var(--text);
+      transition: all 0.15s;
+      position: relative;
+      min-height: 72px;
+    }
+
+    .tile-btn:hover {
+      background: var(--card-hover);
+      border-color: var(--pink);
+      transform: translateY(-2px);
+    }
+
+    .tile-btn.selected {
+      border-color: var(--gold);
+      background: rgba(157, 78, 221, 0.35);
+      box-shadow: 0 0 12px rgba(255, 209, 102, 0.4);
+    }
+
+    .tile-icon {
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .tile-label {
+      font-size: 10.5px;
+      font-weight: 700;
+      text-align: center;
+      line-height: 1.2;
+    }
+
+    /* Swatches for Dyes */
+    .swatch-group-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+
+    .swatches-row {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    .color-swatch {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+    }
+
+    .color-swatch:hover {
+      transform: scale(1.15);
+      border-color: #fff;
+    }
+
+    .color-swatch.active {
+      transform: scale(1.18);
+      border-color: var(--gold);
+      box-shadow: 0 0 10px var(--gold);
+    }
+
+    /* Gem Tray */
+    .gem-tray {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      background: rgba(15, 9, 26, 0.85);
+      border: 1px solid #5a3094;
+      border-radius: 10px;
+      padding: 10px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .gem-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .gem-btn:hover {
+      transform: scale(1.18);
+      box-shadow: 0 0 14px currentColor;
+    }
+
+    .gem-btn.active {
+      transform: scale(1.22);
+      border-color: #fff;
+      box-shadow: 0 0 16px currentColor;
+    }
+
+    /* Stage Canvas Center */
+    .center-stage-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .mirror-frame {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      aspect-ratio: 4 / 5;
+      background: radial-gradient(ellipse at 50% 40%, #301b50 0%, #150a24 100%);
+      border: 4px solid var(--gold);
+      border-radius: 200px 200px 24px 24px;
+      box-shadow: 
+        0 0 25px rgba(255, 209, 102, 0.3),
+        inset 0 0 30px rgba(157, 78, 221, 0.4),
+        0 15px 45px rgba(0, 0, 0, 0.7);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mirror-frame::before {
+      content: '👑';
+      position: absolute;
+      top: 8px;
+      font-size: 20px;
+      z-index: 10;
+      filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5));
+    }
+
+    #stage-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      image-rendering: auto;
+    }
+
+    /* Multi-Tier Wardrobe Rack */
+    .wardrobe-rack-panel {
+      background: rgba(22, 13, 36, 0.95);
+      border: 2px solid #5a3094;
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .rack-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .rack-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .rack-tier {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: rgba(14, 8, 24, 0.6);
+      border: 1px solid #3c1e66;
+      border-radius: 10px;
+      padding: 8px 10px;
+    }
+
+    .tier-bar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .tier-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .tier-items-scroll {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 2px;
+    }
+
+    .tier-items-scroll::-webkit-scrollbar {
+      height: 5px;
+    }
+    .tier-items-scroll::-webkit-scrollbar-thumb {
+      background: #62369d;
+      border-radius: 3px;
+    }
+
+    .rack-garment-card {
+      min-width: 105px;
+      background: #25173d;
+      border: 1.5px solid #4f2b7f;
+      border-radius: 8px;
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .rack-garment-card:hover {
+      background: #39225f;
+      border-color: var(--pink);
+      transform: translateY(-2px);
+    }
+
+    .rack-garment-card.active {
+      border-color: var(--gold);
+      background: rgba(157, 78, 221, 0.4);
+      box-shadow: 0 0 10px rgba(255, 209, 102, 0.4);
+    }
+
+    .garment-preview-box {
+      width: 44px;
+      height: 44px;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .garment-name {
+      font-size: 10px;
+      font-weight: 700;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 95px;
+    }
+
+    /* Action Bar (Walk the Runway!) */
+    .action-bar {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+      align-items: center;
+      justify-content: center;
+      margin-top: 4px;
+    }
+
+    .btn-runway {
+      flex: 1;
+      max-width: 360px;
+      background: linear-gradient(135deg, #ff007f 0%, #9d4edd 50%, #ff5400 100%);
+      background-size: 200% 200%;
+      animation: runwayGlow 3s ease infinite;
+      color: #fff;
+      border: 2px solid var(--gold);
+      border-radius: 12px;
+      padding: 14px 24px;
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 6px 25px rgba(255, 0, 127, 0.5);
+      transition: all 0.2s;
+      text-transform: uppercase;
+    }
+
+    @keyframes runwayGlow {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .btn-runway:hover {
+      transform: scale(1.03);
+      box-shadow: 0 8px 30px rgba(255, 209, 102, 0.6);
+    }
+
+    .btn-secondary {
+      background: #2b1a47;
+      color: var(--text);
+      border: 1.5px solid #5d339b;
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .btn-secondary:hover {
+      background: #3b2462;
+      border-color: var(--gold);
+    }
+
+    /* ======================================================== */
+    /* RUNWAY SHOW & JUDGES VIEW */
+    /* ======================================================== */
+    #runway-view {
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+      width: 100%;
+      align-items: center;
+    }
+
+    .runway-stage-box {
+      position: relative;
+      width: 100%;
+      max-width: 960px;
+      aspect-ratio: 16 / 9;
+      background: #080312;
+      border: 3px solid var(--gold);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(157, 78, 221, 0.3);
+    }
+
+    #runway-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Posing Controls Overlay */
+    .runway-controls-overlay {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      background: rgba(18, 10, 32, 0.85);
+      backdrop-filter: blur(8px);
+      padding: 8px 14px;
+      border-radius: 30px;
+      border: 1.5px solid var(--gold);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+      z-index: 20;
+    }
+
+    .pose-btn {
+      background: linear-gradient(135deg, #7b2cbf, #b5179e);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .pose-btn:hover {
+      transform: scale(1.08);
+      background: linear-gradient(135deg, #ff007f, #ff5400);
+      box-shadow: 0 0 14px rgba(255, 0, 127, 0.6);
+    }
+
+    /* Judges & Podium Scorecard Panel */
+    .judges-box {
+      width: 100%;
+      max-width: 960px;
+      background: var(--panel-bg);
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .judges-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    @media (max-width: 650px) {
+      .judges-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .judge-card {
+      background: #1e1233;
+      border: 1.5px solid #4a287a;
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      text-align: center;
+      position: relative;
+      transition: transform 0.2s;
+    }
+
+    .judge-avatar {
+      font-size: 32px;
+      background: rgba(0, 0, 0, 0.3);
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--gold);
+    }
+
+    .judge-name {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--gold);
+    }
+
+    .judge-title {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: -4px;
+    }
+
+    .judge-stars {
+      font-size: 20px;
+      color: #e5b93b;
+      letter-spacing: 2px;
+      min-height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .judge-comment {
+      font-size: 11px;
+      font-style: italic;
+      color: #f1e4ff;
+      line-height: 1.3;
+      min-height: 30px;
+    }
+
+    /* Podium Overlay Modal */
+    #podium-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 4, 16, 0.88);
+      backdrop-filter: blur(6px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .podium-content {
+      background: linear-gradient(135deg, #24133b 0%, #150926 100%);
+      border: 3px solid var(--gold);
+      border-radius: 20px;
+      max-width: 560px;
+      width: 100%;
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 16px;
+      box-shadow: 0 0 50px rgba(255, 209, 102, 0.4), 0 20px 60px #000;
+      position: relative;
+    }
+
+    .podium-badge {
+      font-size: 48px;
+      line-height: 1;
+      filter: drop-shadow(0 4px 10px rgba(255, 209, 102, 0.6));
+      animation: trophyBob 2s ease-in-out infinite;
+    }
+
+    @keyframes trophyBob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .podium-title {
+      font-family: Georgia, serif;
+      font-size: 26px;
+      font-weight: 900;
+      background: linear-gradient(90deg, #ffd166, #ff758c, #ffd166);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .podium-stats {
+      background: rgba(14, 8, 24, 0.7);
+      border: 1px solid #4f2b7f;
+      border-radius: 12px;
+      padding: 12px 18px;
+      width: 100%;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+    }
+
+    .stat-col {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .stat-val {
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--gold);
+    }
+
+    .stat-lbl {
+      font-size: 10px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    /* Dad Joke Box */
+    .joke-box {
+      background: rgba(157, 78, 221, 0.15);
+      border: 1px dashed var(--pink);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: #ffe0eb;
+      line-height: 1.4;
+      width: 100%;
+      position: relative;
+    }
+
+    .joke-tag {
+      font-size: 9.5px;
+      font-weight: 800;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .podium-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+    }
+
+    /* Footer info */
+    footer {
+      text-align: center;
+      font-size: 11px;
+      color: #8c7aa7;
+      padding: 12px;
+      border-top: 1px solid #2d184a;
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header>
+    <div class="header-left">
+      <a href="../index.html" class="nav-btn">← ARCADE MENU</a>
+      <div class="game-title-badge">
+        <span class="title-main">ROYALTY RUNWAY</span>
+        <span class="title-sub">Awana Crown &amp; Gown Showcase</span>
+      </div>
+    </div>
+    <div class="header-tools">
+      <button id="sound-btn" class="tool-btn" aria-label="Toggle Sound">🔊 Sound: ON</button>
+      <button id="dad-joke-nav-btn" class="tool-btn" title="Runway Dad Joke">✨ Dad Joke</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ============================================== -->
+    <!-- VIEW 1: DRESSING STAGE & SALON                -->
+    <!-- ============================================== -->
+    <div id="dressing-view">
+
+      <!-- LEFT COLUMN: MODEL BEAUTY & SILHOUETTES -->
+      <section class="salon-card" aria-label="Character Customization">
+        <div class="panel-header">
+          <span class="panel-title"><span>👑</span> Model &amp; Style</span>
+        </div>
+
+        <div class="tab-row" role="tablist">
+          <button class="tab-btn active" data-tab="hair">Hair</button>
+          <button class="tab-btn" data-tab="face">Face</button>
+          <button class="tab-btn" data-tab="skin">Skin</button>
+          <button class="tab-btn" data-tab="shoes">Shoes</button>
+        </div>
+
+        <!-- Hair Tab -->
+        <div id="tab-hair" class="tab-content">
+          <div class="item-grid" id="hair-grid"></div>
+          <div class="swatch-group-title">Hair Color</div>
+          <div class="swatches-row" id="hair-color-swatches"></div>
+        </div>
+
+        <!-- Face / Expression Tab -->
+        <div id="tab-face" class="tab-content" style="display:none;">
+          <div class="item-grid" id="face-grid"></div>
+          <div class="swatch-group-title">Eye Color</div>
+          <div class="swatches-row" id="eye-color-swatches"></div>
+        </div>
+
+        <!-- Skin Tone Tab -->
+        <div id="tab-skin" class="tab-content" style="display:none;">
+          <div class="item-grid" id="skin-grid"></div>
+        </div>
+
+        <!-- Shoes Tab -->
+        <div id="tab-shoes" class="tab-content" style="display:none;">
+          <div class="item-grid" id="shoes-grid"></div>
+        </div>
+
+        <!-- Gem & Jewelry Tray from Drawing Bottom-Left -->
+        <div class="panel-header" style="margin-top: 6px;">
+          <span class="panel-title"><span>💎</span> Gem &amp; Jewelry Tray</span>
+        </div>
+        <div class="gem-tray" id="gem-swatches" title="Select Royal Gem Color"></div>
+        
+        <div class="tab-row" style="margin-top: 2px;">
+          <button class="tab-btn active" data-acc="crown">Crown</button>
+          <button class="tab-btn" data-acc="necklace">Necklace</button>
+          <button class="tab-btn" data-acc="scepter">Scepter</button>
+        </div>
+        <div class="item-grid" id="accessories-grid" style="max-height: 120px;"></div>
+      </section>
+
+      <!-- CENTER COLUMN: ELEGANT SALON MIRROR & STAGE -->
+      <section class="center-stage-container" aria-label="Fitting Mirror">
+        <div class="mirror-frame">
+          <canvas id="stage-canvas" width="600" height="750"></canvas>
+        </div>
+
+        <!-- Bottom Action Bar -->
+        <div class="action-bar">
+          <button id="random-btn" class="btn-secondary" title="Randomize Look">🎲 Surprise Look</button>
+          <button id="walk-runway-btn" class="btn-runway">✨ Walk the Runway! →</button>
+        </div>
+      </section>
+
+      <!-- RIGHT COLUMN: COLOR FABRIC PALETTES & BACKDROP -->
+      <section class="salon-card" aria-label="Fabric & Atmosphere">
+        <div class="panel-header">
+          <span class="panel-title"><span>🎨</span> Fabric Dye Palette</span>
+        </div>
+
+        <!-- Storyboard Signature Dye Swatches (Teal, Coral, Purple, Gold, etc.) -->
+        <div class="swatch-group-title">Primary Fabric Color</div>
+        <div class="swatches-row" id="primary-dye-swatches"></div>
+
+        <div class="swatch-group-title" style="margin-top: 8px;">Accent &amp; Trim Fabric Color</div>
+        <div class="swatches-row" id="accent-dye-swatches"></div>
+
+        <div class="panel-header" style="margin-top: 10px;">
+          <span class="panel-title"><span>✨</span> Fabric Patterns &amp; Sheen</span>
+        </div>
+        <div class="item-grid" id="pattern-grid" style="max-height: 110px;"></div>
+
+        <div class="panel-header" style="margin-top: 10px;">
+          <span class="panel-title"><span>🏛️</span> Runway Venue</span>
+        </div>
+        <div class="item-grid" id="venue-grid" style="max-height: 130px;"></div>
+      </section>
+
+    </div>
+
+    <!-- MULTI-TIER WARDROBE RACK (From Storyboard Drawing Bottom-Center) -->
+    <section class="wardrobe-rack-panel" id="wardrobe-rack" aria-label="3-Tier Wardrobe Rack">
+      <div class="rack-header">
+        <span class="rack-title"><span>👗</span> Storyboard 3-Tier Wardrobe Rack</span>
+        <span style="font-size: 11px; color: var(--gold); font-weight: 600;">Click any garment to equip</span>
+      </div>
+
+      <!-- Tier 1: Black / Charcoal Evening Dresses & Formal Suits -->
+      <div class="rack-tier">
+        <div class="tier-bar-header">
+          <span class="tier-indicator" style="background:#2b2930; color:#fff; border: 1px solid #777;">
+            Tier 1 &bull; Black &amp; Charcoal Evening Wear &amp; Tuxedos
+          </span>
+          <span style="font-size:10px; color: #a09cb0;">Formal Velvet &bull; Starlight Obsidian</span>
+        </div>
+        <div class="tier-items-scroll" id="tier1-rack"></div>
+      </div>
+
+      <!-- Tier 2: Ocean Blue Striped Skirts, Blouses, & Royal Waves -->
+      <div class="rack-tier">
+        <div class="tier-bar-header">
+          <span class="tier-indicator" style="background:#004b87; color:#fff; border: 1px solid #29b6f6;">
+            Tier 2 &bull; Ocean Blue &amp; Royal Sapphire Stripes
+          </span>
+          <span style="font-size:10px; color: #81d4fa;">Azure Sea &bull; Coastline Ribbon</span>
+        </div>
+        <div class="tier-items-scroll" id="tier2-rack"></div>
+      </div>
+
+      <!-- Tier 3: Coral & Pink Gowns, Ruffles, & Cute Collars -->
+      <div class="rack-tier">
+        <div class="tier-bar-header">
+          <span class="tier-indicator" style="background:#d81b60; color:#fff; border: 1px solid #ff80ab;">
+            Tier 3 &bull; Coral, Rose Pink &amp; Ruffled Sweetheart Gowns
+          </span>
+          <span style="font-size:10px; color: #ff80ab;">Blossom Petals &bull; Cute Collars</span>
+        </div>
+        <div class="tier-items-scroll" id="tier3-rack"></div>
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- VIEW 2: RUNWAY SHOW & THE JUDGES' STARS        -->
+    <!-- ============================================== -->
+    <div id="runway-view">
+      <div class="runway-stage-box">
+        <canvas id="runway-canvas" width="960" height="540"></canvas>
+        
+        <!-- Posing controls overlay -->
+        <div class="runway-controls-overlay" id="pose-bar">
+          <button class="pose-btn" data-pose="wave">👋 Royal Wave [1]</button>
+          <button class="pose-btn" data-pose="twirl">💫 Graceful Twirl [2]</button>
+          <button class="pose-btn" data-pose="sparkle">✨ Dazzle Smile [3]</button>
+        </div>
+      </div>
+
+      <!-- 3 Judges Scorecards -->
+      <section class="judges-box" aria-label="The Judges Table">
+        <div class="panel-header">
+          <span class="panel-title"><span>⭐</span> The Grand Awana Fashion Jury</span>
+          <span id="runway-status-tag" style="font-size:12px; font-weight:700; color:var(--gold);">Scoring Runway Performance...</span>
+        </div>
+
+        <div class="judges-row">
+          <!-- Judge 1 -->
+          <div class="judge-card" id="judge-1">
+            <div class="judge-avatar">👒</div>
+            <div class="judge-name">Madam Colette</div>
+            <div class="judge-title">Royal Couture Master</div>
+            <div class="judge-stars" id="judge-1-stars">★ ★ ★ ★ ★</div>
+            <div class="judge-comment" id="judge-1-comment">Evaluating look...</div>
+          </div>
+
+          <!-- Judge 2 -->
+          <div class="judge-card" id="judge-2">
+            <div class="judge-avatar">🧐</div>
+            <div class="judge-name">Duke Sterling</div>
+            <div class="judge-title">Grand Etiquette Arbiter</div>
+            <div class="judge-stars" id="judge-2-stars">★ ★ ★ ★ ★</div>
+            <div class="judge-comment" id="judge-2-comment">Evaluating posture...</div>
+          </div>
+
+          <!-- Judge 3 -->
+          <div class="judge-card" id="judge-3">
+            <div class="judge-avatar">⭐</div>
+            <div class="judge-name">Captain Sparks</div>
+            <div class="judge-title">Awana Heart &amp; Joy Judge</div>
+            <div class="judge-stars" id="judge-3-stars">★ ★ ★ ★ ★</div>
+            <div class="judge-comment" id="judge-3-comment">Evaluating joy &amp; dazzle!</div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  </main>
+
+  <!-- ============================================== -->
+  <!-- PODIUM & CELEBRATION MODAL                    -->
+  <!-- ============================================== -->
+  <div id="podium-modal" role="dialog" aria-modal="true" aria-labelledby="podium-heading">
+    <div class="podium-content">
+      <div class="podium-badge" id="podium-trophy">🏆</div>
+      <h2 class="podium-title" id="podium-heading">1ST PLACE ROYAL CHAMPION!</h2>
+      <p id="podium-subtitle" style="font-size: 13px; color: var(--gold);">
+        A truly breathtaking presence of royalty, poise, and sparkling joy!
+      </p>
+
+      <div class="podium-stats">
+        <div class="stat-col">
+          <span class="stat-val" id="podium-score">15 / 15</span>
+          <span class="stat-lbl">Grand Stars</span>
+        </div>
+        <div class="stat-col">
+          <span class="stat-val" id="podium-place">1st Place</span>
+          <span class="stat-lbl">Final Standing</span>
+        </div>
+        <div class="stat-col">
+          <span class="stat-val" id="podium-poses">3 / 3</span>
+          <span class="stat-lbl">Posing Applause</span>
+        </div>
+      </div>
+
+      <!-- Dad Joke on Runway Podium -->
+      <div class="joke-box">
+        <div class="joke-tag">👑 Runway Dad Joke of the Day</div>
+        <div id="podium-dad-joke">Why did the dress go to art class? Because it wanted to look striking!</div>
+      </div>
+
+      <div class="podium-actions">
+        <button id="save-photo-btn" class="btn-secondary" style="border-color:var(--gold);">📸 Save Keepsake Photo</button>
+        <button id="style-again-btn" class="btn-runway" style="max-width:240px; padding:12px 20px;">👗 Style New Look</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    ROYALTY RUNWAY &bull; Awana Retro Arcade &bull; 100% Offline Chromebook-Safe &bull; Psalm 45:13-14
+  </footer>
+
+  <!-- ============================================== -->
+  <!-- GAME ENGINE & RENDERING SCRIPT                 -->
+  <!-- ============================================== -->
+  <script>
+    'use strict';
+
+    /* ----------------------------------------------------
+       1. SOUND SYNTHESIS ENGINE (Web Audio API)
+       ---------------------------------------------------- */
+    const Sound = (() => {
+      let ctx = null;
+      let enabled = true;
+
+      function getCtx() {
+        if (!ctx) {
+          const AudioCtor = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtor) ctx = new AudioCtor();
+        }
+        if (ctx && ctx.state === 'suspended') {
+          ctx.resume().catch(() => {});
+        }
+        return ctx;
+      }
+
+      function playTone(freq, duration = 0.15, type = 'sine', volume = 0.1, bend = null) {
+        if (!enabled) return;
+        try {
+          const c = getCtx();
+          if (!c) return;
+          const osc = c.createOscillator();
+          const gain = c.createGain();
+          const t = c.currentTime;
+
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, t);
+          if (bend) {
+            osc.frequency.exponentialRampToValueAtTime(bend, t + duration);
+          }
+
+          gain.gain.setValueAtTime(volume, t);
+          gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+
+          osc.connect(gain);
+          gain.connect(c.destination);
+
+          osc.start(t);
+          osc.stop(t + duration);
+        } catch (e) {}
+      }
+
+      return {
+        toggle() {
+          enabled = !enabled;
+          return enabled;
+        },
+        isEnabled() { return enabled; },
+
+        click() {
+          playTone(660, 0.06, 'triangle', 0.08);
+        },
+        equip() {
+          // Fabric rustle / chime
+          playTone(440, 0.12, 'sine', 0.1, 880);
+          setTimeout(() => playTone(1200, 0.15, 'triangle', 0.06), 40);
+        },
+        sparkle() {
+          // Gem twinkle
+          const notes = [1046, 1318, 1567, 2093];
+          notes.forEach((n, i) => {
+            setTimeout(() => playTone(n, 0.18, 'sine', 0.07), i * 35);
+          });
+        },
+        flash() {
+          // Camera shutter click + pop
+          playTone(180, 0.04, 'square', 0.12);
+          setTimeout(() => playTone(90, 0.08, 'sawtooth', 0.08), 25);
+        },
+        pose() {
+          // Cheering shimmer
+          const notes = [523, 659, 783, 1046];
+          notes.forEach((n, i) => {
+            setTimeout(() => playTone(n, 0.2, 'triangle', 0.09), i * 40);
+          });
+        },
+        star() {
+          // Star scorecard ding
+          playTone(1318, 0.3, 'sine', 0.12);
+          setTimeout(() => playTone(1760, 0.35, 'triangle', 0.08), 60);
+        },
+        fanfare() {
+          // Royal Trumpet brass arpeggio
+          const fan = [
+            { f: 523, d: 0.18 },
+            { f: 659, d: 0.18 },
+            { f: 783, d: 0.18 },
+            { f: 1046, d: 0.45 },
+            { f: 880, d: 0.18 },
+            { f: 1046, d: 0.6 }
+          ];
+          let time = 0;
+          fan.forEach(item => {
+            setTimeout(() => {
+              playTone(item.f, item.d, 'sawtooth', 0.12);
+              playTone(item.f * 0.5, item.d, 'triangle', 0.08);
+            }, time * 1000);
+            time += item.d * 0.85;
+          });
+        }
+      };
+    })();
+
+    /* ----------------------------------------------------
+       2. WARDROBE & PALETTE DATABASE (STORYBOARD INSPIRED)
+       ---------------------------------------------------- */
+    const DAD_JOKES = [
+      "Why did the dress go to school? Because it wanted to get a little higher class!",
+      "What kind of shoes do ninjas wear on the runway? Sneakers!",
+      "Why do royal kings like gold crowns? Because they reign supreme!",
+      "What did the hat say to the scarf? You hang around here, I'll go on ahead!",
+      "Why was the belt sent to court? For holding up a pair of trousers!",
+      "What did the fabric say to the tailor? You sew got this!",
+      "Why did the jewel sparkle so brightly? Because it had a gem of a personality!",
+      "What is a queen's favorite candy? Royal-ty mints!"
+    ];
+
+    const GEMS = [
+      { id: 'ruby', name: 'Ruby of Joy', color: '#e63946', icon: '❤️' },
+      { id: 'sapphire', name: 'Sapphire Peace', color: '#1d3557', icon: '💙' },
+      { id: 'emerald', name: 'Emerald Grace', color: '#2a9d8f', icon: '💚' },
+      { id: 'amethyst', name: 'Royal Amethyst', color: '#7209b7', icon: '💜' },
+      { id: 'topaz', name: 'Sunlit Topaz', color: '#f77f00', icon: '🧡' },
+      { id: 'pearl', name: 'Pearl of Light', color: '#f8edeb', icon: '🤍' },
+      { id: 'diamond', name: 'Starlight Diamond', color: '#90e0ef', icon: '💎' }
+    ];
+
+    const PRIMARY_DYES = [
+      { id: 'teal', name: 'Storyboard Sky Teal', hex: '#00b4d8' },
+      { id: 'coral', name: 'Storyboard Sunset Coral', hex: '#ff5400' },
+      { id: 'purple', name: 'Storyboard Royal Purple', hex: '#7209b7' },
+      { id: 'black', name: 'Charcoal Midnight', hex: '#212529' },
+      { id: 'pink', name: 'Blush Rose', hex: '#ff4d8d' },
+      { id: 'gold', name: 'Imperial Gold', hex: '#ffd166' },
+      { id: 'emerald', name: 'Regal Emerald', hex: '#06d6a0' },
+      { id: 'white', name: 'Palace Pearl', hex: '#f8f9fa' }
+    ];
+
+    const ACCENT_DYES = [
+      { id: 'gold', name: 'Pure Gold Trim', hex: '#ffd166' },
+      { id: 'white', name: 'Silk Silver', hex: '#f8f9fa' },
+      { id: 'coral', name: 'Coral Ribbon', hex: '#ff6b6b' },
+      { id: 'sky', name: 'Sky Sparkle', hex: '#48cae4' },
+      { id: 'violet', name: 'Amethyst Velvet', hex: '#9d4edd' },
+      { id: 'black', name: 'Onyx Border', hex: '#161a1d' }
+    ];
+
+    const HAIR_STYLES = [
+      { id: 'curls', name: 'Royal Curls', icon: '🦱' },
+      { id: 'crown_braid', name: 'Braided Crown', icon: '👑' },
+      { id: 'flowing', name: 'Flowing Waves', icon: '💇' },
+      { id: 'updo', name: 'Regal Bun', icon: '👱‍♀️' },
+      { id: 'bob', name: 'Chic Bob', icon: '💇‍♀️' },
+      { id: 'puffs', name: 'Majestic Puffs', icon: '✨' }
+    ];
+
+    const HAIR_COLORS = [
+      { id: 'blonde', hex: '#ffd166' },
+      { id: 'brunette', hex: '#5c4033' },
+      { id: 'auburn', hex: '#b7410e' },
+      { id: 'raven', hex: '#1c1c1e' },
+      { id: 'rose', hex: '#ff758c' },
+      { id: 'ice', hex: '#90e0ef' },
+      { id: 'lavender', hex: '#c77dff' }
+    ];
+
+    const SKIN_TONES = [
+      { id: 'fair', hex: '#fadcbf', name: 'Porcelain' },
+      { id: 'peach', hex: '#f3c297', name: 'Sunlit Peach' },
+      { id: 'golden', hex: '#d99b66', name: 'Golden Honey' },
+      { id: 'caramel', hex: '#a66a38', name: 'Warm Caramel' },
+      { id: 'rich', hex: '#5c381e', name: 'Deep Royal' }
+    ];
+
+    const EYE_COLORS = [
+      { id: 'blue', hex: '#2b7fff' },
+      { id: 'brown', hex: '#502e17' },
+      { id: 'green', hex: '#28965a' },
+      { id: 'amber', hex: '#c27803' },
+      { id: 'violet', hex: '#8a3ffc' }
+    ];
+
+    const SHOE_TYPES = [
+      { id: 'slippers', name: 'Glass Slippers', icon: '👠' },
+      { id: 'ruby_flats', name: 'Ruby Ballet Flats', icon: '🥿' },
+      { id: 'gold_boots', name: 'Golden Gala Boots', icon: '👢' },
+      { id: 'velvet_pumps', name: 'Velvet Ribbon Shoes', icon: '👠' }
+    ];
+
+    const ACCESSORY_ITEMS = {
+      crown: [
+        { id: 'tiara', name: 'Princess Tiara', icon: '👑' },
+        { id: 'royal_crown', name: 'Imperial Crown', icon: '🤴' },
+        { id: 'laurel', name: 'Golden Laurel', icon: '🌿' },
+        { id: 'none', name: 'No Crown', icon: '🚫' }
+      ],
+      necklace: [
+        { id: 'pendant', name: 'Gem Pendant', icon: '📿' },
+        { id: 'pearls', name: 'Double Pearl Strand', icon: '⚪' },
+        { id: 'choker', name: 'Velvet Ribbon Choker', icon: '🎀' },
+        { id: 'none', name: 'No Necklace', icon: '🚫' }
+      ],
+      scepter: [
+        { id: 'star_scepter', name: 'Star Scepter', icon: '🪄' },
+        { id: 'bouquet', name: 'Royal Roses', icon: '💐' },
+        { id: 'fan', name: 'Golden Gala Fan', icon: '🪭' },
+        { id: 'none', name: 'No Handheld', icon: '🚫' }
+      ]
+    };
+
+    const FABRIC_PATTERNS = [
+      { id: 'solid', name: 'Solid Silk', icon: '✨' },
+      { id: 'stripes', name: 'Ocean Stripes', icon: '〰️' },
+      { id: 'sparkles', name: 'Stardust Glitz', icon: '🌟' },
+      { id: 'ruffles', name: 'Layered Ruffles', icon: '🌸' }
+    ];
+
+    const VENUES = [
+      { id: 'palace', name: 'Grand Ballroom', icon: '🏰', carpetColor: '#9d0208' },
+      { id: 'starlight', name: 'Starlight Skywalk', icon: '🌌', carpetColor: '#5a189a' },
+      { id: 'garden', name: 'Rose Gazebo', icon: '🌹', carpetColor: '#7209b7' },
+      { id: 'arcade', name: 'Retro Neon Gala', icon: '🕹️', carpetColor: '#ff007f' }
+    ];
+
+    /* 3-Tier Storyboard Wardrobe Outfits */
+    const WARDROBE_RACK = {
+      tier1: [ // Black/Charcoal Evening & Tuxedos
+        { id: 't1_velvet_gown', name: 'Obsidian Velvet Gown', cut: 'ballgown', tier: 1, baseColor: '#1a191f', accentColor: '#ffd166', icon: '👗' },
+        { id: 't1_starlight_tux', name: 'Starlight Tuxedo Suit', cut: 'tuxedo', tier: 1, baseColor: '#25242b', accentColor: '#ffffff', icon: '🤵' },
+        { id: 't1_celestial_cape', name: 'Midnight Celestial Robe', cut: 'cape_gown', tier: 1, baseColor: '#16141a', accentColor: '#9d4edd', icon: '✨' },
+        { id: 't1_charcoal_tier', name: 'Charcoal Gala Tiered', cut: 'tiered', tier: 1, baseColor: '#2b2a33', accentColor: '#ffd166', icon: '👗' }
+      ],
+      tier2: [ // Ocean Blue Striped & Sapphire
+        { id: 't2_ocean_stripes', name: 'Coastal Sailor Gown', cut: 'tiered', tier: 2, baseColor: '#0077b6', accentColor: '#ffffff', pattern: 'stripes', icon: '🌊' },
+        { id: 't2_sapphire_ball', name: 'Sapphire Waves Ballgown', cut: 'ballgown', tier: 2, baseColor: '#023e8a', accentColor: '#90e0ef', icon: '👗' },
+        { id: 't2_marine_cape', name: 'Azure Prince Coat', cut: 'tuxedo', tier: 2, baseColor: '#005f73', accentColor: '#e9d8a6', icon: '🤴' },
+        { id: 't2_mermaid_skirt', name: 'Pacific Pearl Dress', cut: 'strapless', tier: 2, baseColor: '#0096c7', accentColor: '#caf0f8', icon: '🧜‍♀️' }
+      ],
+      tier3: [ // Coral, Rose Pink & Cute Collars
+        { id: 't3_coral_ruffles', name: 'Sunset Coral Ruffle', cut: 'tiered', tier: 3, baseColor: '#ff6b6b', accentColor: '#ffe66d', icon: '🌸' },
+        { id: 't3_rose_collar', name: 'Blush Princess Collar', cut: 'collared', tier: 3, baseColor: '#ff758c', accentColor: '#ffffff', icon: '👗' },
+        { id: 't3_peach_ballgown', name: 'Peachy Sweetheart Gown', cut: 'strapless', tier: 3, baseColor: '#ff8fab', accentColor: '#ffd166', icon: '✨' },
+        { id: 't3_cherry_blossom', name: 'Cherry Blossom Gala', cut: 'ballgown', tier: 3, baseColor: '#ff5400', accentColor: '#ffcbf2', icon: '🌺' }
+      ]
+    };
+
+    /* ----------------------------------------------------
+       3. GAME STATE
+       ---------------------------------------------------- */
+    const State = {
+      model: {
+        skin: SKIN_TONES[1],
+        hairStyle: HAIR_STYLES[0],
+        hairColor: HAIR_COLORS[0],
+        eyeColor: EYE_COLORS[0],
+        expression: 'joyful', // 'joyful', 'wink', 'confident'
+        shoes: SHOE_TYPES[0]
+      },
+      outfit: {
+        ...WARDROBE_RACK.tier1[0]
+      },
+      palette: {
+        primary: PRIMARY_DYES[0].hex,
+        accent: ACCENT_DYES[0].hex,
+        pattern: 'solid'
+      },
+      gem: GEMS[0],
+      accessories: {
+        crown: 'tiara',
+        necklace: 'pearls',
+        scepter: 'star_scepter'
+      },
+      venue: VENUES[0],
+
+      // Runway state
+      runway: {
+        active: false,
+        phase: 'walking', // 'walking', 'posing', 'scoring', 'finished'
+        walkProgress: 0,
+        currentPose: null,
+        poseScore: 0,
+        flashTimer: 0,
+        flashes: [],
+        particles: []
+      }
+    };
+
+    /* ----------------------------------------------------
+       4. CHARACTER & OUTFIT CANVAS DRAWING ENGINE
+       ---------------------------------------------------- */
+    function drawModelOnCanvas(ctx, width, height, options = {}) {
+      const {
+        walking = false,
+        walkTime = 0,
+        pose = null,
+        scale = 1.0,
+        offsetX = 0,
+        offsetY = 0
+      } = options;
+
+      ctx.save();
+      ctx.translate(width / 2 + offsetX, height / 2 + offsetY);
+      ctx.scale(scale, scale);
+
+      // Walk cycle offsets
+      let legAngle = 0;
+      let bobY = 0;
+      let swayX = 0;
+      let armLeftAngle = 0;
+      let armRightAngle = 0;
+
+      if (walking) {
+        bobY = Math.sin(walkTime * 8) * 6;
+        swayX = Math.cos(walkTime * 4) * 4;
+        legAngle = Math.sin(walkTime * 8) * 0.25;
+        armLeftAngle = -Math.sin(walkTime * 8) * 0.35;
+        armRightAngle = Math.sin(walkTime * 8) * 0.35;
+      }
+
+      if (pose === 'wave') {
+        armRightAngle = -2.2 + Math.sin(walkTime * 12) * 0.2;
+      } else if (pose === 'twirl') {
+        swayX = Math.sin(walkTime * 10) * 12;
+        armLeftAngle = -1.2;
+        armRightAngle = -1.2;
+      } else if (pose === 'sparkle') {
+        armLeftAngle = -0.8;
+        armRightAngle = -0.8;
+        bobY = -8;
+      }
+
+      const cy = -20 + bobY;
+      const skinColor = State.model.skin.hex;
+      const hairColor = State.model.hairColor.hex;
+      const primaryDye = State.palette.primary;
+      const accentDye = State.palette.accent;
+      const gemColor = State.gem.color;
+
+      // 1. BACK HAIR (Long hair falls behind shoulders)
+      if (['flowing', 'curls'].includes(State.model.hairStyle.id)) {
+        ctx.fillStyle = hairColor;
+        ctx.beginPath();
+        ctx.ellipse(0, cy - 80, 52, 90, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 2. LEGS & SHOES
+      const drawLeg = (dir) => {
+        ctx.save();
+        ctx.translate(dir * 18 + swayX * 0.5, cy + 90);
+        ctx.rotate(dir * legAngle);
+
+        // Leg
+        ctx.fillStyle = skinColor;
+        ctx.beginPath();
+        ctx.roundRect(-8, 0, 16, 95, 8);
+        ctx.fill();
+
+        // Shoe
+        ctx.fillStyle = State.palette.accent;
+        if (State.model.shoes.id === 'ruby_flats') ctx.fillStyle = '#e63946';
+        if (State.model.shoes.id === 'gold_boots') ctx.fillStyle = '#ffd166';
+        if (State.model.shoes.id === 'slippers') ctx.fillStyle = 'rgba(180, 230, 255, 0.9)';
+
+        ctx.beginPath();
+        ctx.ellipse(dir * 2, 92, 12, 7, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      };
+
+      drawLeg(-1);
+      drawLeg(1);
+
+      // 3. TORSO & OUTFIT
+      ctx.save();
+      ctx.translate(swayX, cy);
+
+      // Neck
+      ctx.fillStyle = skinColor;
+      ctx.fillRect(-10, -50, 20, 25);
+
+      // Main garment base silhouette
+      const cut = State.outfit.cut;
+
+      if (cut === 'tuxedo') {
+        // Tailored Suit Jacket & Slacks
+        ctx.fillStyle = primaryDye;
+        ctx.beginPath();
+        ctx.moveTo(-28, -35);
+        ctx.lineTo(28, -35);
+        ctx.lineTo(32, 60);
+        ctx.lineTo(-32, 60);
+        ctx.closePath();
+        ctx.fill();
+
+        // Lapels
+        ctx.fillStyle = accentDye;
+        ctx.beginPath();
+        ctx.moveTo(-28, -35);
+        ctx.lineTo(0, 15);
+        ctx.lineTo(-8, 55);
+        ctx.lineTo(-24, 55);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(28, -35);
+        ctx.lineTo(0, 15);
+        ctx.lineTo(8, 55);
+        ctx.lineTo(24, 55);
+        ctx.closePath();
+        ctx.fill();
+
+        // Inner white shirt & Bowtie
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.moveTo(-8, -35);
+        ctx.lineTo(8, -35);
+        ctx.lineTo(0, -10);
+        ctx.closePath();
+        ctx.fill();
+
+        // Bowtie
+        ctx.fillStyle = gemColor;
+        ctx.beginPath();
+        ctx.moveTo(-9, -28);
+        ctx.lineTo(9, -20);
+        ctx.lineTo(9, -28);
+        ctx.lineTo(-9, -20);
+        ctx.closePath();
+        ctx.fill();
+
+      } else {
+        // Gown Bodice
+        ctx.fillStyle = primaryDye;
+        ctx.beginPath();
+        ctx.moveTo(-25, -35);
+        ctx.lineTo(25, -35);
+        ctx.lineTo(22, 20);
+        ctx.lineTo(-22, 20);
+        ctx.closePath();
+        ctx.fill();
+
+        // Dress Skirt
+        ctx.beginPath();
+        if (cut === 'ballgown') {
+          // Large dramatic hoop ballgown
+          ctx.moveTo(-22, 18);
+          ctx.bezierCurveTo(-95, 45, -110, 125, -85, 140);
+          ctx.lineTo(85, 140);
+          ctx.bezierCurveTo(110, 125, 95, 45, 22, 18);
+        } else if (cut === 'tiered') {
+          // 3-Tier ruffle gown
+          ctx.moveTo(-22, 18);
+          ctx.lineTo(-45, 55);
+          ctx.lineTo(45, 55);
+          ctx.lineTo(22, 18);
+          ctx.moveTo(-35, 55);
+          ctx.lineTo(-65, 98);
+          ctx.lineTo(65, 98);
+          ctx.lineTo(35, 55);
+          ctx.moveTo(-50, 98);
+          ctx.lineTo(-80, 140);
+          ctx.lineTo(80, 140);
+          ctx.lineTo(50, 98);
+        } else {
+          // Strapless / Classic party cut
+          ctx.moveTo(-22, 18);
+          ctx.bezierCurveTo(-65, 50, -75, 115, -60, 140);
+          ctx.lineTo(60, 140);
+          ctx.bezierCurveTo(75, 115, 65, 50, 22, 18);
+        }
+        ctx.closePath();
+        ctx.fill();
+
+        // Pattern overlays (stripes / sparkles)
+        if (State.palette.pattern === 'stripes' || State.outfit.pattern === 'stripes') {
+          ctx.save();
+          ctx.clip();
+          ctx.strokeStyle = accentDye;
+          ctx.lineWidth = 8;
+          for (let i = -120; i < 160; i += 22) {
+            ctx.beginPath();
+            ctx.moveTo(-120, i);
+            ctx.lineTo(120, i + 10);
+            ctx.stroke();
+          }
+          ctx.restore();
+        } else if (State.palette.pattern === 'sparkles') {
+          ctx.save();
+          ctx.clip();
+          ctx.fillStyle = '#ffffff';
+          for (let i = 0; i < 18; i++) {
+            const sx = (Math.sin(i * 3.7 + walkTime) * 60);
+            const sy = 25 + (i * 6.5);
+            ctx.beginPath();
+            ctx.arc(sx, sy, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+
+        // Gown accent waist sash & ribbon
+        ctx.fillStyle = accentDye;
+        ctx.fillRect(-23, 14, 46, 9);
+        // Belt buckle gem
+        ctx.fillStyle = gemColor;
+        ctx.beginPath();
+        ctx.arc(0, 18.5, 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Cute Collar (if collared or chosen)
+        if (cut === 'collared') {
+          ctx.fillStyle = accentDye;
+          ctx.beginPath();
+          ctx.moveTo(0, -32);
+          ctx.lineTo(-24, -36);
+          ctx.lineTo(-8, -20);
+          ctx.closePath();
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(0, -32);
+          ctx.lineTo(24, -36);
+          ctx.lineTo(8, -20);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Royal Cape (if cape gown)
+        if (cut === 'cape_gown') {
+          ctx.fillStyle = 'rgba(157, 78, 221, 0.45)';
+          ctx.beginPath();
+          ctx.moveTo(-32, -35);
+          ctx.bezierCurveTo(-80, 20, -90, 100, -70, 150);
+          ctx.lineTo(-45, 140);
+          ctx.lineTo(-22, -25);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.moveTo(32, -35);
+          ctx.bezierCurveTo(80, 20, 90, 100, 70, 150);
+          ctx.lineTo(45, 140);
+          ctx.lineTo(22, -25);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+
+      // 4. NECKLACE ACCESSORY
+      if (State.accessories.necklace === 'pearls') {
+        ctx.fillStyle = '#ffffff';
+        for (let i = -5; i <= 5; i++) {
+          const x = i * 4.5;
+          const y = -36 + Math.abs(i) * 2;
+          ctx.beginPath();
+          ctx.arc(x, y, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (State.accessories.necklace === 'pendant') {
+        ctx.strokeStyle = '#ffd166';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, -42, 12, 0.2, Math.PI - 0.2);
+        ctx.stroke();
+        ctx.fillStyle = gemColor;
+        ctx.beginPath();
+        ctx.arc(0, -30, 5.5, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (State.accessories.necklace === 'choker') {
+        ctx.fillStyle = accentDye;
+        ctx.fillRect(-10, -39, 20, 4);
+        ctx.fillStyle = gemColor;
+        ctx.beginPath();
+        ctx.arc(0, -37, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 5. ARMS & HANDHELD SCEPTER/BOUQUET
+      const drawArm = (dir, angle) => {
+        ctx.save();
+        ctx.translate(dir * 25, -30);
+        ctx.rotate(angle);
+
+        // Shoulder puff sleeve
+        ctx.fillStyle = primaryDye;
+        ctx.beginPath();
+        ctx.arc(0, 0, 10, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Arm
+        ctx.fillStyle = skinColor;
+        ctx.beginPath();
+        ctx.roundRect(-5, 0, 10, 60, 5);
+        ctx.fill();
+
+        // Handheld in right arm
+        if (dir === 1 && State.accessories.scepter !== 'none') {
+          ctx.translate(0, 55);
+          if (State.accessories.scepter === 'star_scepter') {
+            ctx.strokeStyle = '#ffd166';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(0, 15);
+            ctx.lineTo(0, -35);
+            ctx.stroke();
+
+            ctx.fillStyle = gemColor;
+            ctx.beginPath();
+            ctx.arc(0, -38, 9, 0, Math.PI * 2);
+            ctx.fill();
+          } else if (State.accessories.scepter === 'bouquet') {
+            ctx.fillStyle = '#ff4d8d';
+            ctx.beginPath();
+            ctx.arc(-4, -6, 8, 0, Math.PI * 2);
+            ctx.arc(4, -6, 8, 0, Math.PI * 2);
+            ctx.arc(0, -14, 9, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#06d6a0';
+            ctx.fillRect(-2, 0, 4, 18);
+          } else if (State.accessories.scepter === 'fan') {
+            ctx.fillStyle = '#ffd166';
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.arc(0, 0, 22, -Math.PI * 0.8, -Math.PI * 0.2);
+            ctx.closePath();
+            ctx.fill();
+          }
+        }
+
+        ctx.restore();
+      };
+
+      drawArm(-1, armLeftAngle);
+      drawArm(1, armRightAngle);
+
+      // 6. HEAD & FACE
+      // Head base
+      ctx.fillStyle = skinColor;
+      ctx.beginPath();
+      ctx.arc(0, -85, 36, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Cheeks (blush)
+      ctx.fillStyle = 'rgba(255, 117, 140, 0.4)';
+      ctx.beginPath();
+      ctx.arc(-18, -78, 6.5, 0, Math.PI * 2);
+      ctx.arc(18, -78, 6.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Eyes
+      const eyeColor = State.model.eyeColor.hex;
+      const isWinking = State.model.expression === 'wink' || pose === 'sparkle';
+
+      const drawEye = (x, isWink) => {
+        if (isWink) {
+          ctx.strokeStyle = '#222';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(x, -88, 6, 0.1 * Math.PI, 0.9 * Math.PI);
+          ctx.stroke();
+        } else {
+          // Open shining cartoon eye
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.ellipse(x, -88, 7.5, 9, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = eyeColor;
+          ctx.beginPath();
+          ctx.arc(x + 1, -88, 5, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Sparkle highlights
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(x - 1, -91, 2.5, 0, Math.PI * 2);
+          ctx.arc(x + 2, -86, 1.2, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Eyelashes
+          ctx.strokeStyle = '#1a0f2b';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(x, -90, 7.5, Math.PI * 1.1, Math.PI * 1.9);
+          ctx.stroke();
+        }
+      };
+
+      drawEye(-14, false);
+      drawEye(14, isWinking);
+
+      // Smile
+      ctx.strokeStyle = '#c9184a';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      if (State.model.expression === 'confident') {
+        ctx.arc(2, -72, 8, 0.1 * Math.PI, 0.7 * Math.PI);
+      } else {
+        ctx.arc(0, -73, 9, 0.15 * Math.PI, 0.85 * Math.PI);
+      }
+      ctx.stroke();
+
+      // 7. FRONT HAIR
+      ctx.fillStyle = hairColor;
+      const hStyle = State.model.hairStyle.id;
+
+      if (hStyle === 'curls') {
+        // Voluminous royal curls
+        ctx.beginPath();
+        ctx.arc(-26, -100, 16, 0, Math.PI * 2);
+        ctx.arc(26, -100, 16, 0, Math.PI * 2);
+        ctx.arc(0, -112, 18, 0, Math.PI * 2);
+        ctx.arc(-32, -80, 14, 0, Math.PI * 2);
+        ctx.arc(32, -80, 14, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (hStyle === 'crown_braid') {
+        // Braided crown updo
+        ctx.beginPath();
+        ctx.arc(0, -116, 26, 0, Math.PI * 2);
+        ctx.arc(-22, -102, 16, 0, Math.PI * 2);
+        ctx.arc(22, -102, 16, 0, Math.PI * 2);
+        ctx.fill();
+        // Braid texture lines
+        ctx.strokeStyle = 'rgba(0,0,0,0.18)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(0, -112, 22, Math.PI * 0.2, Math.PI * 0.8);
+        ctx.stroke();
+      } else if (hStyle === 'updo') {
+        // High royal gala bun
+        ctx.beginPath();
+        ctx.arc(0, -130, 22, 0, Math.PI * 2);
+        ctx.arc(0, -100, 36, Math.PI, 0);
+        ctx.fill();
+      } else if (hStyle === 'bob') {
+        // Sleek chic bob
+        ctx.beginPath();
+        ctx.arc(0, -102, 38, Math.PI * 0.9, Math.PI * 2.1);
+        ctx.lineTo(38, -75);
+        ctx.lineTo(-38, -75);
+        ctx.closePath();
+        ctx.fill();
+      } else if (hStyle === 'puffs') {
+        // Dual puffs
+        ctx.beginPath();
+        ctx.arc(-36, -118, 22, 0, Math.PI * 2);
+        ctx.arc(36, -118, 22, 0, Math.PI * 2);
+        ctx.arc(0, -100, 36, Math.PI, 0);
+        ctx.fill();
+      } else {
+        // Flowing bangs & side locks
+        ctx.beginPath();
+        ctx.arc(0, -100, 38, Math.PI * 0.8, Math.PI * 0.2);
+        ctx.fill();
+      }
+
+      // Bangs across forehead
+      ctx.beginPath();
+      ctx.arc(-10, -98, 16, 0, Math.PI);
+      ctx.arc(10, -98, 16, 0, Math.PI);
+      ctx.fill();
+
+      // 8. TIARA / CROWN ACCESSORY
+      if (State.accessories.crown === 'tiara') {
+        ctx.fillStyle = '#ffd166';
+        ctx.beginPath();
+        ctx.moveTo(-24, -110);
+        ctx.lineTo(-12, -125);
+        ctx.lineTo(0, -135);
+        ctx.lineTo(12, -125);
+        ctx.lineTo(24, -110);
+        ctx.lineTo(0, -114);
+        ctx.closePath();
+        ctx.fill();
+
+        // Gem center
+        ctx.fillStyle = gemColor;
+        ctx.beginPath();
+        ctx.arc(0, -124, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (State.accessories.crown === 'royal_crown') {
+        ctx.fillStyle = '#ffd166';
+        ctx.fillRect(-26, -118, 52, 8);
+        ctx.beginPath();
+        ctx.moveTo(-26, -118);
+        ctx.lineTo(-20, -136);
+        ctx.lineTo(-10, -122);
+        ctx.lineTo(0, -142);
+        ctx.lineTo(10, -122);
+        ctx.lineTo(20, -136);
+        ctx.lineTo(26, -118);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = gemColor;
+        ctx.beginPath();
+        ctx.arc(0, -130, 4, 0, Math.PI * 2);
+        ctx.arc(-15, -124, 3, 0, Math.PI * 2);
+        ctx.arc(15, -124, 3, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (State.accessories.crown === 'laurel') {
+        ctx.fillStyle = '#ffd166';
+        for (let i = -3; i <= 3; i++) {
+          ctx.beginPath();
+          ctx.ellipse(i * 8, -116 - Math.abs(i) * 2, 6, 3, i * 0.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      ctx.restore(); // end torso/head transform
+      ctx.restore(); // end global transform
+    }
+
+    /* ----------------------------------------------------
+       5. MIRROR STAGE RENDER LOOP
+       ---------------------------------------------------- */
+    const stageCanvas = document.getElementById('stage-canvas');
+    const stageCtx = stageCanvas.getContext('2d');
+    let stageAnimFrame = null;
+    let stageTimer = 0;
+
+    function renderStage() {
+      stageTimer += 0.03;
+      stageCtx.clearRect(0, 0, stageCanvas.width, stageCanvas.height);
+
+      // Background dressing salon wallpaper & spotlights
+      const grad = stageCtx.createLinearGradient(0, 0, 0, stageCanvas.height);
+      grad.addColorStop(0, '#2b1645');
+      grad.addColorStop(0.6, '#1a0d2b');
+      grad.addColorStop(1, '#0e0617');
+      stageCtx.fillStyle = grad;
+      stageCtx.fillRect(0, 0, stageCanvas.width, stageCanvas.height);
+
+      // Overhead vanity warm glow
+      const spotGrad = stageCtx.createRadialGradient(300, 150, 20, 300, 250, 320);
+      spotGrad.addColorStop(0, 'rgba(255, 235, 180, 0.22)');
+      spotGrad.addColorStop(1, 'transparent');
+      stageCtx.fillStyle = spotGrad;
+      stageCtx.fillRect(0, 0, stageCanvas.width, stageCanvas.height);
+
+      // Floor carpet & pedestal
+      stageCtx.fillStyle = '#3a1e5c';
+      stageCtx.beginPath();
+      stageCtx.ellipse(300, 640, 210, 45, 0, 0, Math.PI * 2);
+      stageCtx.fill();
+      stageCtx.strokeStyle = 'var(--gold)';
+      stageCtx.lineWidth = 3;
+      stageCtx.stroke();
+
+      // Floating dust sparkles
+      stageCtx.fillStyle = 'rgba(255, 209, 102, 0.4)';
+      for (let i = 0; i < 12; i++) {
+        const sx = (i * 57 + Math.sin(stageTimer + i) * 20) % stageCanvas.width;
+        const sy = (150 + i * 42 + Math.cos(stageTimer * 0.8 + i) * 15) % 600;
+        stageCtx.beginPath();
+        stageCtx.arc(sx, sy, (i % 3) + 1.2, 0, Math.PI * 2);
+        stageCtx.fill();
+      }
+
+      // Draw model standing gracefully
+      drawModelOnCanvas(stageCtx, stageCanvas.width, stageCanvas.height, {
+        walking: false,
+        walkTime: stageTimer,
+        scale: 1.45,
+        offsetY: -30
+      });
+
+      stageAnimFrame = requestAnimationFrame(renderStage);
+    }
+
+    /* ----------------------------------------------------
+       6. RUNWAY SHOW ANIMATION & CAMERA FLASHES
+       ---------------------------------------------------- */
+    const runwayCanvas = document.getElementById('runway-canvas');
+    const runwayCtx = runwayCanvas.getContext('2d');
+    let runwayAnimFrame = null;
+    let runwayTime = 0;
+
+    function startRunwayShow() {
+      // Switch view
+      document.getElementById('dressing-view').style.display = 'none';
+      document.getElementById('wardrobe-rack').style.display = 'none';
+      document.getElementById('runway-view').style.display = 'flex';
+
+      State.runway.active = true;
+      State.runway.phase = 'walking';
+      State.runway.walkProgress = 0;
+      State.runway.currentPose = null;
+      State.runway.poseScore = 0;
+      State.runway.flashes = [];
+      State.runway.particles = [];
+      runwayTime = 0;
+
+      // Reset judges scorecards
+      for (let i = 1; i <= 3; i++) {
+        document.getElementById(`judge-${i}-stars`).textContent = '• • • • •';
+        document.getElementById(`judge-${i}-comment`).textContent = 'Observing runway poise...';
+      }
+      document.getElementById('runway-status-tag').textContent = 'Strutting the Spotlight Carpet...';
+
+      Sound.equip();
+      animateRunway();
+    }
+
+    function animateRunway() {
+      if (!State.runway.active) return;
+      runwayTime += 0.035;
+      const w = runwayCanvas.width;
+      const h = runwayCanvas.height;
+
+      runwayCtx.clearRect(0, 0, w, h);
+
+      // 1. Runway Backdrop (Venue Theme)
+      const venue = State.venue;
+      const bgGrad = runwayCtx.createLinearGradient(0, 0, 0, h);
+      if (venue.id === 'starlight') {
+        bgGrad.addColorStop(0, '#050312');
+        bgGrad.addColorStop(1, '#1b0e36');
+      } else if (venue.id === 'garden') {
+        bgGrad.addColorStop(0, '#0d1f18');
+        bgGrad.addColorStop(1, '#1a3325');
+      } else {
+        bgGrad.addColorStop(0, '#190a2a');
+        bgGrad.addColorStop(1, '#2f134f');
+      }
+      runwayCtx.fillStyle = bgGrad;
+      runwayCtx.fillRect(0, 0, w, h);
+
+      // Stars / lights in background
+      runwayCtx.fillStyle = '#ffffff';
+      for (let i = 0; i < 30; i++) {
+        const lx = (i * 83) % w;
+        const ly = 30 + (i * 29) % 180;
+        runwayCtx.globalAlpha = 0.3 + 0.7 * Math.abs(Math.sin(runwayTime * 2 + i));
+        runwayCtx.beginPath();
+        runwayCtx.arc(lx, ly, (i % 3) + 1, 0, Math.PI * 2);
+        runwayCtx.fill();
+      }
+      runwayCtx.globalAlpha = 1;
+
+      // 2. Audience Silhouette & Random Paparazzi Camera Flashes
+      runwayCtx.fillStyle = '#06030c';
+      runwayCtx.beginPath();
+      runwayCtx.moveTo(0, h * 0.75);
+      for (let x = 0; x < w; x += 35) {
+        runwayCtx.lineTo(x + 15, h * 0.68 + (Math.sin(x) * 10));
+      }
+      runwayCtx.lineTo(w, h);
+      runwayCtx.lineTo(0, h);
+      runwayCtx.closePath();
+      runwayCtx.fill();
+
+      // Camera Flash Logic
+      if (Math.random() < 0.12) {
+        const fx = Math.random() * w;
+        const fy = h * 0.55 + Math.random() * (h * 0.3);
+        State.runway.flashes.push({ x: fx, y: fy, r: 40 + Math.random() * 50, life: 1.0 });
+        if (Math.random() < 0.3) Sound.flash();
+      }
+
+      // Draw active flashes
+      for (let i = State.runway.flashes.length - 1; i >= 0; i--) {
+        const f = State.runway.flashes[i];
+        f.life -= 0.14;
+        if (f.life <= 0) {
+          State.runway.flashes.splice(i, 1);
+          continue;
+        }
+        runwayCtx.save();
+        const flashGrad = runwayCtx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r);
+        flashGrad.addColorStop(0, `rgba(255, 255, 255, ${f.life})`);
+        flashGrad.addColorStop(0.4, `rgba(255, 240, 200, ${f.life * 0.7})`);
+        flashGrad.addColorStop(1, 'transparent');
+        runwayCtx.fillStyle = flashGrad;
+        runwayCtx.beginPath();
+        runwayCtx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+        runwayCtx.fill();
+        runwayCtx.restore();
+      }
+
+      // 3. Central Spotlight & Perspective Runway Carpet
+      runwayCtx.save();
+      // Carpet
+      runwayCtx.fillStyle = venue.carpetColor;
+      runwayCtx.beginPath();
+      runwayCtx.moveTo(w * 0.42, h * 0.35);
+      runwayCtx.lineTo(w * 0.58, h * 0.35);
+      runwayCtx.lineTo(w * 0.85, h);
+      runwayCtx.lineTo(w * 0.15, h);
+      runwayCtx.closePath();
+      runwayCtx.fill();
+
+      // Golden Runway Borders
+      runwayCtx.strokeStyle = '#ffd166';
+      runwayCtx.lineWidth = 5;
+      runwayCtx.stroke();
+
+      // Spotlight Beam
+      const spotLight = runwayCtx.createRadialGradient(w * 0.5, h * 0.7, 40, w * 0.5, h * 0.7, 240);
+      spotLight.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+      spotLight.addColorStop(0.7, 'rgba(255, 220, 150, 0.15)');
+      spotLight.addColorStop(1, 'transparent');
+      runwayCtx.fillStyle = spotLight;
+      runwayCtx.beginPath();
+      runwayCtx.ellipse(w * 0.5, h * 0.78, 220, 65, 0, 0, Math.PI * 2);
+      runwayCtx.fill();
+      runwayCtx.restore();
+
+      // 4. Model Progress along Runway
+      if (State.runway.phase === 'walking') {
+        State.runway.walkProgress += 0.0055;
+        if (State.runway.walkProgress >= 1.0) {
+          State.runway.walkProgress = 1.0;
+          State.runway.phase = 'posing';
+          document.getElementById('runway-status-tag').textContent = 'Strike your Best Poses for the Judges!';
+        }
+      }
+
+      // Model size scales as they strut toward camera
+      const t = State.runway.walkProgress;
+      const modelScale = 0.75 + t * 0.75;
+      const modelY = (h * 0.42) + t * (h * 0.36);
+
+      // Render model
+      drawModelOnCanvas(runwayCtx, w, h, {
+        walking: State.runway.phase === 'walking',
+        walkTime: runwayTime,
+        pose: State.runway.currentPose,
+        scale: modelScale,
+        offsetY: modelY - (h / 2)
+      });
+
+      // 5. Sparkle Particles during poses
+      if (State.runway.currentPose) {
+        if (Math.random() < 0.4) {
+          State.runway.particles.push({
+            x: w * 0.5 + (Math.random() - 0.5) * 160,
+            y: modelY + (Math.random() - 0.5) * 180,
+            vx: (Math.random() - 0.5) * 4,
+            vy: -2 - Math.random() * 3,
+            color: ['#ffd166', '#ff4d8d', '#06d6a0', '#ffffff'][Math.floor(Math.random() * 4)],
+            size: 3 + Math.random() * 4,
+            life: 1.0
+          });
+        }
+      }
+
+      for (let i = State.runway.particles.length - 1; i >= 0; i--) {
+        const p = State.runway.particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= 0.025;
+        if (p.life <= 0) {
+          State.runway.particles.splice(i, 1);
+          continue;
+        }
+        runwayCtx.save();
+        runwayCtx.fillStyle = p.color;
+        runwayCtx.globalAlpha = p.life;
+        runwayCtx.beginPath();
+        runwayCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        runwayCtx.fill();
+        runwayCtx.restore();
+      }
+
+      runwayAnimFrame = requestAnimationFrame(animateRunway);
+    }
+
+    function triggerPose(poseName) {
+      if (!State.runway.active) return;
+      State.runway.currentPose = poseName;
+      State.runway.poseScore++;
+      Sound.pose();
+
+      // Big flash pop
+      for (let i = 0; i < 4; i++) {
+        State.runway.flashes.push({
+          x: runwayCanvas.width * 0.5 + (Math.random() - 0.5) * 300,
+          y: runwayCanvas.height * 0.7 + (Math.random() - 0.5) * 120,
+          r: 60 + Math.random() * 50,
+          life: 1.0
+        });
+      }
+
+      setTimeout(() => {
+        if (State.runway.currentPose === poseName) {
+          State.runway.currentPose = null;
+        }
+      }, 1400);
+
+      // If finished walk, trigger judges scoring after posing
+      if (State.runway.phase === 'posing' && State.runway.poseScore >= 2) {
+        setTimeout(tallyJudgesScores, 1500);
+      }
+    }
+
+    /* ----------------------------------------------------
+       7. THE JUDGES SCORING & PODIUM
+       ---------------------------------------------------- */
+    function tallyJudgesScores() {
+      if (State.runway.phase === 'scoring' || State.runway.phase === 'finished') return;
+      State.runway.phase = 'scoring';
+      document.getElementById('runway-status-tag').textContent = 'The Judges are Revealing Stars!';
+
+      const comments = {
+        j1: [
+          "Magnificent color coordination! The royal fabric drape is pure perfection.",
+          "Exquisite balance between the silhouette and gemstone accents!",
+          "Haute couture excellence! This look belongs in the royal museum."
+        ],
+        j2: [
+          "Superb posture, elegance, and classic royal etiquette on the carpet.",
+          "Every step carried dignity, poise, and majestic court grace.",
+          "Flawless runway poise worthy of a grand coronation."
+        ],
+        j3: [
+          "Such radiant joy! That smile lit up the entire Awana hall!",
+          "The sparkles, the wave, the sheer fun—100% pure sunshine!",
+          "A true champion of good cheer and fabulous style!"
+        ]
+      };
+
+      // Stagger judge stars with chimes
+      setTimeout(() => {
+        document.getElementById('judge-1-stars').textContent = '★ ★ ★ ★ ★';
+        document.getElementById('judge-1-comment').textContent = comments.j1[Math.floor(Math.random() * comments.j1.length)];
+        Sound.star();
+      }, 600);
+
+      setTimeout(() => {
+        document.getElementById('judge-2-stars').textContent = '★ ★ ★ ★ ★';
+        document.getElementById('judge-2-comment').textContent = comments.j2[Math.floor(Math.random() * comments.j2.length)];
+        Sound.star();
+      }, 1300);
+
+      setTimeout(() => {
+        document.getElementById('judge-3-stars').textContent = '★ ★ ★ ★ ★';
+        document.getElementById('judge-3-comment').textContent = comments.j3[Math.floor(Math.random() * comments.j3.length)];
+        Sound.star();
+      }, 2000);
+
+      // Podium celebration
+      setTimeout(() => {
+        State.runway.phase = 'finished';
+        Sound.fanfare();
+        showPodiumModal();
+      }, 2800);
+    }
+
+    function showPodiumModal() {
+      const modal = document.getElementById('podium-modal');
+      const randomJoke = DAD_JOKES[Math.floor(Math.random() * DAD_JOKES.length)];
+      document.getElementById('podium-dad-joke').textContent = randomJoke;
+      document.getElementById('podium-poses').textContent = `${Math.min(3, Math.max(1, State.runway.poseScore))} / 3`;
+      modal.style.display = 'flex';
+    }
+
+    function resetToSalon() {
+      document.getElementById('podium-modal').style.display = 'none';
+      document.getElementById('runway-view').style.display = 'none';
+      document.getElementById('dressing-view').style.display = 'grid';
+      document.getElementById('wardrobe-rack').style.display = 'flex';
+
+      State.runway.active = false;
+      if (runwayAnimFrame) cancelAnimationFrame(runwayAnimFrame);
+      Sound.click();
+    }
+
+    function saveKeepsakePhoto() {
+      // Create a souvenir composite canvas with trophy, border, and the styled model!
+      const snap = document.createElement('canvas');
+      snap.width = 640;
+      snap.height = 800;
+      const sCtx = snap.getContext('2d');
+
+      // Background
+      const bg = sCtx.createLinearGradient(0, 0, 0, 800);
+      bg.addColorStop(0, '#24133b');
+      bg.addColorStop(0.5, '#150926');
+      bg.addColorStop(1, '#0c0517');
+      sCtx.fillStyle = bg;
+      sCtx.fillRect(0, 0, 640, 800);
+
+      // Gold border
+      sCtx.strokeStyle = '#ffd166';
+      sCtx.lineWidth = 10;
+      sCtx.strokeRect(10, 10, 620, 780);
+
+      // Header text
+      sCtx.fillStyle = '#ffd166';
+      sCtx.font = 'bold 30px Georgia, serif';
+      sCtx.textAlign = 'center';
+      sCtx.fillText('ROYALTY RUNWAY', 320, 65);
+
+      sCtx.fillStyle = '#ff758c';
+      sCtx.font = 'bold 16px system-ui, sans-serif';
+      sCtx.fillText('★ 1ST PLACE ROYAL CHAMPION ★', 320, 95);
+
+      // Draw model in center
+      drawModelOnCanvas(sCtx, 640, 800, {
+        scale: 1.5,
+        offsetY: 20
+      });
+
+      // Footer
+      sCtx.fillStyle = '#ffd166';
+      sCtx.font = 'bold 22px system-ui, sans-serif';
+      sCtx.fillText('15 / 15 STARS', 320, 730);
+
+      sCtx.fillStyle = '#c8b6e2';
+      sCtx.font = 'italic 14px system-ui, sans-serif';
+      sCtx.fillText('Psalm 45:13-14 • Awana Retro Arcade', 320, 760);
+
+      // Download trigger
+      const link = document.createElement('a');
+      link.download = 'royalty-runway-look.png';
+      link.href = snap.toDataURL('image/png');
+      link.click();
+      Sound.sparkle();
+    }
+
+    /* ----------------------------------------------------
+       8. UI BUILDERS & EVENT WIRING
+       ---------------------------------------------------- */
+    function initUI() {
+      // 1. Hair styles grid
+      const hairGrid = document.getElementById('hair-grid');
+      HAIR_STYLES.forEach(style => {
+        const btn = document.createElement('button');
+        btn.className = `tile-btn ${State.model.hairStyle.id === style.id ? 'selected' : ''}`;
+        btn.innerHTML = `<span class="tile-icon">${style.icon}</span><span class="tile-label">${style.name}</span>`;
+        btn.onclick = () => {
+          State.model.hairStyle = style;
+          document.querySelectorAll('#hair-grid .tile-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          Sound.equip();
+        };
+        hairGrid.appendChild(btn);
+      });
+
+      // Hair color swatches
+      const hairColors = document.getElementById('hair-color-swatches');
+      HAIR_COLORS.forEach(c => {
+        const sw = document.createElement('div');
+        sw.className = `color-swatch ${State.model.hairColor.id === c.id ? 'active' : ''}`;
+        sw.style.backgroundColor = c.hex;
+        sw.onclick = () => {
+          State.model.hairColor = c;
+          document.querySelectorAll('#hair-color-swatches .color-swatch').forEach(s => s.classList.remove('active'));
+          sw.classList.add('active');
+          Sound.click();
+        };
+        hairColors.appendChild(sw);
+      });
+
+      // Face expressions
+      const faceGrid = document.getElementById('face-grid');
+      const expressions = [
+        { id: 'joyful', name: 'Joyful Smile', icon: '😊' },
+        { id: 'wink', name: 'Royal Wink', icon: '😉' },
+        { id: 'confident', name: 'Regal Grin', icon: '😎' }
+      ];
+      expressions.forEach(exp => {
+        const btn = document.createElement('button');
+        btn.className = `tile-btn ${State.model.expression === exp.id ? 'selected' : ''}`;
+        btn.innerHTML = `<span class="tile-icon">${exp.icon}</span><span class="tile-label">${exp.name}</span>`;
+        btn.onclick = () => {
+          State.model.expression = exp.id;
+          document.querySelectorAll('#face-grid .tile-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          Sound.click();
+        };
+        faceGrid.appendChild(btn);
+      });
+
+      // Eye color swatches
+      const eyeColors = document.getElementById('eye-color-swatches');
+      EYE_COLORS.forEach(c => {
+        const sw = document.createElement('div');
+        sw.className = `color-swatch ${State.model.eyeColor.id === c.id ? 'active' : ''}`;
+        sw.style.backgroundColor = c.hex;
+        sw.onclick = () => {
+          State.model.eyeColor = c;
+          document.querySelectorAll('#eye-color-swatches .color-swatch').forEach(s => s.classList.remove('active'));
+          sw.classList.add('active');
+          Sound.click();
+        };
+        eyeColors.appendChild(sw);
+      });
+
+      // Skin tones
+      const skinGrid = document.getElementById('skin-grid');
+      SKIN_TONES.forEach(tone => {
+        const btn = document.createElement('button');
+        btn.className = `tile-btn ${State.model.skin.id === tone.id ? 'selected' : ''}`;
+        btn.innerHTML = `<div style="width:28px;height:28px;border-radius:50%;background:${tone.hex};border:2px solid #fff;"></div><span class="tile-label">${tone.name}</span>`;
+        btn.onclick = () => {
+          State.model.skin = tone;
+          document.querySelectorAll('#skin-grid .tile-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          Sound.click();
+        };
+        skinGrid.appendChild(btn);
+      });
+
+      // Shoes
+      const shoesGrid = document.getElementById('shoes-grid');
+      SHOE_TYPES.forEach(sh => {
+        const btn = document.createElement('button');
+        btn.className = `tile-btn ${State.model.shoes.id === sh.id ? 'selected' : ''}`;
+        btn.innerHTML = `<span class="tile-icon">${sh.icon}</span><span class="tile-label">${sh.name}</span>`;
+        btn.onclick = () => {
+          State.model.shoes = sh;
+          document.querySelectorAll('#shoes-grid .tile-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          Sound.equip();
+        };
+        shoesGrid.appendChild(btn);
+      });
+
+      // Gem Swatches (From Drawing Bottom-Left)
+      const gemTray = document.getElementById('gem-swatches');
+      GEMS.forEach(gem => {
+        const btn = document.createElement('div');
+        btn.className = `gem-btn ${State.gem.id === gem.id ? 'active' : ''}`;
+        btn.style.backgroundColor = gem.color;
+        btn.style.color = gem.color;
+        btn.title = gem.name;
+        btn.innerHTML = gem.icon;
+        btn.onclick = () => {
+          State.gem = gem;
+          document.querySelectorAll('.gem-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          Sound.sparkle();
+        };
+        gemTray.appendChild(btn);
+      });
+
+      // Accessory items builder
+      function renderAccessories(category) {
+        const grid = document.getElementById('accessories-grid');
+        grid.innerHTML = '';
+        (ACCESSORY_ITEMS[category] || []).forEach(item => {
+          const btn = document.createElement('button');
+          btn.className = `tile-btn ${State.accessories[category] === item.id ? 'selected' : ''}`;
+          btn.innerHTML = `<span class="tile-icon">${item.icon}</span><span class="tile-label">${item.name}</span>`;
+          btn.onclick = () => {
+            State.accessories[category] = item.id;
+            document.querySelectorAll('#accessories-grid .tile-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            Sound.sparkle();
+          };
+          grid.appendChild(btn);
+        });
+      }
+      renderAccessories('crown');
+
+      document.querySelectorAll('[data-acc]').forEach(btn => {
+        btn.onclick = () => {
+          document.querySelectorAll('[data-acc]').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          renderAccessories(btn.dataset.acc);
+          Sound.click();
+        };
+      });
+
+      // Primary Fabric Swatches (Drawing Top-Right)
+      const primarySwatches = document.getElementById('primary-dye-swatches');
+      PRIMARY_DYES.forEach(c => {
+        const sw = document.createElement('div');
+        sw.className = `color-swatch ${State.palette.primary === c.hex ? 'active' : ''}`;
+        sw.style.backgroundColor = c.hex;
+        sw.title = c.name;
+        sw.onclick = () => {
+          State.palette.primary = c.hex;
+          document.querySelectorAll('#primary-dye-swatches .color-swatch').forEach(s => s.classList.remove('active'));
+          sw.classList.add('active');
+          Sound.equip();
+        };
+        primarySwatches.appendChild(sw);
+      });
+
+      // Accent Fabric Swatches
+      const accentSwatches = document.getElementById('accent-dye-swatches');
+      ACCENT_DYES.forEach(c => {
+        const sw = document.createElement('div');
+        sw.className = `color-swatch ${State.palette.accent === c.hex ? 'active' : ''}`;
+        sw.style.backgroundColor = c.hex;
+        sw.title = c.name;
+        sw.onclick = () => {
+          State.palette.accent = c.hex;
+          document.querySelectorAll('#accent-dye-swatches .color-swatch').forEach(s => s.classList.remove('active'));
+          sw.classList.add('active');
+          Sound.equip();
+        };
+        accentSwatches.appendChild(sw);
+      });
+
+      // Pattern Grid
+      const patternGrid = document.getElementById('pattern-grid');
+      FABRIC_PATTERNS.forEach(pat => {
+        const btn = document.createElement('button');
+        btn.className = `tile-btn ${State.palette.pattern === pat.id ? 'selected' : ''}`;
+        btn.innerHTML = `<span class="tile-icon">${pat.icon}</span><span class="tile-label">${pat.name}</span>`;
+        btn.onclick = () => {
+          State.palette.pattern = pat.id;
+          document.querySelectorAll('#pattern-grid .tile-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          Sound.equip();
+        };
+        patternGrid.appendChild(btn);
+      });
+
+      // Venue Grid
+      const venueGrid = document.getElementById('venue-grid');
+      VENUES.forEach(v => {
+        const btn = document.createElement('button');
+        btn.className = `tile-btn ${State.venue.id === v.id ? 'selected' : ''}`;
+        btn.innerHTML = `<span class="tile-icon">${v.icon}</span><span class="tile-label">${v.name}</span>`;
+        btn.onclick = () => {
+          State.venue = v;
+          document.querySelectorAll('#venue-grid .tile-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          Sound.click();
+        };
+        venueGrid.appendChild(btn);
+      });
+
+      // 3-Tier Wardrobe Rack items
+      function populateRackTier(tierId, containerId) {
+        const container = document.getElementById(containerId);
+        WARDROBE_RACK[tierId].forEach(outfit => {
+          const card = document.createElement('div');
+          card.className = `rack-garment-card ${State.outfit.id === outfit.id ? 'active' : ''}`;
+          card.innerHTML = `
+            <div class="garment-preview-box" style="border-left: 4px solid ${outfit.accentColor}; background: ${outfit.baseColor}44;">
+              ${outfit.icon}
+            </div>
+            <div class="garment-name">${outfit.name}</div>
+          `;
+          card.onclick = () => {
+            State.outfit = outfit;
+            State.palette.primary = outfit.baseColor;
+            State.palette.accent = outfit.accentColor;
+            if (outfit.pattern) State.palette.pattern = outfit.pattern;
+
+            document.querySelectorAll('.rack-garment-card').forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+
+            // Sync color swatches active classes
+            document.querySelectorAll('#primary-dye-swatches .color-swatch').forEach(s => {
+              s.classList.toggle('active', s.style.backgroundColor === outfit.baseColor);
+            });
+            Sound.equip();
+          };
+          container.appendChild(card);
+        });
+      }
+
+      populateRackTier('tier1', 'tier1-rack');
+      populateRackTier('tier2', 'tier2-rack');
+      populateRackTier('tier3', 'tier3-rack');
+
+      // Left panel tabs (hair, face, skin, shoes)
+      document.querySelectorAll('[data-tab]').forEach(tab => {
+        tab.onclick = () => {
+          document.querySelectorAll('[data-tab]').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          const target = tab.dataset.tab;
+          document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+          document.getElementById(`tab-${target}`).style.display = 'block';
+          Sound.click();
+        };
+      });
+
+      // Surprise / Randomizer button
+      document.getElementById('random-btn').onclick = () => {
+        State.model.hairStyle = HAIR_STYLES[Math.floor(Math.random() * HAIR_STYLES.length)];
+        State.model.hairColor = HAIR_COLORS[Math.floor(Math.random() * HAIR_COLORS.length)];
+        State.model.skin = SKIN_TONES[Math.floor(Math.random() * SKIN_TONES.length)];
+        State.model.shoes = SHOE_TYPES[Math.floor(Math.random() * SHOE_TYPES.length)];
+        State.gem = GEMS[Math.floor(Math.random() * GEMS.length)];
+
+        // Random outfit from any tier
+        const allOutfits = [...WARDROBE_RACK.tier1, ...WARDROBE_RACK.tier2, ...WARDROBE_RACK.tier3];
+        const randomOutfit = allOutfits[Math.floor(Math.random() * allOutfits.length)];
+        State.outfit = randomOutfit;
+        State.palette.primary = PRIMARY_DYES[Math.floor(Math.random() * PRIMARY_DYES.length)].hex;
+        State.palette.accent = ACCENT_DYES[Math.floor(Math.random() * ACCENT_DYES.length)].hex;
+
+        Sound.sparkle();
+      };
+
+      // Walk the runway button
+      document.getElementById('walk-runway-btn').onclick = startRunwayShow;
+
+      // Posing buttons
+      document.querySelectorAll('[data-pose]').forEach(btn => {
+        btn.onclick = () => triggerPose(btn.dataset.pose);
+      });
+
+      // Sound toggle
+      const soundBtn = document.getElementById('sound-btn');
+      soundBtn.onclick = () => {
+        const on = Sound.toggle();
+        soundBtn.textContent = `🔊 Sound: ${on ? 'ON' : 'OFF'}`;
+      };
+
+      // Dad Joke Nav Button
+      document.getElementById('dad-joke-nav-btn').onclick = () => {
+        const joke = DAD_JOKES[Math.floor(Math.random() * DAD_JOKES.length)];
+        alert(`👑 Runway Dad Joke:\n\n${joke}`);
+        Sound.sparkle();
+      };
+
+      // Podium Buttons
+      document.getElementById('save-photo-btn').onclick = saveKeepsakePhoto;
+      document.getElementById('style-again-btn').onclick = resetToSalon;
+
+      // Keyboard shortcuts
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'm' || e.key === 'M') {
+          soundBtn.click();
+        } else if (e.key === '1') {
+          triggerPose('wave');
+        } else if (e.key === '2') {
+          triggerPose('twirl');
+        } else if (e.key === '3') {
+          triggerPose('sparkle');
+        } else if (e.key === ' ' && !State.runway.active) {
+          e.preventDefault();
+          startRunwayShow();
+        }
+      });
+    }
+
+    // Start everything on window load
+    window.addEventListener('DOMContentLoaded', () => {
+      initUI();
+      renderStage();
+    });
+  </script>
+</body>
+</html>
