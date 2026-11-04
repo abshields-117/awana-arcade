@@ -1,809 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Ark: Deluge Navigator — Awana Retro Arcade</title>
-  <script>
-    // In-memory localStorage fallback for managed Chromebooks
-    try {
-      var test = '__storage_test__';
-      window.localStorage.setItem(test, test);
-      window.localStorage.removeItem(test);
-    } catch (e) {
-      window.localStorage = {
-        _data: {},
-        setItem: function(id, val) { return this._data[id] = String(val); },
-        getItem: function(id) { return this._data.hasOwnProperty(id) ? this._data[id] : null; },
-        removeItem: function(id) { return delete this._data[id]; },
-        clear: function() { return this._data = {}; }
-      };
-    }
-  </script>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-    body {
-      background: #030712;
-      color: #f8fafc;
-      font-family: 'Courier New', Courier, monospace;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      touch-action: none;
-    }
-    .arcade-menu-btn {
-      position: fixed;
-      top: 12px;
-      left: 12px;
-      z-index: 9999;
-      background: rgba(15, 23, 42, 0.85);
-      border: 2px solid #38bdf8;
-      color: #38bdf8;
-      padding: 8px 14px;
-      font-family: 'Courier New', monospace;
-      font-size: 13px;
-      font-weight: bold;
-      border-radius: 6px;
-      text-decoration: none;
-      box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
-      transition: all 0.2s;
-    }
-    .arcade-menu-btn:hover {
-      background: #38bdf8;
-      color: #030712;
-      box-shadow: 0 0 20px rgba(56, 189, 248, 0.8);
-      transform: scale(1.05);
-    }
-    #game-container {
-      position: relative;
-      width: 100%;
-      max-width: 900px;
-      height: 100vh;
-      max-height: 620px;
-      background: #020617;
-      box-shadow: 0 0 35px rgba(56, 189, 248, 0.25);
-      border: 3px solid #38bdf8;
-      border-radius: 10px;
-      overflow: hidden;
-    }
-    canvas {
-      display: block;
-      width: 100%;
-      height: 100%;
-      background: #040e24;
-    }
-    .hud {
-      position: absolute;
-      top: 10px;
-      left: 160px;
-      right: 14px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      pointer-events: none;
-      z-index: 10;
-      font-size: 14px;
-      font-weight: bold;
-      text-shadow: 2px 2px #000, 0 0 8px rgba(0,0,0,0.8);
-    }
-    .hud-hearts { color: #f43f5e; font-size: 18px; letter-spacing: 2px; }
-    .hud-score { color: #facc15; font-size: 16px; }
-    .hud-harmony { color: #34d399; font-size: 14px; }
-    
-    .overlay {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(3, 7, 18, 0.9);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 20;
-      padding: 24px;
-      text-align: center;
-      backdrop-filter: blur(4px);
-    }
-    .overlay.hidden { display: none; }
-    h1 {
-      font-size: 32px;
-      color: #38bdf8;
-      text-shadow: 0 0 18px rgba(56, 189, 248, 0.8), 2px 2px #0284c7;
-      margin-bottom: 6px;
-      letter-spacing: 2px;
-    }
-    .subtitle {
-      font-size: 14px;
-      color: #94a3b8;
-      margin-bottom: 18px;
-    }
-    .verse-card {
-      background: rgba(30, 41, 59, 0.7);
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      border-radius: 8px;
-      padding: 12px 18px;
-      max-width: 520px;
-      font-size: 13px;
-      color: #e2e8f0;
-      margin-bottom: 20px;
-      line-height: 1.4;
-    }
-    .btn {
-      background: linear-gradient(135deg, #0284c7, #0369a1);
-      color: #fff;
-      border: 2px solid #38bdf8;
-      border-radius: 8px;
-      padding: 12px 28px;
-      font-family: inherit;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      box-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
-      transition: all 0.15s;
-    }
-    .btn:hover {
-      background: linear-gradient(135deg, #38bdf8, #0284c7);
-      transform: scale(1.05);
-      box-shadow: 0 0 25px rgba(56, 189, 248, 0.8);
-    }
-    /* Mobile / Touch Controls */
-    .touch-controls {
-      position: absolute;
-      bottom: 15px;
-      left: 15px;
-      right: 15px;
-      display: flex;
-      justify-content: space-between;
-      pointer-events: none;
-      z-index: 15;
-    }
-    .touch-btn {
-      pointer-events: auto;
-      background: rgba(15, 23, 42, 0.7);
-      border: 2px solid rgba(56, 189, 248, 0.5);
-      color: #38bdf8;
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.5);
-    }
-    .touch-btn:active {
-      background: #38bdf8;
-      color: #030712;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Ark: Deluge Navigator — Awanacade</title>
+<script>
+try{const k='__storage_test__';localStorage.setItem(k,k);localStorage.removeItem(k)}catch(e){const data={};Object.defineProperty(window,'localStorage',{value:{setItem:(k,v)=>data[k]=String(v),getItem:k=>Object.prototype.hasOwnProperty.call(data,k)?data[k]:null,removeItem:k=>delete data[k],clear:()=>Object.keys(data).forEach(k=>delete data[k])}})}
+</script>
+<style>
+:root{color-scheme:dark;--cyan:#67e8f9;--gold:#fde68a;--panel:rgba(3,12,28,.82)}
+*{box-sizing:border-box;margin:0;padding:0;user-select:none;-webkit-user-select:none}
+html,body{width:100%;height:100%;overflow:hidden;background:#020617;color:#f8fafc;font-family:"Courier New",monospace;touch-action:none}
+body{display:grid;place-items:center;padding:4px}
+#game-container{position:relative;width:min(calc(100vw - 8px),calc((100dvh - 8px)*16/9),1280px);height:auto;max-height:calc(100dvh - 8px);aspect-ratio:16 / 9;overflow:hidden;border:2px solid #38bdf8;border-radius:12px;background:#061329;box-shadow:0 0 36px #0ea5e966}
+canvas{display:block;width:100%;height:100%;background:#061329}
+.topbar{position:absolute;z-index:12;top:10px;left:10px;right:10px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px;pointer-events:none}
+.menu,.icon-btn{pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:7px 11px;border:2px solid #67e8f9;border-radius:8px;background:rgba(3,12,28,.88);color:#cffafe;text-decoration:none;font:700 clamp(10px,1.25vw,14px)/1 "Courier New",monospace;text-shadow:1px 2px #000;box-shadow:0 0 12px #0891b255}
+.top-actions{display:flex;gap:7px}.icon-btn{cursor:pointer;min-width:42px}
+.hud{position:absolute;z-index:10;top:60px;left:12px;right:12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;pointer-events:none;font-weight:900;font-size:clamp(11px,1.4vw,18px);text-shadow:2px 2px #000,0 0 7px #000}
+.hud>div{padding:5px 8px;border-radius:6px;background:linear-gradient(90deg,rgba(2,6,23,.7),rgba(2,6,23,.2))}.hud-center{text-align:center;color:#a7f3d0}.hud-right{text-align:right;color:#fde047}
+.status{position:absolute;z-index:11;top:103px;left:50%;transform:translateX(-50%);padding:5px 12px;border-radius:20px;background:rgba(2,6,23,.65);color:#bae6fd;font-weight:bold;font-size:clamp(10px,1.1vw,14px);white-space:nowrap;pointer-events:none}
+.overlay{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(8px,1.5vh,16px);padding:clamp(18px,4vw,42px);text-align:center;background:linear-gradient(rgba(2,6,23,.88),rgba(3,15,35,.94));backdrop-filter:blur(4px);overflow:auto}.overlay.hidden{display:none}
+h1{font-size:clamp(23px,4.1vw,52px);line-height:1.05;color:#7dd3fc;text-shadow:0 0 20px #0ea5e9}.subtitle{font-size:clamp(11px,1.5vw,18px);color:#cbd5e1}.verse{max-width:760px;padding:clamp(9px,1.5vw,16px);border:1px solid #38bdf866;border-radius:10px;background:#1e293b99;font-size:clamp(11px,1.3vw,16px);line-height:1.4}.btn{padding:clamp(10px,1.4vw,15px) clamp(18px,3vw,34px);border:2px solid #67e8f9;border-radius:10px;background:linear-gradient(135deg,#0284c7,#075985);color:white;font:900 clamp(13px,1.6vw,19px) "Courier New",monospace;cursor:pointer;box-shadow:0 0 18px #0ea5e980}.controls-copy{font-size:clamp(10px,1.1vw,14px);color:#94a3b8}
+.touch-controls{position:absolute;z-index:15;left:14px;right:14px;bottom:max(12px,env(safe-area-inset-bottom));display:none;justify-content:space-between;pointer-events:none}.touch-group{display:flex;gap:10px}.touch-btn{pointer-events:auto;width:clamp(54px,11vw,76px);height:clamp(54px,11vw,76px);border:2px solid #67e8f9aa;border-radius:50%;background:#07182dcc;color:#cffafe;font-size:clamp(20px,5vw,32px);font-weight:bold;box-shadow:0 3px 18px #000}.touch-btn.active{background:#67e8f9;color:#082f49;transform:scale(.96)}
+@media (pointer:coarse),(max-width:700px){.touch-controls{display:flex}.hud{top:54px;grid-template-columns:1fr 1fr;font-size:clamp(10px,2.7vw,14px)}.hud-center{display:none}.status{top:88px}.menu{max-width:42vw;overflow:hidden;white-space:nowrap}.topbar{top:6px}.top-actions{gap:4px}.icon-btn{min-height:36px;min-width:37px;padding:5px}.overlay{justify-content:flex-start;padding-top:10vh}}
+@media (max-height:480px){.hud{top:50px}.status{display:none}.touch-controls{bottom:7px}.overlay{gap:6px;padding:34px 20px 8px}.verse{line-height:1.2}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
 </head>
 <body>
-
-  <!-- FIXED STICKY TOP-LEFT ARCADE MENU BUTTON -->
-  <a href="../index.html" class="arcade-menu-btn">⬅ ARCADE MENU</a>
-
-  <div id="game-container">
-    <canvas id="gameCanvas" width="900" height="620"></canvas>
-
-    <!-- HUD -->
-    <div class="hud" id="hud">
-      <div class="hud-hearts" id="hudHearts">❤️❤️❤️❤️❤️</div>
-      <div class="hud-harmony" id="hudHarmony">🕊️ EDEN PEACE: 100%</div>
-      <div class="hud-score" id="hudScore">SCORE: 0</div>
-    </div>
-
-    <!-- TOUCH CONTROLS -->
-    <div class="touch-controls" id="touchControls" style="display:none;">
-      <div style="display:flex; gap:10px;">
-        <button class="touch-btn" id="btnLeft">◀</button>
-        <button class="touch-btn" id="btnRight">▶</button>
-      </div>
-      <div style="display:flex; gap:10px;">
-        <button class="touch-btn" id="btnShield">🛡️</button>
-        <button class="touch-btn" id="btnSpeed">▲</button>
-      </div>
-    </div>
-
-    <!-- START MODAL -->
-    <div class="overlay" id="startModal">
-      <h1>🌊 ARK: DELUGE NAVIGATOR</h1>
-      <div class="subtitle">PHYSICS-BASED FLOOD STEERING &bull; EDEN SANCTUARY DEFENSE</div>
-      <div class="verse-card">
-        <strong>Genesis 6:9 (ESV)</strong><br>
-        <em>"Noah was a righteous man, blameless in his generation. Noah walked with God."</em><br><br>
-        Steer the massive 3-deck Ark through torrential currents, crushing whirlpools, and pre-flood redwood drift. Keep the animals calm, collect olive branches, and stay afloat!
-      </div>
-      <button class="btn" id="btnStart" onclick="startGame()">▶ LAUNCH ARK VOYAGE</button>
-      <div style="margin-top:14px; font-size:12px; color:#64748b;">
-        Controls: <strong>[A/D]</strong> or <strong>[Left/Right]</strong> Steer &bull; <strong>[W]</strong> Surge &bull; <strong>[SPACE]</strong> Pitch Shield
-      </div>
-    </div>
-
-    <!-- GAME OVER MODAL -->
-    <div class="overlay hidden" id="gameOverModal">
-      <h1 style="color:#f43f5e;">HULL BREACHED!</h1>
-      <div class="subtitle">The waves were fierce, but God's covenant never fails!</div>
-      <div class="verse-card" id="finalStats">
-        Score: 0 &bull; Doves Rescued: 0 &bull; Distance: 0m
-      </div>
-      <button class="btn" onclick="startGame()">🔄 TRY AGAIN</button>
-    </div>
-
-    <!-- VICTORY WAVE CHECKPOINT -->
-    <div class="overlay hidden" id="checkpointModal">
-      <h1 style="color:#34d399;">🌈 STORM WAVE CLEARED!</h1>
-      <div class="subtitle">The waters calm and a dove returns with green leaves!</div>
-      <div class="verse-card">
-        <strong>Hebrews 11:7</strong><br>
-        <em>"By faith Noah, being warned by God concerning events as yet unseen, in reverent fear constructed an ark for the saving of his household."</em>
-      </div>
-      <button class="btn" onclick="nextWave()">SAIL TO NEXT HORIZON ▶</button>
-    </div>
-
-  </div>
-
-  <script>
-    // --- SYNTHESIZED PROCEDURAL WEB AUDIO (ZERO EXTERNAL MP3s) ---
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    let actx = null;
-
-    function initAudio() {
-      if (!actx) actx = new AudioCtx();
-      if (actx.state === 'suspended') actx.resume();
-    }
-
-    function playSound(type) {
-      if (!actx) return;
-      try {
-        const now = actx.currentTime;
-        if (type === 'steer') {
-          const osc = actx.createOscillator();
-          const gain = actx.createGain();
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(140, now);
-          osc.frequency.linearRampToValueAtTime(80, now + 0.15);
-          gain.gain.setValueAtTime(0.08, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-          osc.connect(gain);
-          gain.connect(actx.destination);
-          osc.start();
-          osc.stop(now + 0.15);
-        } else if (type === 'hit') {
-          // Thunder / Crash
-          const osc = actx.createOscillator();
-          const gain = actx.createGain();
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(80, now);
-          osc.frequency.exponentialRampToValueAtTime(30, now + 0.4);
-          gain.gain.setValueAtTime(0.3, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-          osc.connect(gain);
-          gain.connect(actx.destination);
-          osc.start();
-          osc.stop(now + 0.4);
-        } else if (type === 'dove') {
-          // Cheerful chime
-          const notes = [523.25, 659.25, 783.99, 1046.50];
-          notes.forEach((freq, idx) => {
-            const osc = actx.createOscillator();
-            const gain = actx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(freq, now + idx * 0.08);
-            gain.gain.setValueAtTime(0.12, now + idx * 0.08);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.25);
-            osc.connect(gain);
-            gain.connect(actx.destination);
-            osc.start(now + idx * 0.08);
-            osc.stop(now + idx * 0.08 + 0.25);
-          });
-        } else if (type === 'shield') {
-          const osc = actx.createOscillator();
-          const gain = actx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(300, now);
-          osc.frequency.linearRampToValueAtTime(600, now + 0.3);
-          gain.gain.setValueAtTime(0.15, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-          osc.connect(gain);
-          gain.connect(actx.destination);
-          osc.start();
-          osc.stop(now + 0.3);
-        }
-      } catch (e) {}
-    }
-
-    // --- GAME ENGINE SETUP ---
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-
-    // Detect mobile touch
-    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-      document.getElementById('touchControls').style.display = 'flex';
-    }
-
-    let gameState = 'START';
-    let hearts = 5;
-    let score = 0;
-    let dovesRescued = 0;
-    let distance = 0;
-    let harmony = 100;
-    let currentWave = 1;
-    let waveDistanceTarget = 1500;
-    let invulnTimer = 0;
-    let shieldTimer = 0;
-    let lightningFlash = 0;
-
-    // The Ark Physics Object
-    const ark = {
-      x: 450,
-      y: 480,
-      vx: 0,
-      vy: 0,
-      width: 44,
-      height: 96,
-      angle: 0,
-      angularVelocity: 0,
-      speed: 3.5,
-      maxSpeed: 6.0,
-      steerPower: 0.0035,
-      friction: 0.94,
-      waterDrag: 0.96
-    };
-
-    const keys = {};
-    window.addEventListener('keydown', e => {
-      keys[e.code] = true;
-      initAudio();
-      if (e.code === 'Space' && gameState === 'PLAYING') activateShield();
-    });
-    window.addEventListener('keyup', e => { keys[e.code] = false; });
-
-    // Touch bindings
-    function bindTouch(id, code) {
-      const el = document.getElementById(id);
-      if (!el) return;
-      el.addEventListener('touchstart', e => { e.preventDefault(); keys[code] = true; initAudio(); });
-      el.addEventListener('touchend', e => { e.preventDefault(); keys[code] = false; });
-    }
-    bindTouch('btnLeft', 'ArrowLeft');
-    bindTouch('btnRight', 'ArrowRight');
-    bindTouch('btnSpeed', 'ArrowUp');
-    const bShield = document.getElementById('btnShield');
-    if (bShield) {
-      bShield.addEventListener('touchstart', e => { e.preventDefault(); activateShield(); initAudio(); });
-    }
-
-    // Obstacles and Collectibles
-    let obstacles = [];
-    let collectibles = [];
-    let waveLines = [];
-
-    for (let i = 0; i < 20; i++) {
-      waveLines.push({
-        x: Math.random() * 900,
-        y: Math.random() * 620,
-        len: 30 + Math.random() * 50,
-        speed: 2 + Math.random() * 2
-      });
-    }
-
-    function spawnObstacle() {
-      const types = ['LOG', 'LOG', 'WHIRLPOOL', 'ROCK'];
-      const type = types[Math.floor(Math.random() * types.length)];
-      obstacles.push({
-        type: type,
-        x: 60 + Math.random() * 780,
-        y: -100,
-        radius: type === 'WHIRLPOOL' ? 42 : (type === 'ROCK' ? 26 : 22),
-        vx: (Math.random() - 0.5) * 1.5,
-        vy: 2.5 + Math.random() * 2.0,
-        angle: Math.random() * Math.PI * 2,
-        rotSpeed: (Math.random() - 0.5) * 0.04
-      });
-    }
-
-    function spawnCollectible() {
-      const types = ['DOVE', 'PITCH', 'ANIMAL'];
-      const type = types[Math.floor(Math.random() * types.length)];
-      collectibles.push({
-        type: type,
-        x: 80 + Math.random() * 740,
-        y: -60,
-        radius: 18,
-        vy: 2.2,
-        bobPhase: Math.random() * Math.PI
-      });
-    }
-
-    function activateShield() {
-      if (shieldTimer <= 0 && harmony >= 20) {
-        shieldTimer = 180; // 3 seconds of protective bow-wave
-        harmony = Math.max(0, harmony - 15);
-        playSound('shield');
-      }
-    }
-
-    function startGame() {
-      initAudio();
-      gameState = 'PLAYING';
-      hearts = 5;
-      score = 0;
-      dovesRescued = 0;
-      distance = 0;
-      harmony = 100;
-      currentWave = 1;
-      waveDistanceTarget = 1500;
-      invulnTimer = 0;
-      shieldTimer = 0;
-      obstacles = [];
-      collectibles = [];
-      ark.x = 450;
-      ark.y = 480;
-      ark.vx = 0;
-      ark.vy = 0;
-      ark.angle = 0;
-      ark.angularVelocity = 0;
-
-      document.getElementById('startModal').classList.add('hidden');
-      document.getElementById('gameOverModal').classList.add('hidden');
-      document.getElementById('checkpointModal').classList.add('hidden');
-      updateHUD();
-    }
-
-    function nextWave() {
-      currentWave++;
-      waveDistanceTarget += 1500 + currentWave * 300;
-      gameState = 'PLAYING';
-      obstacles = [];
-      collectibles = [];
-      document.getElementById('checkpointModal').classList.add('hidden');
-    }
-
-    function updateHUD() {
-      let heartStr = '';
-      for (let i = 0; i < 5; i++) {
-        heartStr += (i < hearts) ? '❤️' : '🖤';
-      }
-      document.getElementById('hudHearts').innerText = heartStr;
-      document.getElementById('hudScore').innerText = 'SCORE: ' + score;
-      document.getElementById('hudHarmony').innerText = '🕊️ EDEN PEACE: ' + Math.round(harmony) + '%';
-    }
-
-    // --- MAIN GAME LOOP ---
-    let lastTime = 0;
-    let spawnTimer = 0;
-
-    function gameLoop(timestamp) {
-      const dt = timestamp - lastTime;
-      lastTime = timestamp;
-
-      if (gameState === 'PLAYING') {
-        update(dt);
-      }
-      render();
-
-      requestAnimationFrame(gameLoop);
-    }
-
-    function update(dt) {
-      distance += 2;
-      score += 1;
-
-      // Handle Ark Steering Physics
-      let steerInput = 0;
-      if (keys['ArrowLeft'] || keys['KeyA']) steerInput -= 1;
-      if (keys['ArrowRight'] || keys['KeyD']) steerInput += 1;
-
-      if (steerInput !== 0) {
-        ark.angularVelocity += steerInput * ark.steerPower;
-        playSound('steer');
-      }
-
-      ark.angle += ark.angularVelocity;
-      ark.angularVelocity *= 0.90; // Angular damping
-      ark.angle = Math.max(-0.6, Math.min(0.6, ark.angle)); // Clamp tilt
-
-      let thrust = ark.speed;
-      if (keys['ArrowUp'] || keys['KeyW']) thrust = ark.maxSpeed;
-
-      // Lateral velocity based on angle and steering drift
-      ark.vx += Math.sin(ark.angle) * thrust * 0.4;
-      ark.x += ark.vx;
-      ark.vx *= ark.waterDrag;
-
-      // Keep Ark inside river/ocean banks
-      if (ark.x < 70) { ark.x = 70; ark.vx = -ark.vx * 0.5; }
-      if (ark.x > 830) { ark.x = 830; ark.vx = -ark.vx * 0.5; }
-
-      // Timers
-      if (invulnTimer > 0) invulnTimer--;
-      if (shieldTimer > 0) shieldTimer--;
-
-      // Passive harmony recovery when steering smoothly
-      if (Math.abs(ark.angle) < 0.15 && harmony < 100) {
-        harmony = Math.min(100, harmony + 0.05);
-      } else if (Math.abs(ark.angle) > 0.45) {
-        harmony = Math.max(0, harmony - 0.15); // Rough seas agitate animals
-      }
-
-      // Spawning
-      spawnTimer++;
-      if (spawnTimer % 45 === 0) {
-        spawnObstacle();
-      }
-      if (spawnTimer % 90 === 0) {
-        spawnCollectible();
-      }
-      if (Math.random() < 0.005) {
-        lightningFlash = 6;
-        playSound('hit');
-      }
-      if (lightningFlash > 0) lightningFlash--;
-
-      // Update Obstacles
-      for (let i = obstacles.length - 1; i >= 0; i--) {
-        const o = obstacles[i];
-        o.y += o.vy;
-        o.x += o.vx;
-        o.angle += o.rotSpeed;
-
-        // Whirlpool pull physics
-        if (o.type === 'WHIRLPOOL') {
-          const dx = o.x - ark.x;
-          const dy = o.y - ark.y;
-          const dist = Math.hypot(dx, dy);
-          if (dist < 150) {
-            ark.vx += (dx / dist) * 0.6; // Pulls Ark towards vortex
-          }
-        }
-
-        // Collision Check (Forgiving Inner Hitbox: radius + 14px)
-        const cdx = o.x - ark.x;
-        const cdy = o.y - ark.y;
-        const cdist = Math.hypot(cdx, cdy);
-
-        if (cdist < (o.radius + 18)) {
-          if (shieldTimer > 0) {
-            // Deflected by Pitch Shield
-            obstacles.splice(i, 1);
-            score += 50;
-            playSound('dove');
-          } else if (invulnTimer <= 0) {
-            // Damage Hull
-            hearts--;
-            invulnTimer = 90; // 1.5s grace period
-            harmony = Math.max(0, harmony - 25);
-            playSound('hit');
-            updateHUD();
-
-            if (hearts <= 0) {
-              gameOver();
-              return;
-            }
-          }
-        } else if (o.y > 660) {
-          obstacles.splice(i, 1);
-        }
-      }
-
-      // Update Collectibles
-      for (let i = collectibles.length - 1; i >= 0; i--) {
-        const c = collectibles[i];
-        c.y += c.vy;
-        c.bobPhase += 0.08;
-
-        const cdx = c.x - ark.x;
-        const cdy = c.y - ark.y;
-        const cdist = Math.hypot(cdx, cdy);
-
-        if (cdist < 40) {
-          // Collected!
-          if (c.type === 'DOVE') {
-            dovesRescued++;
-            score += 150;
-            harmony = Math.min(100, harmony + 20);
-            playSound('dove');
-          } else if (c.type === 'PITCH') {
-            score += 100;
-            shieldTimer = 180; // Trigger free pitch shield
-            playSound('shield');
-          } else if (c.type === 'ANIMAL') {
-            score += 200;
-            if (hearts < 5) hearts++;
-            harmony = 100;
-            playSound('dove');
-          }
-          collectibles.splice(i, 1);
-          updateHUD();
-        } else if (c.y > 660) {
-          collectibles.splice(i, 1);
-        }
-      }
-
-      // Wave Checkpoint
-      if (distance >= waveDistanceTarget) {
-        gameState = 'CHECKPOINT';
-        document.getElementById('checkpointModal').classList.remove('hidden');
-      }
-
-      if (spawnTimer % 10 === 0) updateHUD();
-    }
-
-    function gameOver() {
-      gameState = 'GAMEOVER';
-      document.getElementById('finalStats').innerHTML = 
-        `<strong>Final Score:</strong> ${score} &bull; <strong>Doves Rescued:</strong> ${dovesRescued} &bull; <strong>Distance:</strong> ${distance}m`;
-      document.getElementById('gameOverModal').classList.remove('hidden');
-    }
-
-    // --- CANVAS RENDERING ---
-    function render() {
-      ctx.clearRect(0, 0, 900, 620);
-
-      // 1. Water Background with dynamic depth gradient
-      const grad = ctx.createLinearGradient(0, 0, 0, 620);
-      grad.addColorStop(0, '#020617');
-      grad.addColorStop(0.5, '#071838');
-      grad.addColorStop(1, '#0c275a');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 900, 620);
-
-      // 2. Animated Rain & Deluge Wave Lines
-      ctx.strokeStyle = 'rgba(125, 211, 252, 0.25)';
-      ctx.lineWidth = 1.5;
-      waveLines.forEach(w => {
-        w.y += w.speed;
-        if (w.y > 620) { w.y = -10; w.x = Math.random() * 900; }
-        ctx.beginPath();
-        ctx.moveTo(w.x, w.y);
-        ctx.lineTo(w.x + 8, w.y + w.len);
-        ctx.stroke();
-      });
-
-      // 3. Render Collectibles
-      collectibles.forEach(c => {
-        const bob = Math.sin(c.bobPhase) * 4;
-        ctx.save();
-        ctx.translate(c.x, c.y + bob);
-
-        if (c.type === 'DOVE') {
-          ctx.font = '24px sans-serif';
-          ctx.fillText('🕊️', -12, 8);
-          // Golden glow
-          ctx.beginPath();
-          ctx.arc(0, 0, 18, 0, Math.PI * 2);
-          ctx.strokeStyle = '#facc15';
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
-        } else if (c.type === 'PITCH') {
-          ctx.font = '22px sans-serif';
-          ctx.fillText('🛢️', -11, 7);
-        } else if (c.type === 'ANIMAL') {
-          ctx.font = '24px sans-serif';
-          ctx.fillText('🦁', -12, 8);
-          ctx.beginPath();
-          ctx.arc(0, 0, 18, 0, Math.PI * 2);
-          ctx.strokeStyle = '#34d399';
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
-        }
-        ctx.restore();
-      });
-
-      // 4. Render Obstacles
-      obstacles.forEach(o => {
-        ctx.save();
-        ctx.translate(o.x, o.y);
-        ctx.rotate(o.angle);
-
-        if (o.type === 'LOG') {
-          // Pre-flood Giant Timber
-          ctx.fillStyle = '#78350f';
-          ctx.strokeStyle = '#451a03';
-          ctx.lineWidth = 2;
-          ctx.fillRect(-18, -32, 36, 64);
-          ctx.strokeRect(-18, -32, 36, 64);
-          // Bark rings
-          ctx.fillStyle = '#b45309';
-          ctx.beginPath();
-          ctx.arc(0, -20, 8, 0, Math.PI*2);
-          ctx.arc(0, 20, 8, 0, Math.PI*2);
-          ctx.fill();
-        } else if (o.type === 'WHIRLPOOL') {
-          ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)';
-          ctx.lineWidth = 3;
-          for (let r = 8; r < 40; r += 10) {
-            ctx.beginPath();
-            ctx.arc(0, 0, r, o.angle, o.angle + Math.PI * 1.4);
-            ctx.stroke();
-          }
-          ctx.font = '24px sans-serif';
-          ctx.fillText('🌀', -12, 8);
-        } else if (o.type === 'ROCK') {
-          ctx.fillStyle = '#334155';
-          ctx.strokeStyle = '#0f172a';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.moveTo(-20, 20);
-          ctx.lineTo(-10, -22);
-          ctx.lineTo(16, -18);
-          ctx.lineTo(24, 18);
-          ctx.closePath();
-          ctx.fill();
-          ctx.stroke();
-        }
-        ctx.restore();
-      });
-
-      // 5. Render The Ark (The 3-Deck Floating Eden)
-      ctx.save();
-      ctx.translate(ark.x, ark.y);
-      ctx.rotate(ark.angle);
-
-      // Flashing if invulnerable
-      if (invulnTimer % 6 < 3) {
-        // Protective Pitch Shield Glow
-        if (shieldTimer > 0) {
-          ctx.beginPath();
-          ctx.ellipse(0, 0, 38, 62, 0, 0, Math.PI * 2);
-          ctx.strokeStyle = '#38bdf8';
-          ctx.lineWidth = 4;
-          ctx.fillStyle = 'rgba(56, 189, 248, 0.2)';
-          ctx.fill();
-          ctx.stroke();
-        }
-
-        // Hull Bow & Keel (Gopher wood brown)
-        ctx.fillStyle = '#5c2b09';
-        ctx.strokeStyle = '#2b1102';
-        ctx.lineWidth = 3;
-
-        ctx.beginPath();
-        ctx.moveTo(0, -50); // Sharp Bow
-        ctx.quadraticCurveTo(24, -30, 22, 38);
-        ctx.lineTo(-22, 38);
-        ctx.quadraticCurveTo(-24, -30, 0, -50);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        // 3-Deck Windows & Upper Roof
-        ctx.fillStyle = '#854d0e';
-        ctx.fillRect(-14, -28, 28, 56);
-        ctx.strokeStyle = '#451a03';
-        ctx.strokeRect(-14, -28, 28, 56);
-
-        // Deck Lines (Lower, Middle, Upper Decks)
-        ctx.strokeStyle = '#ca8a04';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(-14, -10); ctx.lineTo(14, -10);
-        ctx.moveTo(-14, 10); ctx.lineTo(14, 10);
-        ctx.stroke();
-
-        // Olive Branch / Peace Beacon
-        ctx.font = '16px sans-serif';
-        ctx.fillText('🕊️', -8, -12);
-      }
-      ctx.restore();
-
-      // 6. Lightning Flash Effect
-      if (lightningFlash > 0) {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
-        ctx.fillRect(0, 0, 900, 620);
-      }
-    }
-
-    // Start rendering
-    requestAnimationFrame(gameLoop);
-  </script>
+<div id="game-container">
+<canvas id="gameCanvas" width="1280" height="720" tabindex="0" aria-label="Ark Deluge Navigator game area"></canvas>
+<div class="topbar"><a class="menu" href="../index.html">⬅ ARCADE MENU</a><div class="top-actions"><button class="icon-btn" id="btnPause" aria-label="Pause game">Ⅱ</button><button class="icon-btn" id="btnFullscreen" aria-label="Fullscreen">⛶</button></div></div>
+<div class="hud" id="hud"><div id="hudHearts">❤️❤️❤️❤️❤️</div><div class="hud-center" id="hudHarmony">🕊 PEACE 100%</div><div class="hud-right" id="hudScore">SCORE 0</div></div>
+<div class="status" id="status">CALM WATER • WAVE 1</div>
+<div class="touch-controls" id="touchControls"><div class="touch-group"><button class="touch-btn" id="btnLeft" aria-label="Steer left">◀</button><button class="touch-btn" id="btnRight" aria-label="Steer right">▶</button></div><div class="touch-group"><button class="touch-btn" id="btnShield" aria-label="Use pitch shield">🛡</button><button class="touch-btn" id="btnSpeed" aria-label="Gentle surge">▲</button></div></div>
+<div class="overlay" id="startModal"><h1>🌊 ARK: DELUGE NAVIGATOR</h1><div class="subtitle">A GENTLER VOYAGE OF FAITH • GENESIS 6–8</div><div class="verse"><strong>Genesis 6:9 (ESV)</strong><br><em>“Noah was a righteous man, blameless in his generation. Noah walked with God.”</em><br><br>Guide this storybook Ark through the fictionalized flood voyage. Hazards glow before they arrive. Rescue animals and doves, and use pitch shields when the water gets rough.</div><button class="btn" id="btnStart">▶ LAUNCH ARK VOYAGE</button><div class="controls-copy">A/D or ←/→ steer • W/↑ gentle surge • SPACE shield • P pause</div></div>
+<div class="overlay hidden" id="pauseModal"><h1>VOYAGE PAUSED</h1><div class="verse">The storm, animals, and every game clock are resting.</div><button class="btn" id="btnResume">▶ RESUME</button></div>
+<div class="overlay hidden" id="gameOverModal"><h1 style="color:#fda4af">HULL NEEDS REPAIR</h1><div class="subtitle">Rest, regroup, and set sail again.</div><div class="verse" id="finalStats"></div><button class="btn" id="btnRestart">↻ TRY AGAIN</button></div>
+<div class="overlay hidden" id="checkpointModal"><h1 style="color:#6ee7b7">🌈 HORIZON REACHED!</h1><div class="subtitle">The waters soften and a dove returns with a leaf.</div><div class="verse"><strong>Hebrews 11:7</strong><br><em>“By faith Noah ... constructed an ark for the saving of his household.”</em></div><button class="btn" id="btnNext">SAIL ON ▶</button></div>
+</div>
+<script>
+/* ARK_MECHANICS_START */
+const ArkMechanics=(()=>{
+  const TUNING=Object.freeze({worldWidth:1280,worldHeight:720,maxDeltaMs:100/3,lateralAcceleration:180,maxLateralSpeed:170,lateralDrag:2.8,angularAcceleration:1.05,maxAngularVelocity:.62,angularDamping:5.4,selfRighting:3.2,maxTilt:.28,collisionSpeedCap:78,collisionTiltImpulse:.055,baseScrollSpeed:92,hazardMinSpeed:88,hazardMaxSpeed:154,invulnerabilityMs:2400,shieldMs:8000,hitRadius:32,warningMs:1100});
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const normalizeDelta=ms=>clamp(Number.isFinite(ms)?ms:0,0,TUNING.maxDeltaMs);
+  const createBoat=()=>({x:TUNING.worldWidth/2,y:570,vx:0,angle:0,angularVelocity:0});
+  function stepBoat(b,input,ms){const dt=normalizeDelta(ms)/1000,steer=(input.right?1:0)-(input.left?1:0);b.vx+=steer*TUNING.lateralAcceleration*dt;b.vx*=Math.exp(-TUNING.lateralDrag*dt);b.vx=clamp(b.vx,-TUNING.maxLateralSpeed,TUNING.maxLateralSpeed);b.angularVelocity+=steer*TUNING.angularAcceleration*dt;b.angularVelocity+=(-b.angle*TUNING.selfRighting)*dt;b.angularVelocity*=Math.exp(-TUNING.angularDamping*dt);b.angularVelocity=clamp(b.angularVelocity,-TUNING.maxAngularVelocity,TUNING.maxAngularVelocity);b.angle=clamp(b.angle+b.angularVelocity*dt,-TUNING.maxTilt,TUNING.maxTilt);b.x=clamp(b.x+b.vx*dt,72,TUNING.worldWidth-72);if(b.x===72||b.x===TUNING.worldWidth-72)b.vx*=.2;return b}
+  function applyCollision(b,direction){const d=direction||1;b.vx=clamp(d*TUNING.collisionSpeedCap,-TUNING.collisionSpeedCap,TUNING.collisionSpeedCap);b.angularVelocity=clamp(d*TUNING.collisionTiltImpulse*3,-TUNING.maxAngularVelocity,TUNING.maxAngularVelocity);b.angle=clamp(b.angle+d*TUNING.collisionTiltImpulse,-TUNING.maxTilt,TUNING.maxTilt);return b}
+  const obstacleInterval=wave=>Math.max(820,1300-(Math.max(1,wave)-1)*35);
+  const hazardSpeed=(wave,seed=.5)=>clamp(TUNING.hazardMinSpeed+seed*32+(Math.max(1,wave)-1)*2,TUNING.hazardMinSpeed,TUNING.hazardMaxSpeed);
+  return{TUNING,normalizeDelta,createBoat,stepBoat,applyCollision,obstacleInterval,hazardSpeed};
+})();
+/* ARK_MECHANICS_END */
+const canvas=document.getElementById('gameCanvas'),ctx=canvas.getContext('2d'),T=ArkMechanics.TUNING,reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $=id=>document.getElementById(id),keys={},ark=ArkMechanics.createBoat();
+let gameState='START',previousState='PLAYING',hearts=5,score=0,dovesRescued=0,distance=0,harmony=100,currentWave=1,waveTarget=520,invuln=0,shield=0,spawnClock=0,collectClock=0,worldClock=0,lastTime=0,accumulator=0,lightning={phase:'none',timer:6000,x:900},obstacles=[],collectibles=[],particles=[];
+const rain=Array.from({length:65},(_,i)=>({x:(i*197)%1280,y:(i*83)%720,len:10+(i%5)*4,speed:150+(i%7)*13}));
+const clouds=Array.from({length:9},(_,i)=>({x:i*190-100,y:110+(i%3)*35,size:70+(i%4)*18,speed:4+(i%3)*2}));
+let actx=null;
+function audio(type){try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;if(!actx)actx=new AC();if(actx.state==='suspended')actx.resume();const o=actx.createOscillator(),g=actx.createGain(),n=actx.currentTime;o.type=type==='hit'?'triangle':'sine';o.frequency.setValueAtTime(type==='collect'?520:type==='shield'?310:90,n);o.frequency.exponentialRampToValueAtTime(type==='collect'?820:type==='shield'?620:45,n+.25);g.gain.setValueAtTime(type==='hit'?.12:.07,n);g.gain.exponentialRampToValueAtTime(.001,n+.28);o.connect(g);g.connect(actx.destination);o.start();o.stop(n+.3)}catch(e){}}
+function resetBoat(){Object.assign(ark,ArkMechanics.createBoat())}
+function startGame(){gameState='PLAYING';hearts=5;score=0;dovesRescued=0;distance=0;harmony=100;currentWave=1;waveTarget=520;invuln=shield=spawnClock=collectClock=0;obstacles=[];collectibles=[];particles=[];resetBoat();lastTime=performance.now();accumulator=0;['startModal','gameOverModal','checkpointModal','pauseModal'].forEach(id=>$(id).classList.add('hidden'));canvas.focus();updateHUD();audio('collect')}
+function nextWave(){currentWave++;waveTarget+=560+currentWave*60;obstacles=[];collectibles=[];spawnClock=collectClock=0;gameState='PLAYING';$('checkpointModal').classList.add('hidden');lastTime=performance.now();canvas.focus()}
+function togglePause(){if(gameState==='PLAYING'){previousState='PLAYING';gameState='PAUSED';$('pauseModal').classList.remove('hidden')}else if(gameState==='PAUSED'){gameState=previousState;$('pauseModal').classList.add('hidden');lastTime=performance.now();canvas.focus()}}
+function gameOver(){gameState='GAMEOVER';$('finalStats').textContent=`Score ${score} • Animals rescued ${dovesRescued} • Distance ${Math.floor(distance)}m`;$('gameOverModal').classList.remove('hidden')}
+function shieldOn(){if(gameState==='PLAYING'&&shield<=0&&harmony>=15){shield=T.shieldMs;harmony=Math.max(0,harmony-15);audio('shield')}}
+function spawnObstacle(){const r=Math.random(),type=r<.5?'LOG':r<.78?'ROCK':'WHIRLPOOL',radius=type==='WHIRLPOOL'?38:type==='ROCK'?25:23;obstacles.push({type,x:95+Math.random()*1090,y:-70,radius,vx:(Math.random()-.5)*18,vy:ArkMechanics.hazardSpeed(currentWave,Math.random()),angle:Math.random()*6.28,rot:(Math.random()-.5)*.7,warning:T.warningMs})}
+function spawnCollectible(){const a=['DOVE','PITCH','ANIMAL'],type=a[Math.floor(Math.random()*a.length)];collectibles.push({type,x:105+Math.random()*1070,y:-35,vy:72,bob:Math.random()*6.28})}
+function sparks(x,y,color,count=9){if(reduced)return;for(let i=0;i<count;i++)particles.push({x,y,vx:(Math.random()-.5)*150,vy:(Math.random()-.5)*150,life:500,color})}
+function hitObstacle(o,index){if(o.warning>0)return;if(shield>0){obstacles.splice(index,1);score+=40;sparks(o.x,o.y,'#67e8f9');audio('collect');return}if(invuln<=0){hearts--;invuln=T.invulnerabilityMs;harmony=Math.max(0,harmony-18);ArkMechanics.applyCollision(ark,ark.x<o.x?-1:1);obstacles.splice(index,1);sparks(ark.x,ark.y,'#fda4af',14);audio('hit');if(hearts<=0)gameOver()}}
+function update(ms){const dt=ArkMechanics.normalizeDelta(ms),s=dt/1000;worldClock+=dt;distance+=s*12;score+=s*6;clouds.forEach(c=>{if(!reduced){c.x+=c.speed*s;if(c.x-c.size>1330)c.x=-c.size}});ArkMechanics.stepBoat(ark,{left:keys.ArrowLeft||keys.KeyA,right:keys.ArrowRight||keys.KeyD,surge:keys.ArrowUp||keys.KeyW},dt);invuln=Math.max(0,invuln-dt);shield=Math.max(0,shield-dt);if(Math.abs(ark.angle)<.08)harmony=Math.min(100,harmony+s*2.5);spawnClock+=dt;collectClock+=dt;if(spawnClock>=ArkMechanics.obstacleInterval(currentWave)){spawnClock=0;spawnObstacle()}if(collectClock>=2450){collectClock=0;spawnCollectible()}
+for(let i=obstacles.length-1;i>=0;i--){const o=obstacles[i];o.warning=Math.max(0,o.warning-dt);o.y+=o.vy*s;o.x+=o.vx*s;o.angle+=o.rot*s;if(o.type==='WHIRLPOOL'&&o.warning<=0){const dx=o.x-ark.x,dy=o.y-ark.y,d=Math.hypot(dx,dy);if(d<145&&d>1)ark.vx+=dx/d*18*s}if(Math.hypot(o.x-ark.x,o.y-ark.y)<o.radius+T.hitRadius)hitObstacle(o,i);else if(o.y>790)obstacles.splice(i,1)}
+for(let i=collectibles.length-1;i>=0;i--){const c=collectibles[i];c.y+=c.vy*s;c.bob+=s*2;if(Math.hypot(c.x-ark.x,c.y-ark.y)<48){if(c.type==='DOVE'){score+=130;dovesRescued++;harmony=Math.min(100,harmony+22)}else if(c.type==='PITCH'){score+=90;shield=T.shieldMs}else{score+=170;dovesRescued++;hearts=Math.min(5,hearts+1);harmony=100}sparks(c.x,c.y,'#fde68a',12);collectibles.splice(i,1);audio('collect')}else if(c.y>770)collectibles.splice(i,1)}
+for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.x+=p.vx*s;p.y+=p.vy*s;p.vx*=.96;p.vy*=.96;p.life-=dt;if(p.life<=0)particles.splice(i,1)}
+lightning.timer-=dt;if(lightning.timer<=0){if(lightning.phase==='none'){lightning={phase:'warning',timer:1400,x:180+Math.random()*920}}else if(lightning.phase==='warning'){lightning.phase='flash';lightning.timer=reduced?80:150;audio('hit')}else{lightning.phase='none';lightning.timer=6500+Math.random()*4500}}
+if(distance>=waveTarget){gameState='CHECKPOINT';$('checkpointModal').classList.remove('hidden')}updateHUD()}
+function updateHUD(){$('hudHearts').textContent='❤️'.repeat(hearts)+'🖤'.repeat(5-hearts);$('hudHarmony').textContent=`🕊 PEACE ${Math.round(harmony)}%`;$('hudScore').textContent=`SCORE ${Math.floor(score)}`;$('status').textContent=(shield>0?'PITCH SHIELD • ':invuln>0?'RECOVERING • ':'CALM WATER • ')+`WAVE ${currentWave}`}
+function cloud(c,offset){ctx.fillStyle=offset?'#17233dcc':'#263756dd';ctx.beginPath();ctx.ellipse(c.x, c.y+offset,c.size,c.size*.28,0,0,6.29);ctx.ellipse(c.x-c.size*.45,c.y-12+offset,c.size*.48,c.size*.36,0,0,6.29);ctx.ellipse(c.x+c.size*.3,c.y-18+offset,c.size*.55,c.size*.4,0,0,6.29);ctx.fill()}
+function render(){const t=reduced?0:worldClock/1000;const sky=ctx.createLinearGradient(0,0,0,720);sky.addColorStop(0,currentWave>3?'#101632':'#08152d');sky.addColorStop(.48,'#12335a');sky.addColorStop(1,'#075985');ctx.fillStyle=sky;ctx.fillRect(0,0,1280,720);
+ctx.fillStyle='rgba(251,191,36,.09)';ctx.beginPath();ctx.arc(1050,165,95,0,6.29);ctx.fill();clouds.forEach((c,i)=>cloud(c,i%2*12));
+ctx.fillStyle='#082f49';ctx.beginPath();ctx.moveTo(0,310);for(let x=0;x<=1280;x+=80)ctx.lineTo(x,300+Math.sin(x*.012+t*.12)*25);ctx.lineTo(1280,430);ctx.lineTo(0,430);ctx.fill();
+for(let band=0;band<4;band++){ctx.strokeStyle=`rgba(${band?125:186},211,252,${.12+band*.06})`;ctx.lineWidth=2+band;ctx.beginPath();for(let x=0;x<=1280;x+=18){const y=370+band*82+Math.sin(x*.018+t*(.35+band*.08)+band)*8;ctx.lineTo(x,y)}ctx.stroke()}
+rain.forEach(r=>{const y=(r.y+t*r.speed)%760;ctx.strokeStyle='rgba(186,230,253,.22)';ctx.beginPath();ctx.moveTo(r.x,y);ctx.lineTo(r.x+7,y+r.len);ctx.stroke()});
+if(lightning.phase==='warning'){ctx.fillStyle='rgba(253,230,138,.08)';ctx.fillRect(lightning.x-75,80,150,520);ctx.fillStyle='#fde68a';ctx.font='bold 18px Courier New';ctx.textAlign='center';ctx.fillText('DISTANT LIGHTNING',lightning.x,145)}if(lightning.phase==='flash'){ctx.strokeStyle='rgba(255,255,255,.7)';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(lightning.x,70);ctx.lineTo(lightning.x-18,145);ctx.lineTo(lightning.x+8,210);ctx.lineTo(lightning.x-30,290);ctx.stroke()}
+obstacles.forEach(o=>{ctx.save();ctx.translate(o.x,o.y);ctx.rotate(o.angle);if(o.warning>0){const pulse=reduced?.55:.35+.2*Math.sin(t*8);ctx.strokeStyle=`rgba(253,230,138,${pulse})`;ctx.lineWidth=5;ctx.beginPath();ctx.arc(0,0,o.radius+18,0,6.29);ctx.stroke();ctx.rotate(-o.angle);ctx.fillStyle='#fde68a';ctx.font='bold 14px Courier New';ctx.textAlign='center';ctx.fillText('CAUTION',0,-o.radius-25)}if(o.type==='LOG'){ctx.fillStyle='#78350f';ctx.fillRect(-18,-34,36,68);ctx.strokeStyle='#d97706';ctx.strokeRect(-18,-34,36,68)}else if(o.type==='ROCK'){ctx.fillStyle='#475569';ctx.beginPath();ctx.moveTo(-25,20);ctx.lineTo(-12,-25);ctx.lineTo(20,-18);ctx.lineTo(27,21);ctx.fill()}else{ctx.strokeStyle='#7dd3fc';ctx.lineWidth=4;for(let r=10;r<40;r+=10){ctx.beginPath();ctx.arc(0,0,r,t+r, t+r+4.4);ctx.stroke()}}ctx.restore()});
+collectibles.forEach(c=>{const bob=reduced?0:Math.sin(c.bob)*5;ctx.save();ctx.translate(c.x,c.y+bob);ctx.fillStyle='rgba(253,230,138,.13)';ctx.beginPath();ctx.arc(0,0,27,0,6.29);ctx.fill();ctx.font='30px sans-serif';ctx.textAlign='center';ctx.fillText(c.type==='DOVE'?'🕊️':c.type==='PITCH'?'🛢️':'🦒',0,10);ctx.restore()});
+ctx.save();ctx.translate(ark.x,ark.y);ctx.rotate(ark.angle);if(!reduced){ctx.fillStyle='rgba(186,230,253,.28)';for(let i=0;i<4;i++){ctx.beginPath();ctx.ellipse((i-1.5)*18,58+i*4,12+i*5,5,0,0,6.29);ctx.fill()}}if(shield>0){ctx.strokeStyle='#67e8f9';ctx.fillStyle='rgba(34,211,238,.12)';ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(0,0,57,87,0,0,6.29);ctx.fill();ctx.stroke()}ctx.globalAlpha=invuln>0&&Math.floor(invuln/120)%2?.42:1;ctx.fillStyle='#713f12';ctx.strokeStyle='#2b1305';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(0,-65);ctx.quadraticCurveTo(40,-38,34,54);ctx.quadraticCurveTo(0,73,-34,54);ctx.quadraticCurveTo(-40,-38,0,-65);ctx.fill();ctx.stroke();ctx.fillStyle='#a16207';ctx.fillRect(-23,-38,46,72);ctx.strokeRect(-23,-38,46,72);ctx.strokeStyle='#fde68a';ctx.lineWidth=2;[-14,10,34].forEach(y=>{ctx.beginPath();ctx.moveTo(-22,y);ctx.lineTo(22,y);ctx.stroke()});ctx.font='20px sans-serif';ctx.textAlign='center';ctx.fillText('🕊️',0,-18);ctx.restore();
+particles.forEach(p=>{ctx.globalAlpha=Math.max(0,p.life/500);ctx.fillStyle=p.color;ctx.fillRect(p.x-3,p.y-3,6,6)});ctx.globalAlpha=1;const refl=ctx.createLinearGradient(0,500,0,720);refl.addColorStop(0,'rgba(125,211,252,0)');refl.addColorStop(1,'rgba(125,211,252,.08)');ctx.fillStyle=refl;ctx.fillRect(0,500,1280,220)}
+function loop(ts){let elapsed=ArkMechanics.normalizeDelta(lastTime?ts-lastTime:0);lastTime=ts;if(gameState==='PLAYING'){accumulator=Math.min(accumulator+elapsed,T.maxDeltaMs);while(accumulator>=1000/60){update(1000/60);accumulator-=1000/60}}render();requestAnimationFrame(loop)}
+window.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','ArrowUp','Space'].includes(e.code))e.preventDefault();keys[e.code]=true;if(e.code==='Space')shieldOn();if(e.code==='KeyP'||e.code==='Escape')togglePause()});window.addEventListener('keyup',e=>keys[e.code]=false);window.addEventListener('blur',()=>{Object.keys(keys).forEach(k=>keys[k]=false);if(gameState==='PLAYING')togglePause()});
+function bindHold(id,code){const b=$(id),on=e=>{e.preventDefault();keys[code]=true;b.classList.add('active');canvas.focus()},off=e=>{e.preventDefault();keys[code]=false;b.classList.remove('active')};b.addEventListener('pointerdown',on);['pointerup','pointercancel','pointerleave'].forEach(n=>b.addEventListener(n,off));b.addEventListener('touchcancel',off,{passive:false})}
+bindHold('btnLeft','ArrowLeft');bindHold('btnRight','ArrowRight');bindHold('btnSpeed','ArrowUp');$('btnShield').addEventListener('pointerdown',e=>{e.preventDefault();shieldOn()});$('btnStart').onclick=startGame;$('btnRestart').onclick=startGame;$('btnNext').onclick=nextWave;$('btnPause').onclick=togglePause;$('btnResume').onclick=togglePause;$('btnFullscreen').onclick=async()=>{try{if(!document.fullscreenElement)await $('game-container').requestFullscreen();else await document.exitFullscreen()}catch(e){$('status').textContent='FULLSCREEN UNAVAILABLE • GAME STILL READY'}};
+window.ArkDeluge={getState:()=>({gameState,hearts,score,distance,harmony,currentWave,invuln,shield,ark:{...ark},obstacles:obstacles.length,collectibles:collectibles.length}),start:startGame,pause:togglePause,mechanics:ArkMechanics};
+requestAnimationFrame(loop);
+</script>
 </body>
 </html>

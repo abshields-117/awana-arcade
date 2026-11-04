@@ -1,5 +1,5 @@
 // Awana Retro Arcade — Offline Service Worker
-const CACHE_NAME = 'awanacade-v18';
+const CACHE_NAME = 'awanacade-v19';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
