@@ -19,6 +19,7 @@ const ASSETS_TO_CACHE = [
   './games/eden_sentinel_tds.html',
   './games/noah_raindrop_rush.html',
   './games/ark_deluge_physics.html',
+  './games/faith_dash.html',
   './games/eden_two_trees_td.html',
   './games/henrys_eden_craft.html',
   './games/flaming_sword_defense.html',
