@@ -24,8 +24,8 @@ test('Ark Deluge is self-contained and integrated with versioned offline launch'
   assert.doesNotMatch(html, /<(?:script|link|img)[^>]+(?:src|href)=["']https?:/i);
   const hub = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
-  assert.match(hub, /games\/ark_deluge_physics\.html\?v=2/g);
-  assert.match(sw, /awanacade-v19/);
+  assert.match(hub, /games\/ark_deluge_physics\.html\?v=3/g);
+  assert.match(sw, /awanacade-v20/);
   assert.match(sw, /'\.\/games\/ark_deluge_physics\.html'/);
 });
 
@@ -48,8 +48,9 @@ test('boat steering is gentle, capped, damped and self-righting', () => {
   const api = mechanics();
   const boat = api.createBoat();
   runFrames(api, boat, { right: true, surge: false }, 1);
-  assert.ok(boat.x > api.TUNING.worldWidth / 2 + 35, 'steering should feel responsive');
-  assert.ok(boat.x < api.TUNING.worldWidth / 2 + 150, 'steering must not sling the boat');
+  const oneSecondTravel = boat.x - api.TUNING.worldWidth / 2;
+  assert.ok(oneSecondTravel >= 50, `steering stayed too slow at ${oneSecondTravel}px`);
+  assert.ok(oneSecondTravel <= 70, `steering became unstable at ${oneSecondTravel}px`);
   assert.ok(Math.abs(boat.vx) <= api.TUNING.maxLateralSpeed + 0.001);
   assert.ok(Math.abs(boat.angularVelocity) <= api.TUNING.maxAngularVelocity + 0.001);
   assert.ok(Math.abs(boat.angle) <= api.TUNING.maxTilt + 0.001);
@@ -75,13 +76,18 @@ test('collision response is forgiving and cannot create pinball or capsize traps
 
 test('pace and escalation stay within kid-friendly reaction limits', () => {
   const api = mechanics();
-  assert.ok(api.TUNING.baseScrollSpeed <= 105);
+  assert.ok(api.TUNING.baseScrollSpeed >= 115 && api.TUNING.baseScrollSpeed <= 125);
+  assert.ok(api.TUNING.progressSpeed >= 15 && api.TUNING.progressSpeed <= 16.5);
   assert.ok(api.TUNING.hazardMinSpeed <= api.TUNING.hazardMaxSpeed);
-  assert.ok(api.TUNING.hazardMaxSpeed <= 165);
-  assert.ok(api.obstacleInterval(1) >= 1200);
-  assert.ok(api.obstacleInterval(12) >= 800);
+  assert.ok(api.hazardSpeed(1, 0) >= 108 && api.hazardSpeed(1, 0) <= 116);
+  assert.ok(api.hazardSpeed(1, 1) >= 148 && api.hazardSpeed(1, 1) <= 160);
+  assert.ok(api.TUNING.hazardMaxSpeed <= 195);
+  assert.ok(api.obstacleInterval(1) >= 1040 && api.obstacleInterval(1) <= 1100);
+  assert.ok(api.obstacleInterval(12) >= 730 && api.obstacleInterval(12) <= 790);
   assert.ok(api.hazardSpeed(20, 1) <= api.TUNING.hazardMaxSpeed);
   assert.ok(api.TUNING.warningMs >= 900);
+  assert.ok(api.TUNING.invulnerabilityMs >= 2000 && api.TUNING.invulnerabilityMs <= 2400);
+  assert.equal(api.TUNING.shieldMs, 8000);
 });
 
 test('responsive 16:9 viewport, readable HUD, fullscreen, pause and touch affordances exist', () => {
