@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Awana Week 10 • Noah's Ark Comedy Display</title>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: #131b2e;
+      --accent: #38bdf8;
+      --gold: #fbbf24;
+      --emerald: #10b981;
+      --rose: #f43f5e;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px;
+    }
+    header {
+      width: 100%;
+      max-width: 1240px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 18px;
+      border-bottom: 2px solid rgba(255,255,255,0.1);
+      margin-bottom: 20px;
+    }
+    .badge {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #000;
+      font-weight: 900;
+      padding: 6px 16px;
+      border-radius: 9999px;
+      font-size: 13px;
+      letter-spacing: 1px;
+    }
+    .toggle-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      width: 100%;
+      max-width: 1240px;
+    }
+    .tab-btn {
+      background: #1e293b;
+      border: 2px solid rgba(255,255,255,0.1);
+      color: #cbd5e1;
+      font-weight: 800;
+      font-size: 14px;
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      background: #38bdf8;
+      border-color: #38bdf8;
+      color: #090d16;
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.4);
+    }
+    .container {
+      width: 100%;
+      max-width: 1240px;
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+    .comic-card {
+      background: var(--card-bg);
+      border: 2px solid rgba(56, 189, 248, 0.3);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .comic-card img {
+      width: 100%;
+      max-height: 560px;
+      object-fit: contain;
+      border-radius: 10px;
+      border: 3px solid #1e293b;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      background: #fff;
+    }
+    .caption-box {
+      margin-top: 14px;
+      background: rgba(15, 23, 42, 0.85);
+      border-left: 4px solid var(--gold);
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-size: 15px;
+      line-height: 1.5;
+      color: #e2e8f0;
+      font-style: italic;
+    }
+    .content-column {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .card-title {
+      font-size: 17px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      color: var(--accent);
+    }
+    .dad-jokes {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .joke-item {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .joke-item:hover {
+      background: rgba(56, 189, 248, 0.08);
+      border-color: rgba(56, 189, 248, 0.3);
+    }
+    .joke-q { font-weight: 700; color: #FFF; font-size: 14px; }
+    .joke-a {
+      margin-top: 6px;
+      font-weight: 800;
+      color: var(--gold);
+      font-size: 15px;
+      display: none;
+    }
+    .log-item {
+      background: rgba(15, 23, 42, 0.6);
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      border-left: 3px solid var(--emerald);
+      font-size: 13.5px;
+      line-height: 1.4;
+    }
+    .verse-banner {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(15, 23, 42, 0.9));
+      border: 2px solid var(--emerald);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    .verse-title { font-size: 12px; font-weight: 800; color: var(--emerald); letter-spacing: 1px; }
+    .verse-body { font-size: 17px; font-weight: 800; color: #FFF; margin: 6px 0; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <div style="font-size: 26px; font-weight: 900; letter-spacing: -0.5px;">AWANA WEDNESDAY NIGHT &bull; NOAH'S ARK</div>
+      <div style="color: var(--muted); font-size: 13px; margin-top: 4px;">Genesis 6:9 &bull; &ldquo;Noah walked with God&rdquo;</div>
+    </div>
+    <div class="badge">WEEK 10 SCREEN DISPLAY</div>
+  </header>
+
+  <!-- CARTOON SELECTOR TABS -->
+  <div class="toggle-bar">
+    <button class="tab-btn active" id="btn-pic2" onclick="showPic(2)">
+      🍖 Comic 2: The BBQ Smoker (&ldquo;Don&rsquo;t Even Think About It!&rdquo;)
+    </button>
+    <button class="tab-btn" id="btn-pic1" onclick="showPic(1)">
+      🦄 Comic 1: The Far Side (&ldquo;Confined to C-Deck&rdquo;)
+    </button>
+  </div>
+
+  <div class="container">
+    <!-- LEFT: COMIC VIEWER -->
+    <div class="comic-card">
+      <div id="pic-title" style="font-size: 12px; font-weight: 800; color: var(--muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">
+        Tonight's Feature: The BBQ Smoker
+      </div>
+      <img id="main-comic" src="noah_bbq_smoker.jpg" alt="Noah's Ark Cartoon" />
+      <div class="caption-box" id="caption-text">
+        &ldquo;Dad, we were just gonna smoke some brisket!&rdquo; &bull; &ldquo;NO WAY! THOSE ARE THE ONLY TWO COWS ON EARTH!&rdquo;
+      </div>
+    </div>
+
+    <!-- RIGHT: DAD JOKES & NOAH'S LOGBOOK -->
+    <div class="content-column">
+      
+      <!-- GROANER DAD JOKES -->
+      <div class="card">
+        <div class="card-title">
+          <span>😂</span>
+          <span>Tonight's Groaner Dad Jokes (Click to reveal!)</span>
+        </div>
+        <div class="dad-jokes">
+          <div class="joke-item" onclick="toggleJoke(1)">
+            <div class="joke-q">Q: Why couldn't the sons bring their BBQ smoker onto the Ark?</div>
+            <div class="joke-a" id="joke-1">A: Because the STEAKS were too high! 🥩😂</div>
+          </div>
+          <div class="joke-item" onclick="toggleJoke(2)">
+            <div class="joke-q">Q: Which animals on the Ark could you NEVER play cards with?</div>
+            <div class="joke-a" id="joke-2">A: The cheetahs! 🐆</div>
+          </div>
+          <div class="joke-item" onclick="toggleJoke(3)">
+            <div class="joke-q">Q: Where did Noah keep all the bees?</div>
+            <div class="joke-a" id="joke-3">A: In the ark-hives! 🐝</div>
+          </div>
+          <div class="joke-item" onclick="toggleJoke(4)">
+            <div class="joke-q">Q: What kind of lights did Noah have on the boat?</div>
+            <div class="joke-a" id="joke-4">A: Floodlights! 💡🌧️</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NOAH'S ARK RULES & LOGBOOK -->
+      <div class="card">
+        <div class="card-title">
+          <span>📜</span>
+          <span>Noah's Ark Official Vessel Rules</span>
+        </div>
+        <div class="log-item">
+          <strong>Rule 1:</strong> Absolutely NO BBQ smokers. The briskets are walking on two-by-two!
+        </div>
+        <div class="log-item">
+          <strong>Rule 2:</strong> Woodpeckers must report to the iron cage. Zero pecking the hull!
+        </div>
+        <div class="log-item">
+          <strong>Rule 3:</strong> Skunks are strictly forbidden from the dining quarters.
+        </div>
+        <div class="log-item">
+          <strong>Rule 4:</strong> All carnivores are permanently confined to &ldquo;Deck C&rdquo;.
+        </div>
+      </div>
+
+      <!-- SCRIPTURE ANCHOR -->
+      <div class="verse-banner">
+        <div class="verse-title">MEMORY VERSE (GENESIS 6:9)</div>
+        <div class="verse-body">&ldquo;Noah was a righteous man, blameless in his generation. Noah walked with God.&rdquo;</div>
+        <div style="font-size: 13px; color: #cbd5e1; margin-top: 6px;">
+          Even when everyone around him doubted, Noah obeyed God to the exact detail — including protecting every single animal!
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    function showPic(num) {
+      const img = document.getElementById('main-comic');
+      const title = document.getElementById('pic-title');
+      const caption = document.getElementById('caption-text');
+      const b1 = document.getElementById('btn-pic1');
+      const b2 = document.getElementById('btn-pic2');
+
+      if (num === 2) {
+        img.src = 'noah_bbq_smoker.jpg';
+        title.innerText = "Tonight's Feature: The BBQ Smoker";
+        caption.innerHTML = "&ldquo;Dad, we were just gonna smoke some brisket!&rdquo; &bull; &ldquo;NO WAY! THOSE ARE THE ONLY TWO COWS ON EARTH!&rdquo;";
+        b2.classList.add('active');
+        b1.classList.remove('active');
+      } else {
+        img.src = 'noah_unicorns_far_side.jpg';
+        title.innerText = "Classic Cartoon: The Far Side";
+        caption.innerHTML = "&ldquo;Well, so much for the unicorns. ... But, from now on, all carnivores will be confined to &lsquo;C&rsquo; deck.&rdquo;";
+        b1.classList.add('active');
+        b2.classList.remove('active');
+      }
+    }
+
+    function toggleJoke(num) {
+      const el = document.getElementById('joke-' + num);
+      if (el) {
+        el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+      }
+    }
+  </script>
+</body>
+</html>

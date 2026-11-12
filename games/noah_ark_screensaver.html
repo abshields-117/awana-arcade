@@ -1,0 +1,1451 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#031525">
+<title>Noah's Ark • Deluge Comedy Screensaver — Awanacade</title>
+<script>
+// In-memory localStorage safety polyfill for Chromebook file:// sandboxes
+(function(){
+  const memStore={};
+  try{
+    const k='__storage_test__';
+    window.localStorage.setItem(k,'1');
+    window.localStorage.removeItem(k);
+  }catch(e){
+    Object.defineProperty(window,'localStorage',{
+      value:{
+        getItem:(k)=>memStore[k]||null,
+        setItem:(k,v)=>{memStore[k]=String(v);},
+        removeItem:(k)=>{delete memStore[k];},
+        clear:()=>{for(const k in memStore)delete memStore[k];}
+      },
+      writable:true,configurable:true
+    });
+  }
+})();
+</script>
+<style>
+:root {
+  --bg-dark: #031226;
+  --panel-bg: rgba(6, 22, 44, 0.88);
+  --panel-border: rgba(56, 189, 248, 0.35);
+  --cyan: #38bdf8;
+  --cyan-bright: #7dd3fc;
+  --gold: #fbbf24;
+  --gold-glow: rgba(251, 191, 36, 0.4);
+  --emerald: #34d399;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-dark);
+  color: var(--text-main);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#canvas-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #020b18;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+/* TOP NAVIGATION & CONTROLS HEADER */
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 20px;
+  background: linear-gradient(180deg, rgba(2, 11, 24, 0.92) 0%, rgba(2, 11, 24, 0.6) 75%, rgba(2, 11, 24, 0) 100%);
+  pointer-events: none;
+  flex-wrap: wrap;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  pointer-events: auto;
+}
+
+.arcade-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #cffafe;
+  background: rgba(8, 30, 60, 0.9);
+  border: 1.5px solid var(--cyan);
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  letter-spacing: 0.5px;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.3);
+  transition: all 0.2s ease;
+  min-height: 40px;
+}
+.arcade-menu-btn:hover, .arcade-menu-btn:focus-visible {
+  background: var(--cyan);
+  color: #031226;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.6);
+  outline: none;
+}
+
+.header-title-box {
+  display: flex;
+  flex-direction: column;
+}
+.header-title {
+  font-size: clamp(14px, 1.8vw, 20px);
+  font-weight: 900;
+  letter-spacing: -0.3px;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+}
+.header-subtitle {
+  font-size: clamp(10px, 1.1vw, 12px);
+  color: var(--cyan-bright);
+  font-weight: 600;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.ctrl-btn {
+  background: rgba(8, 30, 60, 0.85);
+  border: 1.5px solid rgba(56, 189, 248, 0.4);
+  color: #e2e8f0;
+  border-radius: 18px;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+.ctrl-btn:hover {
+  background: rgba(14, 165, 233, 0.3);
+  border-color: var(--cyan);
+  color: #fff;
+}
+.ctrl-btn.active {
+  background: var(--cyan);
+  border-color: var(--cyan);
+  color: #031226;
+  font-weight: 900;
+  box-shadow: 0 0 14px var(--cyan);
+}
+.ctrl-btn:focus-visible {
+  outline: 2px solid var(--gold);
+}
+
+/* BOTTOM HUD & CAPTION DOCK */
+footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  padding: 16px 24px;
+  background: linear-gradient(0deg, rgba(2, 11, 24, 0.95) 0%, rgba(2, 11, 24, 0.8) 70%, rgba(2, 11, 24, 0) 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.caption-dock {
+  pointer-events: auto;
+  max-width: 980px;
+  width: 100%;
+  background: var(--panel-bg);
+  border: 1.5px solid var(--panel-border);
+  border-radius: 16px;
+  padding: 12px 20px;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.7);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.caption-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.slide-tag {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #031226;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.slide-headline {
+  font-size: clamp(14px, 1.6vw, 18px);
+  font-weight: 800;
+  color: #fff;
+  flex: 1;
+}
+
+.caption-quote {
+  font-size: clamp(13px, 1.35vw, 15px);
+  color: #cbd5e1;
+  font-style: italic;
+  line-height: 1.4;
+  border-left: 3px solid var(--gold);
+  padding-left: 10px;
+  margin: 2px 0;
+}
+
+/* JOKE ACCORDION BAR */
+.joke-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 10px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.joke-bar:hover {
+  background: rgba(251, 191, 36, 0.12);
+  border-color: var(--gold);
+}
+.joke-text-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+.joke-q {
+  font-size: clamp(12px, 1.25vw, 14px);
+  font-weight: 700;
+  color: #fde68a;
+}
+.joke-a {
+  font-size: clamp(12px, 1.25vw, 14px);
+  font-weight: 800;
+  color: #34d399;
+}
+.joke-badge {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--gold);
+  background: rgba(251, 191, 36, 0.15);
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+/* CAROUSEL CONTROLS BAR */
+.dock-nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.scripture-pill {
+  font-size: clamp(10px, 1.1vw, 12px);
+  color: var(--emerald);
+  font-weight: 700;
+}
+
+.carousel-dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.25);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.dot.active {
+  width: 22px;
+  border-radius: 6px;
+  background: var(--cyan);
+  box-shadow: 0 0 10px var(--cyan);
+}
+
+.dock-buttons {
+  display: flex;
+  gap: 6px;
+}
+.nav-arrow-btn {
+  background: rgba(8, 30, 60, 0.85);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #fff;
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.nav-arrow-btn:hover {
+  background: var(--cyan);
+  color: #031226;
+}
+
+/* LIGHTBOX MODAL FOR FULL-SCREEN CARTOON EXAMINATION */
+.lightbox-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(3, 14, 30, 0.94);
+  backdrop-filter: blur(8px);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.lightbox-modal.active {
+  display: flex;
+}
+.lightbox-card {
+  position: relative;
+  max-width: 900px;
+  width: 100%;
+  max-height: 92vh;
+  background: #081a33;
+  border: 2px solid var(--cyan);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 0 50px rgba(56, 189, 248, 0.4);
+  overflow-y: auto;
+}
+.lightbox-card img {
+  max-width: 100%;
+  max-height: 58vh;
+  object-fit: contain;
+  border-radius: 10px;
+  border: 3px solid #1e293b;
+  background: #fff;
+}
+.lightbox-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #fff;
+  font-size: 18px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lightbox-close:hover {
+  background: #ef4444;
+  border-color: #ef4444;
+}
+
+/* SENSORY-FRIENDLY & RESPONSIVE RULES */
+@media (max-width: 768px) {
+  header {
+    padding: 8px 12px;
+  }
+  .header-subtitle {
+    display: none;
+  }
+  .ctrl-btn {
+    padding: 6px 10px;
+    font-size: 11px;
+    min-height: 36px;
+  }
+  footer {
+    padding: 8px 12px;
+  }
+  .caption-dock {
+    padding: 10px 14px;
+    gap: 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+</style>
+</head>
+<body>
+
+  <!-- TOP HEADER -->
+  <header>
+    <div class="header-left">
+      <a href="../index.html" class="arcade-menu-btn" aria-label="Return to Awanacade Menu">
+        ← ARCADE MENU
+      </a>
+      <div class="header-title-box">
+        <h1 class="header-title">NOAH'S ARK • DELUGE SCREENSAVER</h1>
+        <span class="header-subtitle">Genesis 6–9 • "Noah Walked with God" • Deluge Comedy Showcase</span>
+      </div>
+    </div>
+
+    <div class="header-controls">
+      <button class="ctrl-btn" id="btn-pause" onclick="togglePause()" aria-label="Pause or Resume animation">
+        <span id="pause-icon">⏸</span> <span id="pause-label">Pause</span>
+      </button>
+      <button class="ctrl-btn" id="btn-sensory" onclick="toggleSensory()" aria-pressed="false" aria-label="Toggle Still or Sensory Mode">
+        <span id="sensory-icon">🌿</span> <span id="sensory-label">Still Mode</span>
+      </button>
+      <button class="ctrl-btn" id="btn-autocycle" onclick="toggleAutoCycle()" aria-pressed="true" aria-label="Toggle Slide Auto Cycling">
+        <span>⏱️</span> <span id="cycle-label">Auto: 12s</span>
+      </button>
+      <button class="ctrl-btn" id="btn-enlarge" onclick="openLightbox()" aria-label="Enlarge Cartoon">
+        <span>🔍</span> <span>Enlarge</span>
+      </button>
+      <button class="ctrl-btn" id="btn-fullscreen" onclick="toggleFullscreen()" aria-label="Toggle Fullscreen">
+        <span>⛶</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- CANVAS DISPLAY -->
+  <div id="canvas-container">
+    <canvas id="screensaverCanvas" width="1280" height="720" aria-label="Animated Noah's Ark on gentle deluge waves with radiant rainbow and deck comic display"></canvas>
+  </div>
+
+  <!-- BOTTOM CAPTION DOCK -->
+  <footer>
+    <div class="caption-dock">
+      <div class="caption-top">
+        <span class="slide-tag" id="dock-tag">TONIGHT'S FEATURE</span>
+        <div class="slide-headline" id="dock-title">The BBQ Smoker Incident</div>
+        <div class="carousel-dots" id="carousel-dots">
+          <!-- Dots injected dynamically -->
+        </div>
+      </div>
+
+      <div class="caption-quote" id="dock-quote">
+        “Don’t even think about it!” — Dad, the briskets are walking on two-by-two!
+      </div>
+
+      <!-- GROANER DAD JOKE BAR -->
+      <div class="joke-bar" onclick="revealJoke()" role="button" tabindex="0" aria-label="Click to reveal joke answer">
+        <div class="joke-text-col">
+          <div class="joke-q" id="dock-joke-q">Q: Why couldn't the sons bring their BBQ smoker onto the Ark?</div>
+          <div class="joke-a" id="dock-joke-a" style="display: none;">A: Because the STEAKS were too high! 🥩😂</div>
+        </div>
+        <div class="joke-badge" id="joke-reveal-badge">TAP TO REVEAL 💡</div>
+      </div>
+
+      <!-- DOCK FOOTER ROW -->
+      <div class="dock-nav-row">
+        <div class="scripture-pill" id="dock-scripture">
+          📖 Genesis 6:9 • "Noah was a righteous man, blameless in his generation."
+        </div>
+        <div class="dock-buttons">
+          <button class="nav-arrow-btn" onclick="prevSlide()" aria-label="Previous slide">◀ PREV</button>
+          <button class="nav-arrow-btn" onclick="nextSlide()" aria-label="Next slide">NEXT ▶</button>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- FULLSCREEN LIGHTBOX FOR CARTOON INSPECTION -->
+  <div class="lightbox-modal" id="lightboxModal" onclick="closeLightbox(event)">
+    <div class="lightbox-card" onclick="event.stopPropagation()">
+      <button class="lightbox-close" onclick="closeLightbox()" aria-label="Close lightbox">✕</button>
+      <div class="slide-tag" id="lb-tag">FEATURE CARTOON</div>
+      <h2 id="lb-title" style="color: #fff; text-align: center; font-size: 22px;">The BBQ Smoker Incident</h2>
+      <img id="lb-img" src="noah_bbq_smoker.jpg" alt="Noah's Ark Cartoon">
+      <div id="lb-caption" style="color: #cbd5e1; font-style: italic; text-align: center; font-size: 16px; border-left: 3px solid var(--gold); padding: 6px 14px;">
+        “Don’t even think about it!” — Dad, the steaks are too high!
+      </div>
+      <div style="background: rgba(251, 191, 36, 0.12); border: 1px solid var(--gold); border-radius: 10px; padding: 12px 18px; width: 100%; text-align: center;">
+        <div id="lb-joke-q" style="color: #fde68a; font-weight: 700; margin-bottom: 4px;">Q: Why couldn't the sons bring their BBQ smoker onto the Ark?</div>
+        <div id="lb-joke-a" style="color: #34d399; font-weight: 800; font-size: 16px;">A: Because the STEAKS were too high! 🥩😂</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* NOAH_SCREENSAVER_CORE_START */
+'use strict';
+
+const canvas = document.getElementById('screensaverCanvas');
+const ctx = canvas.getContext('2d');
+
+// --- SLIDES CONFIGURATION ---
+const SLIDES = [
+  {
+    tag: "FEATURE COMIC",
+    title: "The BBQ Smoker Incident",
+    file: "noah_bbq_smoker.jpg",
+    quote: "“Don’t even think about it!” — Dad, we were just gonna smoke a little brisket!",
+    jokeQ: "Q: Why couldn't the sons bring their BBQ smoker onto the Ark?",
+    jokeA: "A: Because the STEAKS were too high! 🥩😂",
+    scripture: "Genesis 6:9 • “Noah was a righteous man, blameless in his generation. Noah walked with God.”"
+  },
+  {
+    tag: "GARY LARSON'S FAR SIDE",
+    title: "Confined to C-Deck",
+    file: "noah_unicorns_far_side.jpg",
+    quote: "“Well, so much for the unicorns. ... But, from now on, all carnivores will be confined to ‘C’ deck.”",
+    jokeQ: "Q: Which animals on the Ark could you NEVER play cards with?",
+    jokeA: "A: The cheetahs! 🐆🃏",
+    scripture: "Genesis 7:2 • “Take with you seven pairs of all clean animals...”"
+  },
+  {
+    tag: "REVEREND FUN CARTOON",
+    title: "An Accident on Deck",
+    file: "noah_elephant_extinct.jpg",
+    quote: "“In that brief moment, Noah watched an unfortunate species achieve threatened, endangered, and extinct.”",
+    jokeQ: "Q: Where did Noah keep all the honeybees on the Ark?",
+    jokeA: "A: In the ark-hives! 🐝🍯",
+    scripture: "Genesis 8:1 • “God remembered Noah and all the beasts and all the livestock with him in the ark.”"
+  },
+  {
+    tag: "GROANER DAD JOKES",
+    title: "Noah's Official Vessel Rules",
+    file: "",
+    quote: "Rule 1: Woodpeckers report directly to the iron brig! Zero pecking the hull timber!",
+    jokeQ: "Q: What kind of lights did Noah install across all three decks?",
+    jokeA: "A: Floodlights! 💡🌧️ (And fireflies for bedtime reading!)",
+    scripture: "Genesis 8:11 • “And the dove came back to him in the evening with a plucked olive leaf.”"
+  },
+  {
+    tag: "COVENANT PROMISE",
+    title: "The Rainbow of Faithfulness",
+    file: "",
+    quote: "“I have set my rainbow in the clouds, and it will be the sign of the covenant between me and the earth.”",
+    jokeQ: "Q: How did Noah navigate 40 days and 40 nights through the waves?",
+    jokeA: "A: By walking with God — one faithful step at a time! 🌈🕊️",
+    scripture: "Genesis 9:13 • “Never again shall the waters become a deluge to destroy all flesh.”"
+  }
+];
+
+// Preload comic images with multiple fallback paths
+const imageCache = {};
+SLIDES.forEach(s => {
+  if (!s.file) return;
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.src = s.file;
+  // Fallbacks if executed from root or parent directory
+  img.onerror = () => {
+    if (!img._retried1) {
+      img._retried1 = true;
+      img.src = 'games/' + s.file;
+    } else if (!img._retried2) {
+      img._retried2 = true;
+      img.src = '../attachments/' + s.file;
+    }
+  };
+  imageCache[s.file] = img;
+});
+
+// State machine
+let currentSlide = 0;
+let slideTimer = 0;
+const SLIDE_DURATION = 12.0; // seconds per slide
+let autoCycle = true;
+let isPaused = false;
+let isCalm = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+let jokeRevealed = false;
+let clock = 0;
+let lastTime = 0;
+
+// Visual elements: flying doves
+const doves = [
+  { x: 180, y: 140, speed: 28, wingPhase: 0, scale: 0.8 },
+  { x: 740, y: 110, speed: 22, wingPhase: 2.1, scale: 0.65 },
+  { x: 1040, y: 170, speed: 25, wingPhase: 4.2, scale: 0.72 }
+];
+
+// Visual elements: clouds
+const clouds = [
+  { x: 80, y: 90, scale: 1.1, speed: 6 },
+  { x: 480, y: 70, scale: 0.85, speed: 4.5 },
+  { x: 890, y: 120, scale: 1.3, speed: 7 },
+  { x: 1220, y: 80, scale: 0.95, speed: 5 }
+];
+
+// UI Synchronization
+function syncUI() {
+  const s = SLIDES[currentSlide];
+  document.getElementById('dock-tag').textContent = s.tag;
+  document.getElementById('dock-title').textContent = s.title;
+  document.getElementById('dock-quote').textContent = s.quote;
+  document.getElementById('dock-joke-q').textContent = s.jokeQ;
+  document.getElementById('dock-joke-a').textContent = s.jokeA;
+  document.getElementById('dock-scripture').textContent = "📖 " + s.scripture;
+
+  // Joke reveal state
+  const jokeA = document.getElementById('dock-joke-a');
+  const jokeBadge = document.getElementById('joke-reveal-badge');
+  if (jokeRevealed) {
+    jokeA.style.display = 'block';
+    jokeBadge.textContent = 'HIDE JOKE ✕';
+  } else {
+    jokeA.style.display = 'none';
+    jokeBadge.textContent = 'TAP TO REVEAL 💡';
+  }
+
+  // Update dots
+  const dotsContainer = document.getElementById('carousel-dots');
+  dotsContainer.innerHTML = '';
+  SLIDES.forEach((_, idx) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (idx === currentSlide ? ' active' : '');
+    d.onclick = () => goToSlide(idx);
+    dotsContainer.appendChild(d);
+  });
+
+  // Buttons state
+  document.getElementById('pause-label').textContent = isPaused ? 'Resume' : 'Pause';
+  document.getElementById('pause-icon').textContent = isPaused ? '▶' : '⏸';
+  document.getElementById('btn-pause').classList.toggle('active', isPaused);
+
+  document.getElementById('sensory-label').textContent = isCalm ? 'Still: ON' : 'Still Mode';
+  document.getElementById('btn-sensory').classList.toggle('active', isCalm);
+  document.getElementById('btn-sensory').setAttribute('aria-pressed', String(isCalm));
+
+  document.getElementById('cycle-label').textContent = autoCycle ? 'Auto: 12s' : 'Auto: OFF';
+  document.getElementById('btn-autocycle').classList.toggle('active', autoCycle);
+  document.getElementById('btn-autocycle').setAttribute('aria-pressed', String(autoCycle));
+
+  // Lightbox content sync
+  document.getElementById('lb-tag').textContent = s.tag;
+  document.getElementById('lb-title').textContent = s.title;
+  document.getElementById('lb-caption').textContent = s.quote;
+  document.getElementById('lb-joke-q').textContent = s.jokeQ;
+  document.getElementById('lb-joke-a').textContent = s.jokeA;
+  const lbImg = document.getElementById('lb-img');
+  if (s.file) {
+    lbImg.style.display = 'block';
+    lbImg.src = s.file;
+  } else {
+    lbImg.style.display = 'none';
+  }
+}
+
+function revealJoke() {
+  jokeRevealed = !jokeRevealed;
+  syncUI();
+}
+
+function goToSlide(idx) {
+  currentSlide = (idx + SLIDES.length) % SLIDES.length;
+  slideTimer = 0;
+  jokeRevealed = false;
+  syncUI();
+}
+
+function nextSlide() {
+  goToSlide(currentSlide + 1);
+}
+
+function prevSlide() {
+  goToSlide(currentSlide - 1);
+}
+
+function togglePause() {
+  isPaused = !isPaused;
+  syncUI();
+}
+
+function toggleSensory() {
+  isCalm = !isCalm;
+  syncUI();
+}
+
+function toggleAutoCycle() {
+  autoCycle = !autoCycle;
+  syncUI();
+}
+
+function openLightbox() {
+  document.getElementById('lightboxModal').classList.add('active');
+}
+
+function closeLightbox(e) {
+  if (!e || e.target === document.getElementById('lightboxModal') || e.target.classList.contains('lightbox-close')) {
+    document.getElementById('lightboxModal').classList.remove('active');
+  }
+}
+
+async function toggleFullscreen() {
+  try {
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+    } else {
+      await document.documentElement.requestFullscreen();
+    }
+  } catch (err) {
+    console.warn('Fullscreen request bypassed:', err);
+  }
+}
+
+// Keyboard shortcuts
+window.addEventListener('keydown', (e) => {
+  if (e.key === ' ' || e.key === 'p' || e.key === 'P') {
+    togglePause();
+  } else if (e.key === 'ArrowRight' || e.key === 'n' || e.key === 'N') {
+    nextSlide();
+  } else if (e.key === 'ArrowLeft') {
+    prevSlide();
+  } else if (e.key === 's' || e.key === 'S' || e.key === 'c' || e.key === 'C') {
+    toggleSensory();
+  } else if (e.key === 'f' || e.key === 'F') {
+    toggleFullscreen();
+  } else if (e.key === 'Escape') {
+    closeLightbox();
+  }
+});
+
+// Canvas click cycles slide or opens lightbox if clicking the frame
+canvas.addEventListener('click', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const clickX = (e.clientX - rect.left) * scaleX;
+  const clickY = (e.clientY - rect.top) * scaleY;
+
+  // Check if click was inside or near the picture frame
+  // The picture frame is located around x: 670..1160, y: 180..520
+  if (clickX >= 650 && clickX <= 1180 && clickY >= 160 && clickY <= 540) {
+    openLightbox();
+  } else {
+    nextSlide();
+  }
+});
+
+// --- RENDER PIPELINE ---
+
+function drawSky() {
+  // Post-flood sky: deep atmospheric indigo fading down into luminous golden hope
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, 480);
+  skyGrad.addColorStop(0, '#04162e');
+  skyGrad.addColorStop(0.35, '#0b2b4f');
+  skyGrad.addColorStop(0.7, '#1d4ed8');
+  skyGrad.addColorStop(0.9, '#38bdf8');
+  skyGrad.addColorStop(1, '#fde68a');
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, 1280, 720);
+
+  // Soft radiant sun rays beaming through the clouds from upper center-left
+  ctx.save();
+  ctx.globalAlpha = 0.12;
+  const sunX = 400, sunY = 50;
+  for (let i = 0; i < 9; i++) {
+    const angle = 0.35 + (i * 0.16) + Math.sin(clock * 0.2 + i) * 0.02;
+    ctx.beginPath();
+    ctx.moveTo(sunX, sunY);
+    ctx.lineTo(sunX + Math.cos(angle) * 1300, sunY + Math.sin(angle) * 900);
+    ctx.lineTo(sunX + Math.cos(angle + 0.08) * 1300, sunY + Math.sin(angle + 0.08) * 900);
+    ctx.closePath();
+    ctx.fillStyle = '#fef08a';
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawRainbow() {
+  // Luminous Covenant Rainbow arching majestically across the sky
+  ctx.save();
+  const cx = 560;
+  const cy = 760;
+  const colors = [
+    'rgba(239, 68, 68, 0.45)',   // Red
+    'rgba(249, 115, 22, 0.45)',  // Orange
+    'rgba(234, 179, 8, 0.50)',   // Yellow
+    'rgba(34, 197, 94, 0.45)',   // Green
+    'rgba(56, 189, 248, 0.45)',  // Blue
+    'rgba(99, 102, 241, 0.45)',  // Indigo
+    'rgba(168, 85, 247, 0.45)'   // Violet
+  ];
+
+  ctx.lineWidth = 14;
+  colors.forEach((col, idx) => {
+    ctx.beginPath();
+    const r = 580 - (idx * 13);
+    ctx.arc(cx, cy, r, Math.PI * 1.05, Math.PI * 1.95, false);
+    ctx.strokeStyle = col;
+    ctx.stroke();
+  });
+
+  // Soft outer celestial shimmer
+  const shimmerGrad = ctx.createRadialGradient(cx, cy, 460, cx, cy, 600);
+  shimmerGrad.addColorStop(0, 'rgba(255,255,255,0)');
+  shimmerGrad.addColorStop(0.5, 'rgba(254, 240, 138, 0.08)');
+  shimmerGrad.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = shimmerGrad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 600, Math.PI, 0);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawClouds() {
+  ctx.save();
+  clouds.forEach((c, idx) => {
+    const x = ((c.x + (isCalm ? 0 : clock * c.speed)) % 1500) - 150;
+    const y = c.y + (isCalm ? 0 : Math.sin(clock * 0.4 + idx) * 4);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+    ctx.beginPath();
+    ctx.ellipse(x, y, 65 * c.scale, 26 * c.scale, 0, 0, Math.PI * 2);
+    ctx.ellipse(x + 35 * c.scale, y - 12 * c.scale, 48 * c.scale, 28 * c.scale, 0, 0, Math.PI * 2);
+    ctx.ellipse(x - 30 * c.scale, y - 8 * c.scale, 42 * c.scale, 24 * c.scale, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Cloud highlight
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+    ctx.beginPath();
+    ctx.ellipse(x + 12 * c.scale, y - 14 * c.scale, 30 * c.scale, 16 * c.scale, 0, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.restore();
+}
+
+function drawDoves() {
+  ctx.save();
+  doves.forEach((d, idx) => {
+    const x = ((d.x + (isCalm ? 0 : clock * d.speed)) % 1400) - 80;
+    const y = d.y + (isCalm ? 0 : Math.sin(clock * 1.4 + idx) * 12);
+    const flap = isCalm ? 0 : Math.sin(clock * 7 + d.wingPhase) * 8;
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(d.scale, d.scale);
+
+    // Body
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 14, 7, -0.15, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Head
+    ctx.beginPath();
+    ctx.arc(12, -4, 5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Golden Beak
+    ctx.fillStyle = '#fbbf24';
+    ctx.beginPath();
+    ctx.moveTo(16, -4);
+    ctx.lineTo(21, -3);
+    ctx.lineTo(16, -1);
+    ctx.closePath();
+    ctx.fill();
+
+    // Wings flapping
+    ctx.fillStyle = '#f1f5f9';
+    ctx.beginPath();
+    ctx.moveTo(-2, -2);
+    ctx.lineTo(-8, -18 + flap);
+    ctx.lineTo(6, -6);
+    ctx.closePath();
+    ctx.fill();
+
+    // Little Green Olive Branch
+    ctx.strokeStyle = '#15803d';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(18, -2);
+    ctx.lineTo(26, 3);
+    ctx.stroke();
+
+    ctx.fillStyle = '#22c55e';
+    ctx.beginPath();
+    ctx.ellipse(24, 1, 3.5, 2, 0.4, 0, Math.PI * 2);
+    ctx.ellipse(28, 4, 3.5, 2, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  });
+  ctx.restore();
+}
+
+// Wave layer renderer
+function drawWaveLayer(baseY, amp, freq, speed, color, foamColor) {
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(0, 720);
+  ctx.lineTo(0, baseY);
+
+  const t = isCalm ? 0 : clock * speed;
+  for (let x = 0; x <= 1280; x += 16) {
+    const y = baseY + Math.sin(x * freq + t) * amp + Math.cos(x * freq * 0.5 + t * 0.8) * (amp * 0.4);
+    ctx.lineTo(x, y);
+  }
+  ctx.lineTo(1280, 720);
+  ctx.closePath();
+  ctx.fill();
+
+  // Gentle wave foam crests
+  if (foamColor) {
+    ctx.strokeStyle = foamColor;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    for (let x = 0; x <= 1280; x += 16) {
+      const y = baseY + Math.sin(x * freq + t) * amp + Math.cos(x * freq * 0.5 + t * 0.8) * (amp * 0.4);
+      if (x === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawArk() {
+  // Ark positioning and gentle buoyant motion
+  const arkBaseX = 370;
+  const arkBaseY = 470;
+  const bobY = isCalm ? 0 : Math.sin(clock * 1.25) * 8;
+  const pitchAngle = isCalm ? 0 : Math.sin(clock * 0.95) * 0.035;
+
+  ctx.save();
+  ctx.translate(arkBaseX, arkBaseY + bobY);
+  ctx.rotate(pitchAngle);
+
+  // --- LOWER HULL (GOPHER WOOD WITH DARK PITCH CAULKING) ---
+  // Shadow beneath the boat
+  ctx.fillStyle = 'rgba(2, 20, 48, 0.5)';
+  ctx.beginPath();
+  ctx.ellipse(0, 85, 340, 24, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Hull Main Body (Curved bow and stern, sturdy 300-cubit proportions)
+  ctx.fillStyle = '#451a03'; // Deep gopher wood timber
+  ctx.beginPath();
+  ctx.moveTo(-310, 0);
+  ctx.bezierCurveTo(-260, 85, -180, 95, 0, 95);
+  ctx.bezierCurveTo(180, 95, 260, 85, 310, 0);
+  ctx.lineTo(310, -35);
+  ctx.lineTo(-310, -35);
+  ctx.closePath();
+  ctx.fill();
+
+  // Wood Planking Lines & Pitch Layers
+  const plankGradients = ['#5c2809', '#451a03', '#321200', '#200c00'];
+  plankGradients.forEach((col, idx) => {
+    ctx.strokeStyle = 'rgba(15, 6, 2, 0.85)';
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    const yOff = -15 + (idx * 24);
+    ctx.moveTo(-300 + (idx * 14), yOff);
+    ctx.bezierCurveTo(-150, yOff + 8, 150, yOff + 8, 300 - (idx * 14), yOff);
+    ctx.stroke();
+
+    // Timber highlight
+    ctx.strokeStyle = 'rgba(180, 83, 9, 0.35)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(-298 + (idx * 14), yOff - 2);
+    ctx.bezierCurveTo(-150, yOff + 6, 150, yOff + 6, 298 - (idx * 14), yOff - 2);
+    ctx.stroke();
+  });
+
+  // Stern & Bow Raised Castles
+  ctx.fillStyle = '#5c2809';
+  // Bow cap (left)
+  ctx.fillRect(-310, -45, 45, 20);
+  // Stern cap (right)
+  ctx.fillRect(265, -45, 45, 20);
+
+  // --- THREE DECK SUPERSTRUCTURE ---
+  ctx.fillStyle = '#78350f';
+  ctx.fillRect(-260, -115, 520, 80);
+
+  // Deck separators & Railings
+  ctx.strokeStyle = '#291102';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(-260, -75);
+  ctx.lineTo(260, -75);
+  ctx.stroke();
+
+  // Deck windows with warm lantern glow
+  const windowCount = 11;
+  for (let w = 0; w < windowCount; w++) {
+    const wx = -230 + (w * 46);
+    // Lower deck portholes
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(wx, -65, 22, 16);
+    ctx.fillStyle = '#fef08a';
+    ctx.fillRect(wx + 3, -62, 16, 10);
+
+    // Upper deck portholes
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(wx, -105, 22, 16);
+    ctx.fillStyle = '#fef08a';
+    ctx.fillRect(wx + 3, -102, 16, 10);
+  }
+
+  // --- ROOF & CUPOLA (GOPHER WOOD PITCHED GABLE) ---
+  ctx.fillStyle = '#92400e';
+  ctx.beginPath();
+  ctx.moveTo(-280, -115);
+  ctx.lineTo(0, -155);
+  ctx.lineTo(280, -115);
+  ctx.lineTo(270, -125);
+  ctx.lineTo(0, -165);
+  ctx.lineTo(-270, -125);
+  ctx.closePath();
+  ctx.fill();
+
+  // Roof slats
+  ctx.strokeStyle = '#451a03';
+  ctx.lineWidth = 2.5;
+  for (let r = -240; r <= 240; r += 40) {
+    ctx.beginPath();
+    ctx.moveTo(r, -118);
+    ctx.lineTo(r * 0.75, -152);
+    ctx.stroke();
+  }
+
+  // Center Observation Skylight Hatch (Genesis 6:16: "Make a roof for the ark, finishing it to a cubit above")
+  ctx.fillStyle = '#451a03';
+  ctx.fillRect(-45, -175, 90, 24);
+  ctx.fillStyle = '#fed7aa';
+  ctx.fillRect(-35, -170, 70, 14);
+
+  // --- ANIMALS ABOARD THE ARK ---
+  // Giraffe stretching neck out of upper roof observation hatch
+  ctx.save();
+  const giraffeBob = isCalm ? 0 : Math.sin(clock * 1.8) * 3;
+  ctx.translate(-75, -155 + giraffeBob);
+  // Neck
+  ctx.fillStyle = '#f59e0b';
+  ctx.fillRect(-7, -45, 14, 45);
+  // Spots
+  ctx.fillStyle = '#92400e';
+  ctx.beginPath();
+  ctx.arc(0, -32, 4, 0, Math.PI * 2);
+  ctx.arc(-2, -18, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+  // Head
+  ctx.fillStyle = '#f59e0b';
+  ctx.beginPath();
+  ctx.ellipse(3, -50, 9, 6, 0.2, 0, Math.PI * 2);
+  ctx.fill();
+  // Ears/Horns
+  ctx.strokeStyle = '#92400e';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, -53); ctx.lineTo(-2, -60);
+  ctx.moveTo(4, -53); ctx.lineTo(3, -60);
+  ctx.stroke();
+  // Eye
+  ctx.fillStyle = '#000';
+  ctx.beginPath();
+  ctx.arc(6, -51, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Elephant trunk peeking out from forward window
+  ctx.save();
+  const trunkCurl = isCalm ? 0 : Math.sin(clock * 2.2) * 5;
+  ctx.translate(145, -57);
+  ctx.strokeStyle = '#94a3b8';
+  ctx.lineWidth = 6;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.quadraticCurveTo(12, 12, 18 + trunkCurl, -4);
+  ctx.stroke();
+  // Gentle water spout mist puff from elephant
+  if (!isCalm && Math.sin(clock * 3.5) > 0.4) {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.beginPath();
+    ctx.arc(20 + trunkCurl, -10, 3, 0, Math.PI * 2);
+    ctx.arc(23 + trunkCurl, -14, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // Two friendly sheep on the forward railing
+  ctx.save();
+  ctx.translate(-210, -85);
+  // Sheep 1 wool
+  ctx.fillStyle = '#f8fafc';
+  ctx.beginPath();
+  ctx.arc(0, 0, 9, 0, Math.PI * 2);
+  ctx.arc(10, 2, 7, 0, Math.PI * 2);
+  ctx.fill();
+  // Sheep 1 black face
+  ctx.fillStyle = '#1e293b';
+  ctx.beginPath();
+  ctx.ellipse(-8, 1, 4.5, 3.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Hanging Lantern on the Ark Deck Railing
+  ctx.save();
+  ctx.translate(240, -95);
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(0, 18);
+  ctx.stroke();
+  // Lantern frame & glowing core
+  ctx.fillStyle = '#fef08a';
+  ctx.beginPath();
+  ctx.arc(0, 22, 5, 0, Math.PI * 2);
+  ctx.fill();
+  // Lantern glow halo
+  const lGlow = ctx.createRadialGradient(0, 22, 2, 0, 22, 24);
+  lGlow.addColorStop(0, 'rgba(254, 240, 138, 0.6)');
+  lGlow.addColorStop(1, 'rgba(254, 240, 138, 0)');
+  ctx.fillStyle = lGlow;
+  ctx.beginPath();
+  ctx.arc(0, 22, 24, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.restore();
+}
+
+function drawPictureFrame() {
+  // PROMINENT RIGHT-HAND MARITIME ROTATING PICTURE FRAME
+  // Perfectly positioned to showcase cartoons and dad jokes with high visibility
+  const fx = 710;
+  const fy = 110;
+  const fw = 520;
+  const fh = 450;
+
+  ctx.save();
+
+  // Outer ambient shadow
+  ctx.fillStyle = 'rgba(0, 5, 18, 0.75)';
+  ctx.beginPath();
+  ctx.roundRect(fx - 4, fy - 4, fw + 8, fh + 8, 18);
+  ctx.fill();
+
+  // Ornate Gopher Wood & Golden Brass Picture Frame
+  const frameGrad = ctx.createLinearGradient(fx, fy, fx + fw, fy + fh);
+  frameGrad.addColorStop(0, '#78350f');
+  frameGrad.addColorStop(0.5, '#451a03');
+  frameGrad.addColorStop(1, '#92400e');
+  ctx.fillStyle = frameGrad;
+  ctx.beginPath();
+  ctx.roundRect(fx, fy, fw, fh, 16);
+  ctx.fill();
+
+  // Brass inner border & rivets
+  ctx.strokeStyle = '#d97706';
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.roundRect(fx + 8, fy + 8, fw - 16, fh - 16, 12);
+  ctx.stroke();
+
+  // Brass corner studs
+  const corners = [
+    [fx + 16, fy + 16],
+    [fx + fw - 16, fy + 16],
+    [fx + 16, fy + fh - 16],
+    [fx + fw - 16, fy + fh - 16]
+  ];
+  corners.forEach(([cx, cy]) => {
+    ctx.fillStyle = '#fbbf24';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#78350f';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  });
+
+  // Hanging nautical rope & brass lantern bracket over frame
+  ctx.strokeStyle = '#ca8a04';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(fx + fw / 2, fy);
+  ctx.lineTo(fx + fw / 2, fy - 40);
+  ctx.stroke();
+  ctx.fillStyle = '#fbbf24';
+  ctx.beginPath();
+  ctx.arc(fx + fw / 2, fy - 40, 6, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Inner Picture Screen Background
+  const innerX = fx + 16;
+  const innerY = fy + 16;
+  const innerW = fw - 32;
+  const innerH = fh - 32;
+
+  ctx.fillStyle = '#0f172a';
+  ctx.beginPath();
+  ctx.roundRect(innerX, innerY, innerW, innerH, 8);
+  ctx.fill();
+
+  // --- DRAW SLIDE CONTENT ---
+  const slide = SLIDES[currentSlide];
+
+  if (slide.file && imageCache[slide.file] && imageCache[slide.file].complete && imageCache[slide.file].naturalWidth > 0) {
+    // RENDER COMIC IMAGE CRISPLY LETTERBOXED INSIDE THE FRAME
+    const img = imageCache[slide.file];
+    const imgRatio = img.naturalWidth / img.naturalHeight;
+    const boxRatio = innerW / innerH;
+
+    let dw, dh, dx, dy;
+    if (imgRatio > boxRatio) {
+      dw = innerW;
+      dh = innerW / imgRatio;
+      dx = innerX;
+      dy = innerY + (innerH - dh) / 2;
+    } else {
+      dh = innerH;
+      dw = innerH * imgRatio;
+      dx = innerX + (innerW - dw) / 2;
+      dy = innerY;
+    }
+
+    // White backing card for clean cartoon contrast
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(dx, dy, dw, dh);
+    ctx.drawImage(img, dx, dy, dw, dh);
+
+    // Inner subtle shadow over image
+    ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(dx, dy, dw, dh);
+
+  } else if (!slide.file && currentSlide === 3) {
+    // GROANER DAD JOKES SLIDE
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(innerX, innerY, innerW, innerH);
+
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = '900 18px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('😂 TONIGHT’S TOP ARK GROANERS 😂', innerX + innerW / 2, innerY + 36);
+
+    const jokes = [
+      { q: "Q: Why couldn't they bring the BBQ smoker?", a: "A: The STEAKS were too high! 🥩😂" },
+      { q: "Q: Which animals could you NEVER play cards with?", a: "A: The cheetahs! 🐆🃏" },
+      { q: "Q: Where did Noah keep all the bees?", a: "A: In the ark-hives! 🐝🍯" },
+      { q: "Q: What kind of lights did Noah use?", a: "A: Floodlights! 💡🌧️" }
+    ];
+
+    jokes.forEach((j, i) => {
+      const jy = innerY + 75 + (i * 72);
+      ctx.fillStyle = 'rgba(255,255,255,0.06)';
+      ctx.beginPath();
+      ctx.roundRect(innerX + 16, jy - 18, innerW - 32, 60, 8);
+      ctx.fill();
+
+      ctx.font = '700 14px system-ui, sans-serif';
+      ctx.fillStyle = '#fde68a';
+      ctx.textAlign = 'left';
+      ctx.fillText(j.q, innerX + 26, jy);
+
+      ctx.font = '800 14px system-ui, sans-serif';
+      ctx.fillStyle = '#34d399';
+      ctx.fillText(j.a, innerX + 26, jy + 24);
+    });
+
+  } else if (!slide.file && currentSlide === 4) {
+    // RAINBOW COVENANT CELEBRATION SLIDE
+    const grad = ctx.createLinearGradient(innerX, innerY, innerX, innerY + innerH);
+    grad.addColorStop(0, '#0f2b46');
+    grad.addColorStop(1, '#051323');
+    ctx.fillStyle = grad;
+    ctx.fillRect(innerX, innerY, innerW, innerH);
+
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = '900 22px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🌈 THE PROMISE OF GOD 🕊️', innerX + innerW / 2, innerY + 50);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'italic 17px Georgia, serif';
+    ctx.fillText('“I have set my rainbow in the clouds,', innerX + innerW / 2, innerY + 110);
+    ctx.fillText('and it will be the sign of the covenant', innerX + innerW / 2, innerY + 140);
+    ctx.fillText('between me and the earth.”', innerX + innerW / 2, innerY + 170);
+
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = '800 15px system-ui, sans-serif';
+    ctx.fillText('— Genesis 9:13', innerX + innerW / 2, innerY + 215);
+
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '600 14px system-ui, sans-serif';
+    ctx.fillText('Noah walked faithfully with God through the deluge,', innerX + innerW / 2, innerY + 270);
+    ctx.fillText('and God remembered every single promise.', innerX + innerW / 2, innerY + 295);
+
+    // Decorative Olive Branch Icon
+    ctx.strokeStyle = '#22c55e';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(innerX + innerW / 2, innerY + 350, 24, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = '#22c55e';
+    ctx.font = '24px system-ui, sans-serif';
+    ctx.fillText('🌿', innerX + innerW / 2, innerY + 358);
+
+  } else {
+    // Fallback loading / drawing placeholder
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(innerX, innerY, innerW, innerH);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '700 16px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Loading Cartoon Feature...', innerX + innerW / 2, innerY + innerH / 2);
+  }
+
+  // "Click to Enlarge 🔍" badge on frame
+  ctx.fillStyle = 'rgba(2, 6, 23, 0.8)';
+  ctx.beginPath();
+  ctx.roundRect(fx + fw - 130, fy + fh - 34, 115, 24, 6);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.fillStyle = '#7dd3fc';
+  ctx.font = '700 11px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('TAP TO ENLARGE 🔍', fx + fw - 72, fy + fh - 18);
+
+  ctx.restore();
+}
+
+// --- MAIN GAME LOOP ---
+
+function update(dt) {
+  if (isPaused) return;
+
+  if (!isCalm) {
+    clock += dt;
+  }
+
+  // Slide Auto Cycling timer
+  if (autoCycle && !isPaused) {
+    slideTimer += dt;
+    if (slideTimer >= SLIDE_DURATION) {
+      slideTimer = 0;
+      nextSlide();
+    }
+  }
+}
+
+function render() {
+  ctx.clearRect(0, 0, 1280, 720);
+
+  // 1. Celestial Sky & Sunbeams
+  drawSky();
+
+  // 2. The Radiant Rainbow of Promise
+  drawRainbow();
+
+  // 3. Fluffy Drifting Clouds
+  drawClouds();
+
+  // 4. Flying Olive-Branch Doves
+  drawDoves();
+
+  // 5. Far Background Ocean Waves (Deep Midnight Indigo)
+  drawWaveLayer(440, 14, 0.007, 1.2, '#0c2444', 'rgba(56, 189, 248, 0.25)');
+
+  // 6. Noah's Ark floating on midground waves
+  drawArk();
+
+  // 7. Midground Ocean Waves (Deep Cerulean Blue)
+  drawWaveLayer(485, 18, 0.009, 1.6, '#073260', 'rgba(125, 211, 252, 0.4)');
+
+  // 8. Foreground Picture Frame Display (Cartoons & Dad Jokes)
+  drawPictureFrame();
+
+  // 9. Foreground Ocean Wave Crests (Luminous Deluge Blue with White Sea Foam)
+  drawWaveLayer(560, 22, 0.012, 2.1, 'rgba(4, 38, 77, 0.95)', 'rgba(255, 255, 255, 0.75)');
+}
+
+function loop(timestamp) {
+  const dt = lastTime ? Math.min(0.1, (timestamp - lastTime) / 1000) : 0;
+  lastTime = timestamp;
+
+  update(dt);
+  render();
+
+  requestAnimationFrame(loop);
+}
+
+// Initialize
+syncUI();
+requestAnimationFrame(loop);
+
+/* NOAH_SCREENSAVER_CORE_END */
+</script>
+</body>
+</html>

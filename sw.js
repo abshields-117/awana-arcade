@@ -1,5 +1,5 @@
 // Awana Retro Arcade — Offline Service Worker
-const CACHE_NAME = 'awanacade-v20';
+const CACHE_NAME = 'awanacade-v21';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -26,6 +26,10 @@ const ASSETS_TO_CACHE = [
   './games/phantom_manor.html',
   './games/path_of_hallows.html',
   './games/eden_screensaver.html',
+  './games/noah_ark_screensaver.html',
+  './games/noah_bbq_smoker.jpg',
+  './games/noah_unicorns_far_side.jpg',
+  './games/noah_elephant_extinct.jpg',
   './games/super_tetra_16.html'
 ];
 
