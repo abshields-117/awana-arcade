@@ -25,6 +25,8 @@
     return {
       id: 'corrupted-flood-archive',
       title: 'COVENANT//TERMINAL: The Corrupted Flood Archive',
+      intro: '[FICTIONAL CYBER TRAINING MISSION]\nSYSTEM ALERT\nIncreasing corruption on Earth has led to the AWANACADE network being compromised.\nThe criminal hacker group known as MoR has claimed responsibility.\nYour mission: solve the puzzles, repair the Flood Archive, and restore AWANACADE service.',
+      reveal: 'MoR // MEN OF RENOWN // fictional group designation // Genesis 6:4 reference',
       premise: 'An unreliable human logging system corrupted records and fictional Ark support simulations. God’s commands remain correct; Scripture is the authenticated source.',
       puzzles: [
         {

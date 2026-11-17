@@ -6,9 +6,18 @@ The landing page is an **activity gate, not a security boundary**. The access co
 
 The code and answers are necessarily source-visible in a static offline app. They are not a password or secret, and no credentials are stored. Unlock and mission progress use `sessionStorage` only. If browser storage is denied, the terminal safely stays locked and keeps progress only in page memory.
 
+## Two-screen setup
+
+1. On the player Chromebook or laptop, open `index.html` and leave the terminal at the fresh prompt. Do not refresh this player screen during a team run.
+2. On the projector device, open `games/retro_screensaver.html?mode=mor&v=2`, or use **MoR Support Display** under **Visual Displays & Room Support** in `arcade.html`.
+3. Put the projector display in fullscreen. It rotates general, spoiler-free help every 12 seconds; Previous, Next, and Pause remain available. Pause and operating-system reduced motion freeze its animation and clocks.
+4. The leader panel also has **MoR Support Display**, which opens the support view in a separate window. The default `games/retro_screensaver.html?mode=retro&v=2` remains the original rotating retro screensaver.
+
+The support display is intentionally independent: it never reads or invents player progress, never gives puzzle solutions, and runs without network dependencies or audio. Keep the leader spoilers below on the leader device only.
+
 ## Guided player flow
 
-A fresh session shows only `Hint: type HELP` and the `>` input prompt. `HELP` gives one immediate action: `RUN FLOOD.EXE`. The launcher runs a roughly three-second, skippable mount/load/operator sequence, then Guided Mission Mode automatically prints each clue and one `TYPE:` or `NEXT COMMAND:` instruction. A correct solution briefly celebrates and advances to the next operator. `HELP` becomes contextual; `STATUS`, `HINT`, `LOG`/`HISTORY`, and the advanced discovery commands remain available but are never required to find the next step. There is no countdown.
+A fresh session shows only `Hint: type HELP` and the `>` input prompt. `HELP` gives one immediate action: `RUN FLOOD.EXE`. Only after that command, the launcher shows the short `[FICTIONAL CYBER TRAINING MISSION]` MoR system alert, then runs a roughly three-second, skippable mount/load/operator sequence. Guided Mission Mode automatically prints each clue and one `TYPE:` or `NEXT COMMAND:` instruction. The later `MoR // MEN OF RENOWN` line is explicitly a fictional group designation with a Genesis 6:4 reference; it does not portray the biblical men of renown as computer hackers. A correct solution briefly celebrates and advances to the next operator. `HELP` becomes contextual; `STATUS`, `HINT`, `LOG`/`HISTORY`, and the advanced discovery commands remain available but are never required to find the next step. There is no countdown.
 
 ## Mission architecture
 

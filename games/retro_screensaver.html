@@ -66,14 +66,86 @@
     z-index: 20;
     transition: all 0.5s ease;
   }
+  [hidden] { display: none !important; }
+  #morMode { position: fixed; inset: 0; overflow: hidden; color: #b8ffc8; background: #010403; }
+  #mor-canvas { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .42; }
+  .mor-scan { position:absolute; inset:0; pointer-events:none; background:repeating-linear-gradient(0deg,rgba(0,0,0,.2) 0 1px,transparent 1px 4px),radial-gradient(ellipse at center,transparent 20%,rgba(0,0,0,.76) 100%); }
+  .mor-shell { position:relative; z-index:2; min-height:100%; padding:clamp(54px,7vh,80px) clamp(22px,5vw,72px) clamp(18px,3vh,30px); display:grid; grid-template-rows:auto 1fr auto; gap:clamp(14px,2.4vh,24px); }
+  .mor-status { display:flex; justify-content:space-between; align-items:center; gap:20px; color:#54ff78; font-size:clamp(12px,1.25vw,18px); letter-spacing:.13em; text-transform:uppercase; }
+  .mor-signal { color:#e9ffd9; text-shadow:0 0 12px #54ff78; }
+  .mor-card { width:min(1080px,92vw); min-height:min(430px,58vh); margin:auto; align-self:center; border:2px solid #2bd452; background:rgba(1,9,4,.9); box-shadow:0 0 38px rgba(49,255,95,.18),inset 0 0 32px rgba(18,111,42,.16); padding:clamp(26px,4.3vw,58px); display:flex; flex-direction:column; justify-content:center; position:relative; overflow:hidden; }
+  .mor-card::before { content:'> ssh support@awanacade.local'; position:absolute; top:14px; left:18px; color:#3fc95f; font-size:clamp(11px,1vw,14px); }
+  .mor-card::after { content:'[////]'; position:absolute; right:20px; bottom:14px; color:#2a8e42; letter-spacing:.18em; }
+  .mor-kicker { color:#54ff78; font-weight:700; font-size:clamp(13px,1.5vw,20px); letter-spacing:.14em; text-transform:uppercase; margin-bottom:clamp(14px,2.3vh,24px); }
+  .mor-title { color:#f0fff3; text-shadow:0 0 16px rgba(84,255,120,.6); font-size:clamp(30px,4.2vw,62px); line-height:1.05; letter-spacing:.015em; margin:0 0 clamp(18px,3vh,30px); overflow-wrap:anywhere; }
+  .mor-body { color:#b8ffc8; font-size:clamp(19px,2.15vw,32px); line-height:1.4; max-width:950px; white-space:pre-line; }
+  .mor-footer { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:clamp(10px,2vw,24px); }
+  .mor-controls { display:flex; gap:8px; flex-wrap:wrap; }
+  .mor-controls button,.mor-dot { color:#b8ffc8; background:rgba(2,18,8,.94); border:1px solid #2aa748; font:700 clamp(12px,1.05vw,15px) 'Courier New',monospace; min-height:42px; padding:8px 12px; cursor:pointer; }
+  .mor-controls button:hover,.mor-controls button:focus-visible,.mor-dot:focus-visible { outline:2px solid #54ff78; outline-offset:2px; color:#fff; }
+  #mor-dots { display:flex; justify-content:center; align-items:center; gap:8px; flex-wrap:wrap; }
+  .mor-dot { width:13px; height:13px; min-height:13px; padding:0; border-radius:50%; background:#164d25; font-size:0; }
+  .mor-dot[aria-current="true"] { background:#7dff96; box-shadow:0 0 12px #54ff78; }
+  .mor-clock { text-align:right; color:#54ff78; font-size:clamp(11px,1vw,14px); min-width:90px; }
+  .mor-card.corrupt { box-shadow:0 0 46px rgba(49,255,95,.26),inset 0 0 42px rgba(84,255,120,.12); transform:translateX(1px); }
+  @media (max-width: 600px) {
+    .mor-shell { padding:54px 12px 12px; gap:10px; }
+    .mor-status { font-size:11px; align-items:flex-start; }
+    .mor-card { width:100%; min-height:54vh; padding:42px 20px 26px; }
+    .mor-title { font-size:clamp(25px,8.5vw,40px); }
+    .mor-body { font-size:clamp(16px,4.8vw,22px); }
+    .mor-footer { grid-template-columns:1fr; }
+    .mor-controls { justify-content:center; }
+    .mor-clock { text-align:center; }
+    #mor-dots { gap:6px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .mor-card { transition:none; } }
 </style>
 </head>
 <body>
-<div class="crt-overlay"></div>
-<div id="themeBadge" class="theme-badge">THEME: MATRIX CRT</div>
-<canvas id="screenCanvas"></canvas>
+<div id="retroMode">
+  <div class="crt-overlay"></div>
+  <div id="themeBadge" class="theme-badge">THEME: MATRIX CRT</div>
+  <canvas id="screenCanvas"></canvas>
+</div>
+<main id="morMode" hidden aria-label="MoR terminal mission support display">
+  <canvas id="mor-canvas" aria-hidden="true"></canvas>
+  <div class="mor-scan" aria-hidden="true"></div>
+  <div class="mor-shell">
+    <div class="mor-status"><span class="mor-signal" id="mor-signal">MoR SIGNAL DETECTED</span><span>[FICTIONAL TRAINING SIMULATION]</span></div>
+    <section class="mor-card" aria-live="polite" aria-atomic="true">
+      <div id="mor-kicker" class="mor-kicker"></div>
+      <h1 id="mor-title" class="mor-title"></h1>
+      <div id="mor-body" class="mor-body"></div>
+    </section>
+    <div class="mor-footer">
+      <div class="mor-controls" aria-label="Support display controls">
+        <button id="mor-prev" type="button" aria-label="Previous support card">◀ PREV</button>
+        <button id="mor-pause" type="button" aria-label="Pause support display">Ⅱ PAUSE</button>
+        <button id="mor-next" type="button" aria-label="Next support card">NEXT ▶</button>
+        <button id="mor-fullscreen" type="button" aria-label="Enter fullscreen">⛶ FULLSCREEN</button>
+      </div>
+      <nav id="mor-dots" aria-label="Support card progress"></nav>
+      <div id="mor-clock" class="mor-clock">CARD 01 / 10</div>
+    </div>
+  </div>
+</main>
+<script id="mor-card-data" type="application/json">[
+  {"kicker":"Connection protocol","title":"START: HELP → RUN FLOOD.EXE","body":"Begin at the player terminal. Type HELP, read the response, then launch the mission."},
+  {"kicker":"Command reference","title":"HELP · HINT · STATUS · LOG","body":"HELP shows the next action. HINT offers up to three levels. STATUS shows your place. LOG reviews what the terminal printed."},
+  {"kicker":"Syntax pattern","title":"COMMAND TARGET --OPTION=VALUE","body":"Commands tell the computer what to do. Targets name what to use. Options change how it runs."},
+  {"kicker":"Accuracy check","title":"READ EVERY CHARACTER","body":"Capital letters are flexible, but paths, flags, hyphens, and spaces matter. Compare your line one character at a time."},
+  {"kicker":"Error decoder","title":"THREE ERRORS · THREE FIXES","body":"COMMAND NOT FOUND: check the first word.\nSYNTAX: fix the command shape.\nANSWER INCORRECT: re-read the clue."},
+  {"kicker":"Keyboard tools","title":"EDIT · RECALL · SUBMIT","body":"Arrow-Up recalls your last command. Backspace repairs a character. Enter submits the line."},
+  {"kicker":"Team protocol","title":"READER · OPERATOR · CHECKER · RESEARCHER","body":"Reader speaks the clue. Operator types. Checker compares every character. Researcher checks the Bible reference. Rotate roles after each puzzle."},
+  {"kicker":"Help channel","title":"HINT HAS THREE LEVELS","body":"Start with careful reading. If the team is stuck, type HINT again for stronger guidance—up to three levels."},
+  {"kicker":"Simulation notice","title":"FICTION IS LABELED","body":"[FICTIONAL TRAINING SIMULATION] marks invented Ark technology. Scripture references remain separate from the fictional mission story."},
+  {"kicker":"Room support","title":"NO COUNTDOWN · SLOW DOWN AND READ","body":"There is no countdown. Do not refresh the player screen. Pause, read aloud, compare spaces, and keep the current team’s progress."}
+]</script>
 
 <script>
+const pageMode = new URLSearchParams(location.search).get('mode');
+const isMorMode = pageMode === 'mor';
 const canvas = document.getElementById('screenCanvas');
 const ctx = canvas.getContext('2d');
 let width = canvas.width = window.innerWidth;
@@ -566,7 +638,135 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
-loop();
+if (!isMorMode) {
+  loop();
+} else {
+  document.getElementById('retroMode').hidden = true;
+  document.getElementById('morMode').hidden = false;
+}
+</script>
+<script>
+(function(){
+  'use strict';
+  if (!isMorMode) return;
+  const MOR_CARD_MS = 12000;
+  const cards = JSON.parse(document.getElementById('mor-card-data').textContent);
+  const mode = document.getElementById('morMode');
+  const card = mode.querySelector('.mor-card');
+  const kicker = document.getElementById('mor-kicker');
+  const title = document.getElementById('mor-title');
+  const body = document.getElementById('mor-body');
+  const dots = document.getElementById('mor-dots');
+  const clock = document.getElementById('mor-clock');
+  const signal = document.getElementById('mor-signal');
+  const pauseButton = document.getElementById('mor-pause');
+  const fullscreenButton = document.getElementById('mor-fullscreen');
+  const morCanvas = document.getElementById('mor-canvas');
+  const morCtx = morCanvas.getContext('2d');
+  const reducedQuery = matchMedia('(prefers-reduced-motion: reduce)');
+  const notices = ['MoR SIGNAL DETECTED','ARCHIVE RESTORATION IN PROGRESS','SUPPORT CHANNEL // GENERAL HINTS'];
+  const glyphs = '01ABCDEFGHIJKLMNOPQRSTUVWXYZ<>/\\[]{}+*#'.split('');
+  let drops = [];
+  let index = 0;
+  let paused = false;
+  let reduced = reducedQuery.matches;
+  let morFrame = 0;
+  let morCardStarted = performance.now();
+  let morAnimStarted = morCardStarted;
+  let morFrozenAt = reduced ? morCardStarted : 0;
+
+  function resizeMor(){
+    const ratio = Math.min(devicePixelRatio || 1, 2);
+    morCanvas.width = Math.round(innerWidth * ratio);
+    morCanvas.height = Math.round(innerHeight * ratio);
+    morCanvas.style.width = innerWidth + 'px';
+    morCanvas.style.height = innerHeight + 'px';
+    morCtx.setTransform(ratio,0,0,ratio,0,0);
+    const count = Math.max(24,Math.floor(innerWidth/24));
+    drops = Array.from({length:count},(_,i)=>({x:i*24+Math.random()*12,y:Math.random()*innerHeight,speed:12+Math.random()*20,char:glyphs[Math.floor(Math.random()*glyphs.length)]}));
+    drawMorAmbient(morFrozenAt || performance.now());
+  }
+  function drawMorAmbient(now){
+    const t = (now - morAnimStarted)/1000;
+    morCtx.fillStyle = '#010403';
+    morCtx.fillRect(0,0,innerWidth,innerHeight);
+    morCtx.font = '15px Courier New, monospace';
+    drops.forEach((drop,i)=>{
+      const y = (drop.y + t*drop.speed) % (innerHeight+40)-20;
+      const alpha = .12 + ((i*17)%28)/100;
+      morCtx.fillStyle = `rgba(52,255,94,${alpha})`;
+      morCtx.fillText(glyphs[(i+Math.floor(t/2))%glyphs.length],drop.x,y);
+      morCtx.fillStyle = `rgba(33,148,62,${alpha*.65})`;
+      morCtx.fillText(drop.char,drop.x,y-23);
+    });
+    morCtx.strokeStyle = 'rgba(58,255,99,.1)';
+    morCtx.lineWidth = 1;
+    const scanY = reduced || paused ? innerHeight*.72 : (t*19)%innerHeight;
+    morCtx.beginPath();morCtx.moveTo(0,scanY);morCtx.lineTo(innerWidth,scanY);morCtx.stroke();
+  }
+  function renderCard(){
+    const item = cards[index];
+    kicker.textContent = item.kicker;
+    title.textContent = item.title;
+    body.textContent = item.body;
+    signal.textContent = notices[index % notices.length];
+    clock.textContent = `CARD ${String(index+1).padStart(2,'0')} / ${String(cards.length).padStart(2,'0')}`;
+    [...dots.children].forEach((dot,i)=>dot.setAttribute('aria-current',String(i===index)));
+  }
+  function select(next){
+    index = (next + cards.length) % cards.length;
+    morCardStarted = reduced || paused ? (morFrozenAt || performance.now()) : performance.now();
+    renderCard();
+  }
+  function drawMorFrame(now){
+    if (paused || reduced) return;
+    if (performance.now() - morCardStarted >= MOR_CARD_MS) select(index+1);
+    drawMorAmbient(now);
+    card.classList.toggle('corrupt',Math.floor((now-morAnimStarted)/3200)%2===1 && (now-morAnimStarted)%3200<240);
+    morFrame = requestAnimationFrame(drawMorFrame);
+  }
+  function freeze(){
+    morFrozenAt = performance.now();
+    cancelAnimationFrame(morFrame);
+    morFrame = 0;
+    drawMorAmbient(morFrozenAt);
+    card.classList.remove('corrupt');
+  }
+  function resume(){
+    const now = performance.now();
+    const frozenFor = Math.max(0,now-morFrozenAt);
+    morCardStarted += frozenFor;
+    morAnimStarted += frozenFor;
+    morFrozenAt = 0;
+    cancelAnimationFrame(morFrame);
+    morFrame = requestAnimationFrame(drawMorFrame);
+  }
+  function togglePause(){
+    paused = !paused;
+    pauseButton.textContent = paused ? '▶ RESUME' : 'Ⅱ PAUSE';
+    pauseButton.setAttribute('aria-label',paused ? 'Resume support display' : 'Pause support display');
+    if (paused) freeze(); else if (!reduced) resume();
+  }
+  cards.forEach((item,i)=>{
+    const dot = document.createElement('button');
+    dot.type = 'button';dot.className='mor-dot';dot.setAttribute('aria-label',`Show support card ${i+1}: ${item.title}`);
+    dot.onclick=()=>select(i);dots.appendChild(dot);
+  });
+  document.getElementById('mor-prev').onclick=()=>select(index-1);
+  document.getElementById('mor-next').onclick=()=>select(index+1);
+  pauseButton.onclick=togglePause;
+  fullscreenButton.onclick=async()=>{try{if(!document.fullscreenElement){await document.documentElement.requestFullscreen();fullscreenButton.textContent='⛶ EXIT';fullscreenButton.setAttribute('aria-label','Exit fullscreen')}else{await document.exitFullscreen()}}catch(_){fullscreenButton.textContent='FULLSCREEN UNAVAILABLE'}};
+  document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement){fullscreenButton.textContent='⛶ FULLSCREEN';fullscreenButton.setAttribute('aria-label','Enter fullscreen')}});
+  function onMotionChange(event){
+    const wasReduced = reduced;reduced = event.matches;
+    if(reduced)freeze();else if(wasReduced&&!paused)resume();
+  }
+  if(reducedQuery.addEventListener)reducedQuery.addEventListener('change',onMotionChange);else reducedQuery.addListener(onMotionChange);
+  addEventListener('resize',resizeMor);
+  renderCard();resizeMor();
+  if(!reduced)morFrame=requestAnimationFrame(drawMorFrame);
+  window.MorSupport={cardCount:cards.length,getState:()=>({index,paused,reduced,elapsed:Math.floor(((paused||reduced)?morFrozenAt:performance.now())-morCardStarted),animation:Math.floor(((paused||reduced)?morFrozenAt:performance.now())-morAnimStarted)})};
+})();
 </script>
 <a href="../index.html" id="arcadeBackBtn" style="position:fixed; top:12px; left:12px; z-index:999999; background:rgba(15,23,42,0.85); color:#38BDF8; border:2px solid #38BDF8; border-radius:8px; padding:6px 14px; font-family:'Courier New', monospace; font-size:13px; font-weight:800; text-decoration:none; box-shadow:0 4px 15px rgba(0,0,0,0.5); backdrop-filter:blur(4px); display:flex; align-items:center; gap:6px; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='#38BDF8'; this.style.color='#0F172A';" onmouseout="this.style.background='rgba(15,23,42,0.85)'; this.style.color='#38BDF8';">
   ⬅ ARCADE MENU

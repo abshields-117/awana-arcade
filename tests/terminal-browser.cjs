@@ -23,7 +23,8 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
     const help=await page.locator('#screen').innerText();assert.match(help,/START HERE: RUN FLOOD\.EXE/);assert.ok(help.split('\n').length<=7,help);
     await page.screenshot({path:path.join(shots,'terminal-start-1366.png')});
     await command('  run   flood.exe  ',{waitForInput:false});
-    assert.match(await page.locator('#screen').innerText(),/LOADING FLOOD\.EXE/);assert.ok(await page.locator('#skip-loading').isVisible());assert.equal(await field.isDisabled(),true);
+    const launched=await page.locator('#screen').innerText();
+    assert.match(launched,/\[FICTIONAL CYBER TRAINING MISSION\]/);assert.match(launched,/SYSTEM ALERT/);assert.match(launched,/MoR/);assert.match(launched,/LOADING FLOOD\.EXE/);assert.ok(await page.locator('#skip-loading').isVisible());assert.equal(await field.isDisabled(),true);
     await page.waitForTimeout(750);assert.match(await page.locator('#screen').innerText(),/MOUNTING ARCHIVE/);
     await page.screenshot({path:path.join(shots,'terminal-loading-1366.png')});
     await page.locator('#skip-loading').click();await expectMission(1);assert.equal(await field.isDisabled(),false);
@@ -32,7 +33,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
     await page.locator('#command-input').press('ArrowUp');assert.equal(await field.inputValue(),'NOPE');await field.fill('');
     await command('FILES');assert.match(await page.locator('#screen').innerText(),/manifest\.txt/);assert.match(await page.locator('#screen').innerText(),/MISSION 1\/9/);
     await command('READ');assert.match(await page.locator('#screen').innerText(),/SYNTAX/);
-    await command('READ /archive/manifest.txt');await expectMission(2);
+    await command('READ /archive/manifest.txt');await expectMission(2);assert.match(await page.locator('#screen').innerText(),/MoR \/\/ MEN OF RENOWN \/\/ fictional group designation \/\/ Genesis 6:4 reference/);
     await command('ANSWER 40');assert.match(await page.locator('#screen').innerText(),/ANSWER INCORRECT/);assert.match(await page.locator('#screen').innerText(),/Format: ANSWER your answer/);
     await command('answer width is 50 cubits');await expectMission(3);
     await command('ANSWER ALL');await expectMission(4);
