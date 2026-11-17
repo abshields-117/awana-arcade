@@ -6,6 +6,10 @@ The landing page is an **activity gate, not a security boundary**. The access co
 
 The code and answers are necessarily source-visible in a static offline app. They are not a password or secret, and no credentials are stored. Unlock and mission progress use `sessionStorage` only. If browser storage is denied, the terminal safely stays locked and keeps progress only in page memory.
 
+## Guided player flow
+
+A fresh session shows only `Hint: type HELP` and the `>` input prompt. `HELP` gives one immediate action: `RUN FLOOD.EXE`. The launcher runs a roughly three-second, skippable mount/load/operator sequence, then Guided Mission Mode automatically prints each clue and one `TYPE:` or `NEXT COMMAND:` instruction. A correct solution briefly celebrates and advances to the next operator. `HELP` becomes contextual; `STATUS`, `HINT`, `LOG`/`HISTORY`, and the advanced discovery commands remain available but are never required to find the next step. There is no countdown.
+
 ## Mission architecture
 
 Reusable mission content lives in `js/terminal-missions.js`; terminal rendering and controls live in `index.html`. The module exports:

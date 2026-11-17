@@ -22,6 +22,14 @@ test('terminal landing includes safe session redirect and accessible hidden lead
   assert.match(html,/aria-label="Leader access"/);
   assert.match(html,/id="leader-code"/);
   assert.match(html,/id="command-input"/);
+  assert.match(html,/Hint: type HELP/);
+  assert.doesNotMatch(html,/Human logging system/);
+  assert.doesNotMatch(html,/Authenticated Scripture/);
+  assert.doesNotMatch(html,/God’s Command|God’s commands remain correct/);
+  assert.doesNotMatch(html,/class="cursor"/);
+  assert.match(html,/caret-color:\s*var\(--green\)/);
+  assert.match(html,/id="skip-loading"/);
+  assert.match(html,/RUN FLOOD\.EXE/);
   assert.doesNotMatch(html,/eval\s*\(/);
 });
 
@@ -29,7 +37,7 @@ test('manifest starts at terminal and service worker precaches all takeover file
   const manifest=JSON.parse(read('manifest.json'));
   assert.equal(manifest.start_url,'./index.html');
   const sw=read('sw.js');
-  assert.match(sw,/awanacade-v22/);
+  assert.match(sw,/awanacade-v23/);
   for(const asset of ['./index.html','./arcade.html','./js/terminal-missions.js']) assert.ok(sw.includes(`'${asset}'`),asset);
   assert.match(sw,/ignoreSearch:\s*true/);
 });

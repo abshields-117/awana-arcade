@@ -7,6 +7,7 @@ test('parser forgives command case and outer whitespace but preserves argument s
   assert.equal(parseCommand('RUN RESTORE --VERIFY').command, 'RUN');
   assert.equal(parseCommand('RUN RESTORE --VERIFY').rawArgs, 'RESTORE --VERIFY');
   assert.equal(parseCommand('   ').error, 'EMPTY');
+  assert.deepEqual(parseCommand('  run   flood.exe  '), { command: 'RUN', rawArgs: 'flood.exe', args: ['flood.exe'] });
 });
 
 test('mission has nine reachable, varied puzzles and three hints each', () => {
@@ -17,10 +18,32 @@ test('mission has nine reachable, varied puzzles and three hints each', () => {
     assert.equal(puzzle.hints.length, 3, puzzle.id);
     assert.ok(puzzle.accepts.length >= 1, puzzle.id);
     assert.match(puzzle.prompt, /OPERATOR /);
+    assert.match(puzzle.guide, /^(TYPE|NEXT COMMAND):/);
+    assert.ok(!/\b(?:FILES|MISSION|MAP|SCAN)\b/.test(puzzle.guide), `${puzzle.id} requires discovery`);
   }
   assert.ok(mission.puzzles.some(p => p.accepts.some(a => /7-2-9-4/.test(a.value || ''))));
   assert.ok(!mission.puzzles.some(p => p.accepts.some(a => /^(1[- ]?2[- ]?3[- ]?4)$/.test(a.value || ''))));
   assert.equal(STORAGE_KEY, 'covenant-terminal-progress-v1');
+});
+
+test('all nine puzzles expose a complete guided route without discovery commands', () => {
+  const mission = createMission();
+  const route = mission.puzzles.map(p => p.route);
+  assert.deepEqual(route, [
+    'READ /archive/manifest.txt', 'ANSWER 50 CUBITS', 'ANSWER ALL',
+    'ANSWER 7-2-9-4', 'ANSWER DOVE', 'REPAIR LAMP --A=ON --B=OFF',
+    'TRACK --EAST --BAY=3', 'READ /archive/final.key', 'RUN RESTORE --VERIFY'
+  ]);
+  mission.puzzles.forEach((puzzle) => assert.equal(evaluateAction(puzzle, parseCommand(puzzle.route)).ok, true, puzzle.id));
+});
+
+test('context help stays short and teaches one relevant syntax without revealing answers', () => {
+  const mission = createMission();
+  for (const puzzle of mission.puzzles) {
+    assert.ok(puzzle.help.length <= 2, puzzle.id);
+    assert.match(puzzle.help.join('\n'), /Example:/);
+    assert.ok(!puzzle.help.join('\n').includes(puzzle.route), `${puzzle.id} help revealed route`);
+  }
 });
 
 test('every puzzle accepts its intended action and rejects a wrong answer without progress', () => {
@@ -51,6 +74,9 @@ test('syntax errors differ from incorrect solutions', () => {
   assert.equal(evaluateAction(dimensions, parseCommand('ANSWER 40')).kind, 'INCORRECT');
   const circuit = mission.puzzles[5];
   assert.equal(evaluateAction(circuit, parseCommand('REPAIR LAMP A ON B OFF')).kind, 'SYNTAX');
+  assert.match(evaluateAction(dimensions, parseCommand('ANSWER')).message, /^SYNTAX —/);
+  assert.match(evaluateAction(dimensions, parseCommand('ANSWER 40')).message, /^ANSWER INCORRECT —/);
+  assert.match(evaluateAction(dimensions, parseCommand('NOPE')).message, /^COMMAND NOT FOUND —/);
 });
 
 test('text answers accept reasonable variants without weakening exact command puzzles', () => {
