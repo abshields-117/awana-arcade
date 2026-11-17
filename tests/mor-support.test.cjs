@@ -12,12 +12,14 @@ function supportCards(html) {
   return JSON.parse(match[1]);
 }
 
-test('MoR narrative is mission intro data, never fresh boot clutter, and is theologically clear', () => {
+test('boot uses only a compact fictional MoR signature while full narrative stays in mission intro', () => {
   const html = read('index.html');
   const missionSource = read('js/terminal-missions.js');
-  assert.match(html, /function boot\(\)\{clearScreen\(\);transcript=\[\];add\('Hint: type HELP','prompt-line'\)\}/);
   const bootBody = html.match(/function boot\(\)[\s\S]*?\nfunction openArcade/)[0];
-  assert.doesNotMatch(bootBody, /MoR|SYSTEM ALERT|MEN OF RENOWN|CYBER TRAINING/i);
+  assert.match(bootBody, /addBootDiagnostic\(\)/);
+  assert.match(html, /\[ FICTIONAL TRAINING SIMULATION \]/);
+  assert.match(html, /INTRUSION SIGNATURE \.\.\.\. MoR/);
+  assert.doesNotMatch(bootBody, /MEN OF RENOWN|Genesis|criminal hacker|Increasing corruption|theology/i);
   assert.match(missionSource, /\[FICTIONAL CYBER TRAINING MISSION\]/);
   assert.match(missionSource, /SYSTEM ALERT/);
   assert.match(missionSource, /Increasing corruption on Earth has led to the AWANACADE network being compromised\./);
@@ -77,7 +79,7 @@ test('hub exposes support display outside cabinet count and offline cache stays 
   assert.match(arcade, /games\/retro_screensaver\.html\?mode=mor&v=2/);
   assert.match(arcade, /MoR Support Display/i);
   const sw = read('sw.js');
-  assert.match(sw, /awanacade-v24/);
+  assert.match(sw, /awanacade-v25/);
   assert.equal((sw.match(/'\.\/games\/retro_screensaver\.html'/g) || []).length, 1);
   assert.match(sw, /ignoreSearch:\s*true/);
   const workflow = read('.github/workflows/game-tests.yml');

@@ -30,6 +30,20 @@ test('terminal landing includes safe session redirect and accessible hidden lead
   assert.match(html,/caret-color:\s*var\(--green\)/);
   assert.match(html,/id="skip-loading"/);
   assert.match(html,/RUN FLOOD\.EXE/);
+  assert.match(html,/LINK: DISCONNECTED/);
+  for(const required of [
+    '[ FICTIONAL TRAINING SIMULATION ]',
+    'AWANACADE STATUS .... DOWN',
+    'ARCADE CORE .... LOCKED',
+    'FLOOD ARCHIVE .... CORRUPTED',
+    'INTRUSION SIGNATURE .... MoR',
+    'MoR WAS HERE // YOUR MOVE, OPERATORS',
+    'Restore the archive to bring AWANACADE online.'
+  ]) assert.ok(html.includes(required),`missing boot context: ${required}`);
+  assert.match(html,/className='boot-diagnostic'/);
+  assert.match(html,/@media\(prefers-reduced-motion:reduce\)/);
+  assert.match(html,/\.boot-row\{animation:none!important/);
+  assert.doesNotMatch(html,/animation[^;}]*:\s*[^;}]*(?:flash|strobe)/i);
   assert.doesNotMatch(html,/eval\s*\(/);
 });
 
@@ -37,7 +51,7 @@ test('manifest starts at terminal and service worker precaches all takeover file
   const manifest=JSON.parse(read('manifest.json'));
   assert.equal(manifest.start_url,'./index.html');
   const sw=read('sw.js');
-  assert.match(sw,/awanacade-v24/);
+  assert.match(sw,/awanacade-v25/);
   for(const asset of ['./index.html','./arcade.html','./js/terminal-missions.js']) assert.ok(sw.includes(`'${asset}'`),asset);
   assert.match(sw,/ignoreSearch:\s*true/);
 });

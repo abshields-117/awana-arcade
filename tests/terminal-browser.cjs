@@ -13,14 +13,20 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
   async function expectMission(number){await page.waitForFunction(n=>document.querySelector('#screen').innerText.includes(`[MISSION ${n}/9]`),number);}
   try{
     await page.goto(base+'/index.html?terminal=1&browser-test=guided');
-    assert.equal((await page.locator('#screen').innerText()).trim(),'Hint: type HELP');
+    const boot=(await page.locator('#screen').innerText()).trim();
+    for(const required of ['[ FICTIONAL TRAINING SIMULATION ]','AWANACADE STATUS .... DOWN','ARCADE CORE .... LOCKED','FLOOD ARCHIVE .... CORRUPTED','INTRUSION SIGNATURE .... MoR','MoR WAS HERE // YOUR MOVE, OPERATORS','Restore the archive to bring AWANACADE online.','Hint: type HELP'])assert.match(boot,new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+    assert.ok(boot.split(/\s+/).length<=40,`boot is too wordy: ${boot}`);
+    assert.ok(boot.split('\n').filter(Boolean).length<=9,`boot is too tall: ${boot}`);
     assert.equal(await page.locator('.cursor').count(),0);
+    assert.equal((await page.locator('#link-state').innerText()).trim(),'LINK: DISCONNECTED');
     assert.equal(await field.evaluate(el=>document.activeElement===el),true);
+    assert.equal(await page.locator('.boot-row').first().evaluate(el=>getComputedStyle(el).animationName),'none');
+    await page.screenshot({path:path.join(shots,'terminal-boot-1366.png')});
     await field.fill('HEL');
     const caret=await field.evaluate(el=>({start:el.selectionStart,end:el.selectionEnd,color:getComputedStyle(el).caretColor,input:el.getBoundingClientRect(),prompt:document.querySelector('.ps1').getBoundingClientRect()}));
     assert.deepEqual([caret.start,caret.end],[3,3]);assert.notEqual(caret.color,'rgba(0, 0, 0, 0)');assert.ok(caret.prompt.right<=caret.input.left+2,'prompt and real input caret are detached');
     await field.fill('HELP');await field.press('Enter');
-    const help=await page.locator('#screen').innerText();assert.match(help,/START HERE: RUN FLOOD\.EXE/);assert.ok(help.split('\n').length<=7,help);
+    const help=await page.locator('#screen').innerText(),helpLines=help.slice(help.indexOf('COVENANT TERMINAL')).trim().split('\n');assert.match(help,/START HERE: RUN FLOOD\.EXE/);assert.ok(helpLines.length<=5,help);
     await page.screenshot({path:path.join(shots,'terminal-start-1366.png')});
     await command('  run   flood.exe  ',{waitForInput:false});
     const launched=await page.locator('#screen').innerText();
@@ -54,21 +60,22 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
     await page.goto(base+'/index.html?terminal=1');const hotspot=page.getByRole('button',{name:'Leader access'});for(let i=0;i<5;i++)await hotspot.click();
     await page.locator('#leader-code').fill('WRONG');await page.getByRole('button',{name:'AUTHORIZE'}).click();assert.equal(await page.locator('#leader-message').innerText(),'Access denied.');
     await page.locator('#leader-code').fill('  awana  ');await page.getByRole('button',{name:'AUTHORIZE'}).click();assert.equal(await page.locator('#leader-message').innerText(),'Channel authorized.');assert.ok(await page.getByRole('button',{name:'CURRENT ANSWER'}).isVisible());
-    await page.getByRole('button',{name:'RELOCK'}).click();await page.waitForURL(/index\.html\?relocked=1/);assert.equal((await page.locator('#screen').innerText()).trim(),'Hint: type HELP');
+    await page.getByRole('button',{name:'RELOCK'}).click();await page.waitForURL(/index\.html\?relocked=1/);assert.match((await page.locator('#screen').innerText()).trim(),/AWANACADE STATUS \.\.\.\. DOWN[\s\S]*Hint: type HELP/);
 
     await page.getByRole('button',{name:'FULLSCREEN'}).click();await page.waitForFunction(()=>!!document.fullscreenElement);await page.evaluate(()=>document.exitFullscreen());
     await page.evaluate(()=>navigator.serviceWorker.ready);await page.reload();await page.waitForFunction(()=>!!navigator.serviceWorker.controller);
-    await context.setOffline(true);await page.goto(base+'/index.html?v=never-visited-guided');assert.ok(await page.locator('#command-input').isVisible());assert.equal((await page.locator('#screen').innerText()).trim(),'Hint: type HELP');await context.setOffline(false);
+    await context.setOffline(true);await page.goto(base+'/index.html?v=never-visited-guided');assert.ok(await page.locator('#command-input').isVisible());assert.match((await page.locator('#screen').innerText()).trim(),/\[ FICTIONAL TRAINING SIMULATION \][\s\S]*Hint: type HELP/);await context.setOffline(false);
 
     const mobileContext=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true});const mobile=await mobileContext.newPage();mobile.on('pageerror',e=>errors.push(e.message));
-    await mobile.goto(base+'/index.html?terminal=1&mobile=1');assert.ok(await mobile.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+    await mobile.goto(base+'/index.html?terminal=1&mobile=1');assert.ok(await mobile.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.match(await mobile.locator('#screen').innerText(),/AWANACADE STATUS \.\.\.\. DOWN/);await mobile.waitForTimeout(950);await mobile.screenshot({path:path.join(shots,'terminal-boot-mobile-390.png'),fullPage:true});
     const mobileInput=mobile.locator('#command-input');await mobileInput.tap();assert.equal(await mobileInput.evaluate(el=>document.activeElement===el),true);await mobileInput.fill('HELP');assert.equal(await mobileInput.evaluate(el=>el.selectionStart),4);await mobileInput.press('Enter');assert.match(await mobile.locator('#screen').innerText(),/RUN FLOOD\.EXE/);
     await mobileInput.fill('RUN FLOOD.EXE');await mobileInput.press('Enter');await mobile.getByRole('button',{name:'SKIP LOADING'}).tap();await mobile.waitForFunction(()=>document.querySelector('#screen').innerText.includes('[MISSION 1/9]'));
     const mobileBoxes=await mobile.evaluate(()=>{const f=document.querySelector('#terminal-form').getBoundingClientRect(),i=document.querySelector('#command-input').getBoundingClientRect();return{fw:f.width,fr:f.right,ir:i.right,bottom:f.bottom,vw:innerWidth,vh:innerHeight}});assert.ok(mobileBoxes.fr<=mobileBoxes.vw&&mobileBoxes.ir<=mobileBoxes.vw&&mobileBoxes.bottom<=mobileBoxes.vh+1,JSON.stringify(mobileBoxes));
     await mobile.screenshot({path:path.join(shots,'terminal-mobile-390.png'),fullPage:true});await mobileContext.close();
 
     const denied=await browser.newContext({viewport:{width:390,height:844}});await denied.addInitScript(()=>Object.defineProperty(window,'sessionStorage',{configurable:true,get(){throw new DOMException('denied','SecurityError')}}));const deniedPage=await denied.newPage();deniedPage.on('pageerror',e=>errors.push(e.message));await deniedPage.goto(base+'/index.html?storage-denied=1');await deniedPage.locator('#command-input').fill('HELP');await deniedPage.locator('#command-input').press('Enter');assert.match(await deniedPage.locator('#screen').innerText(),/RUN FLOOD\.EXE/);await denied.close();
+    const motion=await browser.newContext({viewport:{width:1366,height:768},reducedMotion:'no-preference'}),motionPage=await motion.newPage();motionPage.on('pageerror',e=>errors.push(e.message));await motionPage.goto(base+'/index.html?terminal=1&motion=1');const motionInput=motionPage.locator('#command-input');assert.equal(await motionPage.locator('.boot-row').last().evaluate(el=>getComputedStyle(el).animationName),'boot-reveal');assert.equal(await motionInput.evaluate(el=>document.activeElement===el),true);await motionInput.fill('HELP');await motionInput.press('Enter');assert.match(await motionPage.locator('#screen').innerText(),/START HERE: RUN FLOOD\.EXE/);await motion.close();
     assert.deepEqual(errors,[]);
-    console.log(JSON.stringify({result:'PASS',checks:['uncluttered exact boot','real inline focused caret','short launcher help','skippable loading phases','full guided 9-step typed route','command/syntax/answer recovery','optional FILES and contextual HELP','history arrows','leader bypass/relock','session redirect','fullscreen','390px touch and no overlap','storage denial fallback','offline fresh query','zero page errors'],screenshots:shots},null,2));
+    console.log(JSON.stringify({result:'PASS',checks:['compact fictional outage boot','required status context','reduced-motion static','immediate HELP with native focused caret','short launcher help','skippable loading phases','full guided 9-step typed route','command/syntax/answer recovery','optional FILES and contextual HELP','history arrows','leader bypass/relock','session redirect','fullscreen','390px touch and no overlap','storage denial fallback','offline fresh query','zero page errors'],screenshots:shots},null,2));
   }finally{await context.close();await browser.close()}
 })().catch(e=>{console.error(e);process.exit(1)});
