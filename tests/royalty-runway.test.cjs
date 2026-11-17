@@ -60,7 +60,7 @@ test('Royalty Runway implements all core storyboard elements from Brett Shields'
 });
 
 test('Royalty Runway is integrated into hub and offline service worker', () => {
-  const hub = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  const hub = fs.readFileSync(path.join(root, 'arcade.html'), 'utf8');
   const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
 
   assert.match(hub, /href="games\/royalty_runway\.html"/);

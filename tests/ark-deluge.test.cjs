@@ -22,10 +22,10 @@ function runFrames(api, state, input, seconds, hz = 60) {
 
 test('Ark Deluge is self-contained and integrated with versioned offline launch', () => {
   assert.doesNotMatch(html, /<(?:script|link|img)[^>]+(?:src|href)=["']https?:/i);
-  const hub = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  const hub = fs.readFileSync(path.join(root, 'arcade.html'), 'utf8');
   const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
   assert.match(hub, /games\/ark_deluge_physics\.html\?v=3/g);
-  assert.match(sw, /awanacade-v20/);
+  assert.ok(Number(sw.match(/awanacade-v(\d+)/)[1]) >= 20);
   assert.match(sw, /'\.\/games\/ark_deluge_physics\.html'/);
 });
 

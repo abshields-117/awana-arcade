@@ -5,7 +5,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  const base=process.env.ARCADE_URL||'http://127.0.0.1:8765',shots=process.env.ARTIFACT_DIR||path.join(require('node:os').tmpdir(),'deepwoods-evidence');fs.mkdirSync(shots,{recursive:true});
  const browser=await chromium.launch({headless:true,args:['--no-sandbox']});const context=await browser.newContext({viewport:{width:1366,height:900},hasTouch:true,reducedMotion:'no-preference'});const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));let inputLegs=0;
  try{
- await page.goto(base);await page.evaluate(()=>navigator.serviceWorker.ready);await page.reload();await page.waitForFunction(()=>!!navigator.serviceWorker.controller);
+ await page.goto(base+'/arcade.html');await page.evaluate(()=>navigator.serviceWorker.ready);await page.reload();await page.waitForFunction(()=>!!navigator.serviceWorker.controller);
  // Stale scenery keys must not override the OS or disable default motion.
  await page.evaluate(()=>{for(const key of ['calm','phantom-calm','phantom-manor-calm'])localStorage.setItem(key,'true');});
  await page.goto(base+'/games/phantom_manor.html?v=14');assert.deepEqual(await page.evaluate(()=>({on:PhantomManorAudio.status().on,state:PhantomManorAudio.status().state})),{on:true,state:'unavailable'});await page.getByRole('button',{name:'Enter the manor',exact:true}).click();await page.waitForFunction(()=>PhantomManorAudio.status().state==='running');assert.equal(await page.evaluate(()=>PhantomManorAudio.status().track),'manor');

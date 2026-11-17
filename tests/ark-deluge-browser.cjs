@@ -15,7 +15,7 @@ const os = require('node:os');
     const desktop = await browser.newContext({ viewport: { width: 1366, height: 768 } });
     const page = await desktop.newPage();
     page.on('pageerror', e => errors.push(e.message));
-    await page.goto(base);
+    await page.goto(base + '/arcade.html');
     await page.evaluate(() => navigator.serviceWorker.ready);
     await page.reload();
     await page.waitForFunction(() => !!navigator.serviceWorker.controller);
@@ -80,7 +80,7 @@ const os = require('node:os');
 
     const offline = await browser.newContext({ viewport: { width: 1366, height: 768 } });
     const o = await offline.newPage();
-    await o.goto(base);
+    await o.goto(base + '/arcade.html');
     await o.evaluate(() => navigator.serviceWorker.ready);
     await o.reload();
     await o.waitForFunction(() => !!navigator.serviceWorker.controller);

@@ -18,6 +18,13 @@ jobs:
         run: |
           npm install --prefix "$RUNNER_TEMP/hallows-tools" playwright@1.64.1
           "$RUNNER_TEMP/hallows-tools/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Exercise Covenant Terminal takeover in real Chromium
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 &
+          SERVER=$!
+          trap 'kill "$SERVER"' EXIT
+          curl --retry 10 --retry-connrefused --retry-delay 1 --fail http://127.0.0.1:8765/ > /dev/null
+          NODE_PATH="$RUNNER_TEMP/hallows-tools/node_modules" ARTIFACT_DIR="$RUNNER_TEMP/terminal-evidence" node tests/terminal-browser.cjs
       - name: Exercise Path of Hallows in real Chromium
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 &
@@ -60,3 +67,8 @@ jobs:
         with:
           name: hallows-browser-screenshots
           path: ${{ runner.temp }}/hallows-evidence
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: terminal-browser-screenshots
+          path: ${{ runner.temp }}/terminal-evidence
