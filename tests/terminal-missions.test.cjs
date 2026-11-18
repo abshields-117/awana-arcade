@@ -21,7 +21,7 @@ test('mission has nine reachable, varied puzzles and three hints each', () => {
     assert.match(puzzle.guide, /^(TYPE|NEXT COMMAND):/);
     assert.ok(!/\b(?:FILES|MISSION|MAP|SCAN)\b/.test(puzzle.guide), `${puzzle.id} requires discovery`);
   }
-  assert.ok(mission.puzzles.some(p => p.accepts.some(a => /7-2-9-4/.test(a.value || ''))));
+  assert.ok(mission.puzzles.some(p => p.accepts.some(a => /7,2,9,4/.test(a.value || ''))));
   assert.ok(!mission.puzzles.some(p => p.accepts.some(a => /^(1[- ]?2[- ]?3[- ]?4)$/.test(a.value || ''))));
   assert.equal(STORAGE_KEY, 'covenant-terminal-progress-v1');
 });
@@ -31,8 +31,8 @@ test('all nine puzzles expose a complete guided route without discovery commands
   const route = mission.puzzles.map(p => p.route);
   assert.deepEqual(route, [
     'READ /archive/manifest.txt', 'ANSWER 50 CUBITS', 'ANSWER ALL',
-    'ANSWER 7-2-9-4', 'ANSWER DOVE', 'REPAIR LAMP --A=ON --B=OFF',
-    'TRACK --EAST --BAY=3', 'READ /archive/final.key', 'RUN RESTORE --VERIFY'
+    'ANSWER 7,2,9,4', 'ANSWER DOVE', 'REPAIR LAMP --A=ON --B=OFF',
+    'ANSWER B', 'READ /final.key', 'RELOAD'
   ]);
   mission.puzzles.forEach((puzzle) => assert.equal(evaluateAction(puzzle, parseCommand(puzzle.route)).ok, true, puzzle.id));
 });
@@ -52,12 +52,12 @@ test('every puzzle accepts its intended action and rejects a wrong answer withou
     'READ /archive/manifest.txt',
     'ANSWER 50 CUBITS',
     'ANSWER ALL',
-    'ANSWER 7-2-9-4',
+    'ANSWER 7,2,9,4',
     'ANSWER DOVE',
     'REPAIR LAMP --A=ON --B=OFF',
-    'TRACK --EAST --BAY=3',
-    'READ /archive/final.key',
-    'RUN RESTORE --VERIFY'
+    'ANSWER B',
+    'READ /final.key',
+    'RELOAD'
   ];
   mission.puzzles.forEach((puzzle, index) => {
     const wrong = evaluateAction(puzzle, parseCommand('ANSWER 1234'));
@@ -83,8 +83,12 @@ test('text answers accept reasonable variants without weakening exact command pu
   const mission = createMission();
   assert.equal(evaluateAction(mission.puzzles[1], parseCommand('answer width is 50 cubits')).ok, true);
   assert.equal(evaluateAction(mission.puzzles[4], parseCommand('answer a dove')).ok, true);
+  assert.equal(evaluateAction(mission.puzzles[2], parseCommand('  answer everything  ')).ok, true);
+  assert.equal(evaluateAction(mission.puzzles[3], parseCommand('answer 7, 2, 9, 4')).ok, true);
+  assert.equal(evaluateAction(mission.puzzles[3], parseCommand('ANSWER 1234')).ok, false);
+  assert.equal(evaluateAction(mission.puzzles[6], parseCommand('answer a')).ok, false);
   assert.equal(evaluateAction(mission.puzzles[8], parseCommand('run restore verify')).ok, false);
-  assert.equal(evaluateAction(mission.puzzles[8], parseCommand('RUN RESTORE --VERIFY')).ok, true);
+  assert.equal(evaluateAction(mission.puzzles[8], parseCommand(' reload ')).ok, true);
 });
 
 test('hint progression is bounded at three and resettable per puzzle', () => {
@@ -96,15 +100,17 @@ test('hint progression is bounded at three and resettable per puzzle', () => {
   assert.equal(nextHint(state, 'p2'), 0);
 });
 
-test('fictional technology and dinosaur claims are explicitly labeled while Scripture remains accurate', () => {
+test('Bible record is distinct from Ark story challenge without intrusive labels', () => {
   const mission = createMission();
   const text = JSON.stringify(mission);
   assert.match(text, /Genesis 6:15/);
   assert.match(text, /300 cubits long, 50 cubits wide, and 30 cubits high/);
   assert.match(text, /Genesis 6:22/);
-  assert.match(text, /God’s commands remain correct|God's commands remain correct/);
+  assert.match(text, /BIBLE RECORD/);
+  assert.match(text, /ARK STORY CHALLENGE/);
   const fictional = mission.puzzles.filter(p => /lamp|dinosaur|support system/i.test(JSON.stringify(p)));
   assert.ok(fictional.length >= 2);
-  fictional.forEach(p => assert.match(JSON.stringify(p), /\[FICTIONAL TRAINING SIMULATION\]/));
+  fictional.forEach(p => assert.match(JSON.stringify(p), /ARK STORY CHALLENGE/));
+  assert.doesNotMatch(text, /fictional training|dinosaur prop|simulation/i);
   assert.doesNotMatch(text, /God.{0,20}(bug|mistake|debug|corrupt)/i);
 });

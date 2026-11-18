@@ -12,20 +12,19 @@ function supportCards(html) {
   return JSON.parse(match[1]);
 }
 
-test('boot uses only a compact fictional MoR signature while full narrative stays in mission intro', () => {
+test('boot displays the outage story and launcher waits for continuation', () => {
   const html = read('index.html');
   const missionSource = read('js/terminal-missions.js');
   const bootBody = html.match(/function boot\(\)[\s\S]*?\nfunction openArcade/)[0];
   assert.match(bootBody, /addBootDiagnostic\(\)/);
-  assert.match(html, /\[ FICTIONAL TRAINING SIMULATION \]/);
+  assert.match(html, /SYSTEM DOWN/);
   assert.match(html, /INTRUSION SIGNATURE \.\.\.\. MoR/);
-  assert.doesNotMatch(bootBody, /MEN OF RENOWN|Genesis|criminal hacker|Increasing corruption|theology/i);
-  assert.match(missionSource, /\[FICTIONAL CYBER TRAINING MISSION\]/);
-  assert.match(missionSource, /SYSTEM ALERT/);
-  assert.match(missionSource, /Increasing corruption on Earth has led to the AWANACADE network being compromised\./);
-  assert.match(missionSource, /criminal hacker group known as MoR has claimed responsibility/);
-  assert.match(missionSource, /solve the puzzles, repair the Flood Archive, and restore AWANACADE service/);
-  assert.match(missionSource, /MoR \/\/ MEN OF RENOWN \/\/ fictional group designation \/\/ Genesis 6:4 reference/);
+  assert.match(html, /claimed responsibility/);
+  assert.match(missionSource, /MoR claimed responsibility/);
+  assert.match(html, /id="continue-mission"/);
+  assert.match(html, /id="reset-confirm"/);
+  assert.match(html, /id="leader-access"/);
+  assert.doesNotMatch(html + missionSource, /fictional training|dinosaur prop|simulation/i);
   assert.match(html, /mission\.intro/);
   assert.doesNotMatch(missionSource, /(?:biblical|Bible|Genesis).*men of renown.{0,80}(?:computer|cyber|hack)/i);
   assert.doesNotMatch(missionSource, /God.{0,30}(?:debug|hack|compromis|corrupt|repair|restore)/i);
@@ -50,11 +49,11 @@ test('MoR support cards teach general terminal literacy without puzzle solutions
     'COMMAND TARGET --OPTION=VALUE', 'spaces matter', 'COMMAND NOT FOUND',
     'SYNTAX', 'ANSWER INCORRECT', 'Arrow-Up', 'Backspace', 'Enter',
     'Reader', 'Operator', 'Checker', 'Researcher', 'three levels',
-    '[FICTIONAL TRAINING SIMULATION]', 'no countdown', 'Do not refresh the player screen'
+    'BIBLE RECORD', 'no countdown', 'Do not refresh the player screen'
   ]) assert.ok(text.toLowerCase().includes(required.toLowerCase()), `missing card guidance: ${required}`);
   for (const spoiler of [
-    '50 CUBITS', 'ANSWER ALL', '7-2-9-4', 'ANSWER DOVE',
-    'REPAIR LAMP', '--EAST --BAY=3', '/archive/final.key', 'RUN RESTORE --VERIFY'
+    '50 CUBITS', 'ANSWER ALL', '7,2,9,4', 'ANSWER DOVE',
+    'REPAIR LAMP', 'ANSWER B', '/final.key', 'RELOAD'
   ]) assert.doesNotMatch(text, new RegExp(spoiler.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'), `spoiler leaked: ${spoiler}`);
 });
 
@@ -76,10 +75,10 @@ test('hub exposes support display outside cabinet count and offline cache stays 
   const cabinet = arcade.match(/<div class="arcade-grid" id="arcade-games">([\s\S]*?)<\/div>\s*<\/div>\s*<\/div>/)?.[1] || '';
   assert.doesNotMatch(cabinet, /mode=mor/);
   assert.match(arcade, /id="visual-support"/);
-  assert.match(arcade, /games\/retro_screensaver\.html\?mode=mor&v=2/);
+  assert.match(arcade, /games\/retro_screensaver\.html\?mode=mor&v=3/);
   assert.match(arcade, /MoR Support Display/i);
   const sw = read('sw.js');
-  assert.match(sw, /awanacade-v25/);
+  assert.match(sw, /awanacade-v26/);
   assert.equal((sw.match(/'\.\/games\/retro_screensaver\.html'/g) || []).length, 1);
   assert.match(sw, /ignoreSearch:\s*true/);
   const workflow = read('.github/workflows/game-tests.yml');
