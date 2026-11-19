@@ -78,7 +78,7 @@ test('hub exposes support display outside cabinet count and offline cache stays 
   assert.match(arcade, /games\/retro_screensaver\.html\?mode=mor&v=3/);
   assert.match(arcade, /MoR Support Display/i);
   const sw = read('sw.js');
-  assert.match(sw, /awanacade-v26/);
+  assert.match(sw, /awanacade-v27/);
   assert.equal((sw.match(/'\.\/games\/retro_screensaver\.html'/g) || []).length, 1);
   assert.match(sw, /ignoreSearch:\s*true/);
   const workflow = read('.github/workflows/game-tests.yml');

@@ -4,7 +4,7 @@ A standalone, fictional single-player side-scroller based on a young creator's g
 
 ## Play
 
-`games/path_of_hallows.html?v=9` (also runs as a local HTML file).
+`games/path_of_hallows.html?v=10` (also runs as a local HTML file).
 
 - A/D or left/right arrows: run.
 - W, up arrow or Space: jump (release before the next jump).
@@ -17,7 +17,7 @@ A standalone, fictional single-player side-scroller based on a young creator's g
 - Five connected sections introduce larger waves (3/4/5/6/7), sturdy skeletons, willow scenery and crypts. Gates require every scheduled spawn and defeat. The sword is collected before any enemy appears.
 - Each section has an in-session checkpoint. Defeat restores that section's starting score and all five hearts. No duplicate-score farming from retries.
 - The fifth gate opens the unsigned warning. Reading freezes gameplay and audio; Continue explicitly starts the chase.
-- Four-second descending-ghost head start, permanent gold spike markers, generous jump arc, old-gate fade and `TO BE CONTINUED…`. Ghost contact retries the chase, not the graveyard. Sword does not damage the ghost.
+- Four-second descending-ghost head start, then a brisker 230-unit/s ghost (up from 205); permanent gold spike markers, generous jump arc, old-gate fade and `TO BE CONTINUED…`. Ghost contact retries the chase, not the graveyard. Sword does not damage the ghost.
 - Checkpoints are in memory, not saved across reloads. Only best score and reduced-motion preference persist; blocked storage falls back to session memory. Sound defaults off.
 
 ## Verification

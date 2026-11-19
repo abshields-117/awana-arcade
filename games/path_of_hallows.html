@@ -42,7 +42,7 @@ class Game{
  s.x+=dir*heroes[s.hero].speed*dt;
  if(s.phase==='chase'){
   s.x=Math.max(5510,s.x);s.chaseTime+=dt;s.ghostY=Math.max(0,270-s.chaseTime*67.5);
-  if(s.chaseTime>4)s.ghostX+=205*dt;
+  if(s.chaseTime>4)s.ghostX+=230*dt;
   if(spikes.some(x=>s.x>x-7&&s.x<x+67&&s.y<27))this.hurt();
   if(s.chaseTime>4&&s.ghostX>=s.x-20){this.retry();return;}
   if(s.x>=7710){s.phase='ending';s.fade=0;this.event('win');}return;

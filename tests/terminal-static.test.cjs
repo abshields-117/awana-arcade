@@ -52,7 +52,7 @@ test('manifest starts at terminal and service worker precaches all takeover file
   const manifest=JSON.parse(read('manifest.json'));
   assert.equal(manifest.start_url,'./index.html');
   const sw=read('sw.js');
-  assert.match(sw,/awanacade-v26/);
+  assert.match(sw,/awanacade-v27/);
   for(const asset of ['./index.html','./arcade.html','./js/terminal-missions.js']) assert.ok(sw.includes(`'${asset}'`),asset);
   assert.match(sw,/ignoreSearch:\s*true/);
 });
